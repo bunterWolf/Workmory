@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Footer = ({ activeTime, inactiveTime, totalTime }) => {
+const Footer = ({ activeTime, inactiveTime, totalTime, isMockData }) => {
   return (
     <div className="footer">
       <div className="summary-stat">
@@ -17,6 +17,12 @@ const Footer = ({ activeTime, inactiveTime, totalTime }) => {
         <div className="summary-value">{inactiveTime}</div>
         <div className="summary-label">Inactive Time</div>
       </div>
+      
+      {isMockData && (
+        <div className="mock-data-info">
+          Using sample data for development
+        </div>
+      )}
     </div>
   );
 };

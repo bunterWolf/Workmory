@@ -39,6 +39,26 @@ Focus is an Electron-based desktop application designed to track and analyze you
    npm run dev
    ```
 
+### Using Mock Data
+
+For development and testing purposes, you can use sample mock data instead of tracking real activity:
+
+```
+npm start -- --mock-data
+```
+
+When using mock data:
+- The application will display sample activity data for today and yesterday
+- No actual activity will be tracked
+- Tracking controls will be disabled
+- Mock data will not be saved to disk
+- The UI will show indicators that mock data is being used
+
+This is useful for:
+- UI development without waiting for real data
+- Testing functionality without actual tracking
+- Presentations and demos
+
 ### Building
 
 To build the application for your platform:

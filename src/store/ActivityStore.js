@@ -3,12 +3,13 @@ const path = require('path');
 const { app } = require('electron');
 
 class ActivityStore {
-  constructor(customStoragePath = null) {
+  constructor(customStoragePath = null, useMockData = false) {
     this.version = 1;
     this.startTime = Date.now();
     this.lastCleanup = Date.now();
     this.days = {};
     this.storagePath = customStoragePath || path.join(app.getPath('userData'), 'activity-data.json');
+    this.useMockData = useMockData;
     
     // Load existing data if available
     this.load();
@@ -23,6 +24,16 @@ class ActivityStore {
   // Load data from storage
   load() {
     try {
+      // Use mock data if enabled
+      if (this.useMockData) {
+        console.log('Using mock data for development');
+        const mockData = require('./mockData');
+        this.days = mockData.days;
+        this.startTime = mockData.startTime;
+        this.lastCleanup = mockData.lastCleanup;
+        return;
+      }
+      
       if (fs.existsSync(this.storagePath)) {
         const data = JSON.parse(fs.readFileSync(this.storagePath, 'utf8'));
         
@@ -44,6 +55,12 @@ class ActivityStore {
   // Save data to storage
   async save() {
     try {
+      // Skip saving if using mock data
+      if (this.useMockData) {
+        console.log('Mock data enabled - skipping save');
+        return;
+      }
+      
       const data = {
         version: this.version,
         startTime: this.startTime,
@@ -60,6 +77,12 @@ class ActivityStore {
   // Update storage path and move data
   async updateStoragePath(newPath) {
     try {
+      // Skip if using mock data
+      if (this.useMockData) {
+        console.log('Mock data enabled - cannot update storage path');
+        return false;
+      }
+      
       // Save current data first
       await this.save();
       
@@ -104,6 +127,11 @@ class ActivityStore {
   
   // Process and store an active window event
   storeActiveWindowEvent(eventData) {
+    // Skip if using mock data
+    if (this.useMockData) {
+      return true;
+    }
+    
     const dateKey = ActivityStore.getTodayKey();
     const dayData = this.initDay(dateKey);
     
@@ -126,6 +154,11 @@ class ActivityStore {
   
   // Process and store an inactivity event
   storeInactivityEvent(eventData) {
+    // Skip if using mock data
+    if (this.useMockData) {
+      return true;
+    }
+    
     const dateKey = ActivityStore.getTodayKey();
     const dayData = this.initDay(dateKey);
     
@@ -149,6 +182,11 @@ class ActivityStore {
   
   // Process and store a Teams meeting event
   storeTeamsMeetingEvent(eventData) {
+    // Skip if using mock data
+    if (this.useMockData) {
+      return true;
+    }
+    
     const dateKey = ActivityStore.getTodayKey();
     const dayData = this.initDay(dateKey);
     
@@ -367,6 +405,11 @@ class ActivityStore {
   
   // Clean up data older than 30 days
   cleanup() {
+    // Skip if using mock data
+    if (this.useMockData) {
+      return;
+    }
+    
     const now = Date.now();
     const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
     const cutoff = now - thirtyDaysInMs;
@@ -386,7 +429,10 @@ class ActivityStore {
   dispose() {
     clearInterval(this.autoSaveInterval);
     clearInterval(this.cleanupInterval);
-    this.save();
+    
+    if (!this.useMockData) {
+      this.save();
+    }
   }
 }
 

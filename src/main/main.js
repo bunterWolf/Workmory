@@ -21,6 +21,12 @@ if (isDev) {
   }
 }
 
+// Check for the mock data flag
+const useMockData = process.argv.includes('--mock-data');
+if (useMockData) {
+  console.log('🧪 Mock data mode enabled for development');
+}
+
 // Create the main browser window
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -30,7 +36,7 @@ function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
     },
-    title: 'Focus - Productivity Tracker'
+    title: 'Focus - Productivity Tracker' + (useMockData ? ' (Mock Data)' : '')
   });
 
   // Load the index.html file
@@ -53,14 +59,16 @@ function createWindow() {
 
 // Initialize activity tracking components
 function initializeTracking() {
-  // Create ActivityStore instance
-  activityStore = new ActivityStore();
+  // Create ActivityStore instance with mock data flag
+  activityStore = new ActivityStore(null, useMockData);
   
   // Create WatcherManager instance and pass the ActivityStore to it
   watcherManager = new WatcherManager(activityStore);
   
-  // Start tracking
-  watcherManager.startAll();
+  // Start tracking (only if not using mock data)
+  if (!useMockData) {
+    watcherManager.startAll();
+  }
 }
 
 // Register IPC handlers
@@ -72,6 +80,11 @@ function registerIpcHandlers() {
   
   // Pause or resume tracking
   ipcMain.handle('toggle-tracking', async (event, shouldTrack) => {
+    if (useMockData) {
+      console.log('Mock data mode - tracking controls disabled');
+      return true;
+    }
+    
     if (shouldTrack) {
       watcherManager.startAll();
       return true;
@@ -83,12 +96,17 @@ function registerIpcHandlers() {
   
   // Get tracking status
   ipcMain.handle('get-tracking-status', () => {
-    return watcherManager.isTracking();
+    return useMockData || watcherManager.isTracking();
   });
   
   // Update data storage location
   ipcMain.handle('update-storage-location', async (event, newLocation) => {
     return activityStore.updateStoragePath(newLocation);
+  });
+  
+  // Check if using mock data
+  ipcMain.handle('is-using-mock-data', () => {
+    return useMockData;
   });
 }
 

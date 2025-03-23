@@ -5,8 +5,9 @@
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "webpack --config webpack.config.js",
     "dev": "webpack --config webpack.config.js --watch & electron .",
+    "dev:mock": "webpack --config webpack.config.js --watch & electron . --mock-data",
+    "build": "webpack --config webpack.config.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },

@@ -9,6 +9,7 @@ const App = () => {
   const [activityData, setActivityData] = useState(null);
   const [isTracking, setIsTracking] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMockData, setIsMockData] = useState(false);
 
   // Get today's date in YYYY-MM-DD format
   function getTodayKey() {
@@ -73,6 +74,16 @@ const App = () => {
     }
   };
   
+  // Check if using mock data
+  const checkMockDataStatus = async () => {
+    try {
+      const usingMockData = await ipc.isUsingMockData();
+      setIsMockData(usingMockData);
+    } catch (error) {
+      console.error('Failed to check mock data status:', error);
+    }
+  };
+  
   // Toggle tracking
   const toggleTracking = async () => {
     try {
@@ -132,9 +143,10 @@ const App = () => {
     };
   }, [selectedDate]);
   
-  // Check tracking status when component mounts
+  // Check tracking status and mock data status when component mounts
   useEffect(() => {
     checkTrackingStatus();
+    checkMockDataStatus();
   }, []);
   
   // Calculate summary statistics
@@ -153,6 +165,7 @@ const App = () => {
         onNext={goToNextDay}
         isTracking={isTracking}
         onToggleTracking={toggleTracking}
+        isMockData={isMockData}
       />
       
       <DayOverview 
@@ -165,6 +178,7 @@ const App = () => {
         activeTime={activeTime}
         inactiveTime={inactiveTime}
         totalTime={totalTrackingTime}
+        isMockData={isMockData}
       />
     </div>
   );

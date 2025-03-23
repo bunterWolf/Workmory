@@ -190,7 +190,7 @@ Focus is an Electron-based desktop application designed to track and analyze use
 - Button to pause or start tracking
 
 #### 2.5.2.2 Content: dayOverview 
-- Vertical Timeline (like a Day-Calendar View) showing the data of the ‘daySummary’
+- Vertical Timeline (like a Day-Calendar View) showing the data of the 'daySummary'
 - By default, the timeline consists of a time window from 8:00 to 17:00 and expands when events are displayed outside this time. 
 - The events are positioned along the vertical time axis according to their start and end time
 - Each event displays its type, title, subtitle (if applicable) and duration. 
@@ -284,3 +284,49 @@ OS Events -> Watcher -> WatcherManager -> ActivityStore
 - Multi-OS verification
 - Long-term testing
 - Memory & performance profiling
+
+## 11. Development Mode und Mock-Daten
+
+### 11.1 Mock-Daten Integration
+
+Zur Vereinfachung der Entwicklung und des Testens bietet die Anwendung einen speziellen Mock-Daten-Modus, der über eine Kommandozeilen-Flag aktiviert werden kann.
+
+#### 11.1.1 Aktivierung
+
+Der Mock-Daten-Modus kann über folgendes Kommando aktiviert werden:
+
+```
+npm start -- --mock-data
+```
+
+Für die Entwicklung mit automatischem Reload:
+
+```
+npm run dev:mock
+```
+
+#### 11.1.2 Verhalten im Mock-Daten-Modus
+
+- Die Anwendung verwendet ein vordefiniertes Datensatz anstatt echte Aktivitäten zu verfolgen
+- Die Mock-Daten enthalten Beispieldaten für den aktuellen und den vorherigen Tag
+- Tracking-Kontrollen werden deaktiviert
+- Die UI zeigt durch visuelle Indikatoren an, dass Mock-Daten verwendet werden
+- Mock-Daten werden nicht auf der Festplatte gespeichert
+- Events werden nicht aufgezeichnet
+
+#### 11.1.3 Implementierung
+
+Die Mock-Daten-Funktionalität ist folgendermaßen implementiert:
+
+- `src/store/mockData.js`: Enthält statische Beispieldaten
+- Kommandozeilen-Flag wird im `main.js` ausgewertet
+- Der `ActivityStore` erhält einen zusätzlichen Parameter `useMockData`
+- Bei aktiviertem Mock-Modus werden sämtliche Tracking-Operationen übersprungen
+- Die UI-Komponenten zeigen entsprechende Status-Hinweise an
+
+#### 11.1.4 Vorteile für die Entwicklung
+
+- UI-Entwicklung ohne Warten auf echte Daten
+- Konsistente Testumgebung mit vorhersehbaren Daten
+- Demonstrationen und Präsentationen ohne echtes Tracking
+- Keine Verfälschung der tatsächlichen Nutzungsdaten während der Entwicklung

@@ -20,6 +20,11 @@ const ipc = {
   // Update data storage location
   updateStorageLocation: async (newLocation) => {
     return ipcRenderer.invoke('update-storage-location', newLocation);
+  },
+  
+  // Check if mock data is being used
+  isUsingMockData: async () => {
+    return ipcRenderer.invoke('is-using-mock-data');
   }
 };
 
