@@ -53,14 +53,6 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
       const startTime = new Date(event.start);
       const endTime = new Date(event.end);
       
-      // Calculate position and height based on time
-      const startOfDay = new Date(startTime);
-      startOfDay.setHours(0, 0, 0, 0);
-      
-      const msInDay = 24 * 60 * 60 * 1000;
-      const startPercentage = ((startTime - startOfDay) / msInDay) * 100;
-      const heightPercentage = ((endTime - startTime) / msInDay) * 100;
-      
       // Format times for display
       const formattedStartTime = startTime.toLocaleTimeString([], { 
         hour: '2-digit', 
@@ -76,8 +68,8 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
       
       return {
         ...event,
-        startPercentage,
-        heightPercentage,
+        startTime,
+        endTime,
         formattedStartTime,
         formattedEndTime
       };
@@ -86,6 +78,13 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
     setEvents(processedEvents);
   }, [activityData]);
   
+  // Calculate timeline height based on hours
+  const getTimelineHeight = () => {
+    if (!timelineHours.length) return '600px'; // Default height
+    const calculatedHeight = timelineHours.length * 60; // 60px per hour
+    return calculatedHeight > 0 ? `${calculatedHeight}px` : '600px';
+  };
+  
   // Format time for display
   const formatHour = (hour) => {
     return `${hour}:00`;
@@ -93,10 +92,41 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
   
   // Set dynamic styles for an event based on its time
   const getEventStyle = (event) => {
+    // Get the first (earliest) and last (latest) hour in the timeline
+    const minHour = timelineHours[0];
+    const maxHour = timelineHours[timelineHours.length - 1] + 1; // Add 1 to include the full last hour
+    
+    // Total height of the timeline in pixels (60px per hour)
+    const hourHeight = 60; // height in pixels for one hour
+    
+    // Minutes since the start of the timeline
+    const startHour = event.startTime.getHours();
+    const startMinute = event.startTime.getMinutes();
+    const hoursSinceStart = startHour - minHour;
+    const minutesSinceStartOfHour = startMinute;
+    
+    // Calculate top position in pixels
+    const topPosition = (hoursSinceStart * hourHeight) + (minutesSinceStartOfHour / 60 * hourHeight);
+    
+    // Calculate height based on duration
+    const durationInMinutes = (event.endTime - event.startTime) / (60 * 1000);
+    const heightInPixels = (durationInMinutes / 60) * hourHeight;
+    
     return {
-      top: `${event.startPercentage}%`,
-      height: `${Math.max(2, event.heightPercentage)}%`, // Minimum height for visibility
+      top: `${topPosition}px`,
+      height: `${Math.max(10, heightInPixels)}px`, // Minimum height for visibility
     };
+  };
+  
+  // Create hour markers for the timeline
+  const renderHourMarkers = () => {
+    return timelineHours.map((hour, index) => (
+      <div 
+        key={`marker-${hour}`} 
+        className="hour-marker" 
+        style={{ top: `${index * 60}px` }} 
+      />
+    ));
   };
   
   // If loading, show placeholder
@@ -110,9 +140,12 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
             </div>
           ))}
         </div>
-        <div className="events-container">
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
-            Loading activity data...
+        <div className="events-container" style={{ height: getTimelineHeight() }}>
+          {renderHourMarkers()}
+          <div className="events-content">
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              Loading activity data...
+            </div>
           </div>
         </div>
       </div>
@@ -130,9 +163,12 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
             </div>
           ))}
         </div>
-        <div className="events-container">
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
-            No activity data for this day.
+        <div className="events-container" style={{ height: getTimelineHeight() }}>
+          {renderHourMarkers()}
+          <div className="events-content">
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              No activity data for this day.
+            </div>
           </div>
         </div>
       </div>
@@ -149,32 +185,33 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
         ))}
       </div>
       
-      <div className="events-container">
-        {events.map((event, index) => (
-          <div 
-            key={index} 
-            className={`event ${event.type}`}
-            style={getEventStyle(event)}
-          >
-            <div className="event-title">
-              {event.type === 'primaryWindow' ? event.title : 
-               event.type === 'teams_meeting' ? event.title :
-               'Inactive'}
+      <div className="events-container" style={{ height: getTimelineHeight() }}>
+        {renderHourMarkers()}
+        <div className="events-content">
+          {events.map((event, index) => (
+            <div 
+              key={index} 
+              className={`event ${event.type}`}
+              style={getEventStyle(event)}
+            >
+              <span className="event-title">
+                {event.type === 'primaryWindow' ? event.title : 
+                 event.type === 'teams_meeting' ? event.title :
+                 'Inactive'}
+              </span>
+              
+              {event.type === 'primaryWindow' && event.subTitle && (
+                <span className="event-subtitle"> {event.subTitle}</span>
+              )}
+              
+              <span className="event-time"> - {event.formattedStartTime} - {event.formattedEndTime}</span>
+              
+              <div className="event-duration">
+                {formatDuration(event.duration)}
+              </div>
             </div>
-            
-            {event.type === 'primaryWindow' && event.subTitle && (
-              <div className="event-subtitle">{event.subTitle}</div>
-            )}
-            
-            <div className="event-time">
-              {event.formattedStartTime} - {event.formattedEndTime}
-            </div>
-            
-            <div className="event-duration">
-              {formatDuration(event.duration)}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

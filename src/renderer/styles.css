@@ -29,6 +29,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden;
 }
 
 /* Header styles */
@@ -99,56 +100,78 @@ body {
 
 /* Timeline styles */
 .day-overview {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
   position: relative;
+  height: calc(100vh - 120px); /* Abzüglich der ungefähren Höhe von Header und Footer */
+  overflow-y: auto;
 }
 
 .timeline {
   width: var(--timeline-width);
+  height: 100%;
   border-right: 1px solid var(--color-border);
   background-color: var(--color-secondary);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow-y: auto;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
 }
 
 .timeline-hour {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   height: 60px;
   width: 100%;
   font-size: 12px;
   color: #777;
   position: relative;
+  box-sizing: border-box;
+  padding-top: 2px;
 }
 
 .timeline-hour::after {
   content: '';
   position: absolute;
+  left: 0;
   right: 0;
   top: 0;
-  width: 5px;
   height: 1px;
   background-color: #ddd;
 }
 
+.timeline-hour:first-child::after {
+  display: none;
+}
+
 .events-container {
-  flex: 1;
-  overflow-y: auto;
+  margin-left: var(--timeline-width);
   position: relative;
+  min-height: 100%;
+}
+
+.hour-marker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #eee;
+  z-index: 1;
+}
+
+.events-content {
+  position: relative;
+  min-height: 100%;
+  padding-right: 20px;
 }
 
 .event {
   position: absolute;
-  left: 0;
-  right: 20px;
-  padding: 10px;
+  left: 10px;
+  right: 10px;
+  padding: 5px 8px;
   border-radius: 4px;
-  margin-left: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 3;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -167,12 +190,13 @@ body {
   color: white;
 }
 
-.event-title {
+.event-title, .event-time {
   font-weight: 500;
   margin-bottom: 5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 12px;
 }
 
 .event-subtitle {
