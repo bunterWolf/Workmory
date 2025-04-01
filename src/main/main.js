@@ -2,12 +2,12 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const url = require('url');
 const ActivityStore = require('../store/ActivityStore');
-const WatcherManager = require('../watchers/WatcherManager');
+const HeartbeatManager = require('../store/HeartbeatManager');
 
 // Keep a global reference of the window object and other instances
 let mainWindow;
 let activityStore;
-let watcherManager;
+let heartbeatManager;
 
 // Check if in development mode and enable live reload
 const isDev = process.env.NODE_ENV === 'development';
@@ -58,27 +58,47 @@ function createWindow() {
 }
 
 // Initialize activity tracking components
-function initializeTracking() {
+async function initializeTracking() {
   // Create ActivityStore instance with mock data flag
-  activityStore = new ActivityStore(null, useMockData);
+  activityStore = new ActivityStore({
+    useMockData: useMockData
+  });
   
-  // Create WatcherManager instance and pass the ActivityStore to it
-  watcherManager = new WatcherManager(activityStore);
+  // Create HeartbeatManager instance with activity store and main window
+  heartbeatManager = new HeartbeatManager({
+    activityStore: activityStore,
+    mainWindow: mainWindow
+  });
+  
+  // Initialize the watchers inside the heartbeat manager
+  await heartbeatManager.init();
   
   // Start tracking (only if not using mock data)
   if (!useMockData) {
-    watcherManager.startAll();
+    // Start the watcher for activity data
+    activityStore.startTracking();
+    
+    // Start generating heartbeats
+    heartbeatManager.start();
+    
+    console.log('Activity tracking initialized and started');
+  } else {
+    console.log('Using mock data, not starting real tracking');
   }
+  
+  // Run cleanup for old data
+  activityStore.cleanupOldData();
 }
 
 // Register IPC handlers
 function registerIpcHandlers() {
-  // Get activity data for a specific date
-  ipcMain.handle('get-activity-data', async (event, date) => {
-    return activityStore.getActivityData(date);
+  // Get tracking status
+  ipcMain.handle('get-tracking-status', () => {
+    if (useMockData) return true;
+    return activityStore.isTracking;
   });
   
-  // Pause or resume tracking
+  // Toggle tracking status
   ipcMain.handle('toggle-tracking', async (event, shouldTrack) => {
     if (useMockData) {
       console.log('Mock data mode - tracking controls disabled');
@@ -86,22 +106,14 @@ function registerIpcHandlers() {
     }
     
     if (shouldTrack) {
-      watcherManager.startAll();
+      activityStore.startTracking();
+      heartbeatManager.start();
       return true;
     } else {
-      watcherManager.stopAll();
+      activityStore.pauseTracking();
+      heartbeatManager.stop();
       return false;
     }
-  });
-  
-  // Get tracking status
-  ipcMain.handle('get-tracking-status', () => {
-    return useMockData || watcherManager.isTracking();
-  });
-  
-  // Update data storage location
-  ipcMain.handle('update-storage-location', async (event, newLocation) => {
-    return activityStore.updateStoragePath(newLocation);
   });
   
   // Check if using mock data
@@ -111,9 +123,9 @@ function registerIpcHandlers() {
 }
 
 // App is ready to start
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   createWindow();
-  initializeTracking();
+  await initializeTracking();
   registerIpcHandlers();
   
   app.on('activate', function () {
@@ -128,11 +140,19 @@ app.on('window-all-closed', function () {
 
 // Save data and clean up before quitting
 app.on('before-quit', async () => {
-  if (watcherManager) {
-    watcherManager.stopAll();
+  // Clean up resources
+  if (heartbeatManager) {
+    heartbeatManager.cleanup();
   }
   
   if (activityStore) {
-    await activityStore.save();
+    activityStore.cleanup();
   }
+  
+  // Clean up our directly registered IPC handlers
+  ipcMain.removeHandler('get-tracking-status');
+  ipcMain.removeHandler('toggle-tracking');
+  ipcMain.removeHandler('is-using-mock-data');
+  
+  console.log('All resources cleaned up before quitting');
 }); 

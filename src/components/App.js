@@ -2,182 +2,170 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import DayOverview from './DayOverview';
 import Footer from './Footer';
-import ipc from '../ipc/ipc';
+import { ipcRenderer } from 'electron';
+import './App.css';
 
 const App = () => {
-  const [selectedDate, setSelectedDate] = useState(getTodayKey());
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  });
+  
   const [activityData, setActivityData] = useState(null);
-  const [isTracking, setIsTracking] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [availableDates, setAvailableDates] = useState([]);
+  const [isTracking, setIsTracking] = useState(false);
   const [isMockData, setIsMockData] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Get today's date in YYYY-MM-DD format
-  function getTodayKey() {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  }
-  
-  // Get yesterday's date
-  function getYesterdayKey() {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-  }
-  
-  // Get tomorrow's date
-  function getTomorrowKey() {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
-  }
-  
-  // Format date for display
-  function formatDateLabel(dateKey) {
-    const today = getTodayKey();
-    const yesterday = getYesterdayKey();
+  // Format duration in milliseconds to human-readable string
+  const formatDuration = (ms) => {
+    if (!ms) return '0m';
     
-    if (dateKey === today) {
-      return 'Today';
-    } else if (dateKey === yesterday) {
-      return 'Yesterday';
-    } else {
-      const date = new Date(dateKey + 'T00:00:00');
-      return date.toLocaleDateString(undefined, {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    }
-  }
-  
-  // Load activity data for the selected date
-  const loadActivityData = async () => {
-    setIsLoading(true);
-    try {
-      const data = await ipc.getActivityData(selectedDate);
-      setActivityData(data);
-    } catch (error) {
-      console.error('Failed to load activity data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Check tracking status
-  const checkTrackingStatus = async () => {
-    try {
-      const status = await ipc.getTrackingStatus();
-      setIsTracking(status);
-    } catch (error) {
-      console.error('Failed to get tracking status:', error);
-    }
-  };
-  
-  // Check if using mock data
-  const checkMockDataStatus = async () => {
-    try {
-      const usingMockData = await ipc.isUsingMockData();
-      setIsMockData(usingMockData);
-    } catch (error) {
-      console.error('Failed to check mock data status:', error);
-    }
-  };
-  
-  // Toggle tracking
-  const toggleTracking = async () => {
-    try {
-      const newStatus = await ipc.toggleTracking(!isTracking);
-      setIsTracking(newStatus);
-    } catch (error) {
-      console.error('Failed to toggle tracking:', error);
-    }
-  };
-  
-  // Navigate to the previous day
-  const goToPreviousDay = () => {
-    const date = new Date(selectedDate + 'T00:00:00');
-    date.setDate(date.getDate() - 1);
-    const newDateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    setSelectedDate(newDateKey);
-  };
-  
-  // Navigate to the next day
-  const goToNextDay = () => {
-    const date = new Date(selectedDate + 'T00:00:00');
-    date.setDate(date.getDate() + 1);
-    const newDateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    
-    // Don't allow navigating to future dates
-    if (newDateKey <= getTodayKey()) {
-      setSelectedDate(newDateKey);
-    }
-  };
-  
-  // Format duration in milliseconds to a readable format
-  const formatDuration = (milliseconds) => {
-    if (!milliseconds) return '0m';
-    
-    const seconds = Math.floor(milliseconds / 1000);
+    const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     
     if (hours > 0) {
-      return `${hours}h ${minutes % 60}m`;
-    } else {
-      return `${minutes}m`;
+      const remainingMinutes = minutes % 60;
+      return `${hours}h ${remainingMinutes}m`;
+    }
+    
+    return `${minutes}m`;
+  };
+
+  // Handle date changes
+  const handleDateChange = (newDate) => {
+    setSelectedDate(newDate);
+  };
+
+  // Toggle tracking
+  const toggleTracking = async () => {
+    const newStatus = await ipcRenderer.invoke('toggle-tracking', !isTracking);
+    setIsTracking(newStatus);
+  };
+
+  // Load activity data for the selected date
+  const loadActivityData = async () => {
+    setIsLoading(true);
+    
+    try {
+      const data = await ipcRenderer.invoke('get-day-data', selectedDate);
+      setActivityData(data);
+    } catch (error) {
+      console.error('Error loading activity data:', error);
+      setActivityData(null);
+    } finally {
+      setIsLoading(false);
     }
   };
-  
-  // Load data when component mounts and when selected date changes
+
+  // Monitor user activity for inactivity detection
   useEffect(() => {
-    loadActivityData();
+    const events = ['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart'];
     
-    // Set up auto-refresh every minute
-    const refreshInterval = setInterval(() => {
-      loadActivityData();
-    }, 60000);
+    const handleUserActivity = () => {
+      ipcRenderer.send('user-activity');
+    };
     
+    // Listen for start-activity-monitoring message from main process
+    ipcRenderer.on('start-activity-monitoring', () => {
+      events.forEach(event => {
+        window.addEventListener(event, handleUserActivity);
+      });
+    });
+    
+    // Listen for activity data updates
+    ipcRenderer.on('activity-data-updated', (event, dateKey) => {
+      if (dateKey === selectedDate) {
+        loadActivityData();
+      }
+    });
+    
+    // Cleanup listeners
     return () => {
-      clearInterval(refreshInterval);
+      events.forEach(event => {
+        window.removeEventListener(event, handleUserActivity);
+      });
+      ipcRenderer.removeAllListeners('start-activity-monitoring');
+      ipcRenderer.removeAllListeners('activity-data-updated');
     };
   }, [selectedDate]);
-  
-  // Check tracking status and mock data status when component mounts
+
+  // Initial setup
   useEffect(() => {
-    checkTrackingStatus();
-    checkMockDataStatus();
+    const init = async () => {
+      try {
+        // Check if using mock data
+        const mockDataStatus = await ipcRenderer.invoke('is-using-mock-data');
+        setIsMockData(mockDataStatus);
+        
+        // Get tracking status
+        const trackingStatus = await ipcRenderer.invoke('get-tracking-status');
+        setIsTracking(trackingStatus);
+        
+        // Get available dates
+        const dates = await ipcRenderer.invoke('get-available-dates');
+        setAvailableDates(dates);
+        
+        // Load initial data
+        await loadActivityData();
+      } catch (error) {
+        console.error('Error during initialization:', error);
+      }
+    };
+    
+    init();
   }, []);
-  
-  // Calculate summary statistics
-  const activeTime = activityData ? formatDuration(activityData.totalActiveDuration) : '0m';
-  const inactiveTime = activityData ? formatDuration(activityData.totalInactiveDuration) : '0m';
-  const totalTrackingTime = activityData ? formatDuration(activityData.activeTrackingDuration) : '0m';
-  
-  // Generate friendly date label
-  const dateLabel = formatDateLabel(selectedDate);
-  
+
+  // Reload data when selected date changes
+  useEffect(() => {
+    loadActivityData();
+  }, [selectedDate]);
+
+  // Compute summary information
+  const getSummary = () => {
+    if (!activityData || !activityData.aggregated || !activityData.aggregated.summary) {
+      return {
+        totalTime: '0h',
+        activeTime: '0h',
+        inactiveTime: '0h'
+      };
+    }
+    
+    const { summary } = activityData.aggregated;
+    
+    return {
+      totalTime: formatDuration(summary.activeTrackingDuration),
+      activeTime: formatDuration(summary.totalActiveDuration),
+      inactiveTime: formatDuration(summary.totalInactiveDuration)
+    };
+  };
+
+  const summary = getSummary();
+
   return (
     <div className="app">
       <Header 
-        date={dateLabel}
-        onPrevious={goToPreviousDay}
-        onNext={goToNextDay}
+        selectedDate={selectedDate}
+        availableDates={availableDates}
+        onDateChange={handleDateChange}
         isTracking={isTracking}
         onToggleTracking={toggleTracking}
         isMockData={isMockData}
       />
       
-      <DayOverview 
-        activityData={activityData}
-        isLoading={isLoading}
-        formatDuration={formatDuration}
-      />
+      <main className="main-content">
+        <DayOverview 
+          activityData={activityData}
+          isLoading={isLoading}
+          formatDuration={formatDuration}
+        />
+      </main>
       
       <Footer 
-        activeTime={activeTime}
-        inactiveTime={inactiveTime}
-        totalTime={totalTrackingTime}
+        activeTime={summary.activeTime}
+        inactiveTime={summary.inactiveTime}
+        totalTime={summary.totalTime}
         isMockData={isMockData}
       />
     </div>

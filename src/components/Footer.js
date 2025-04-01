@@ -1,8 +1,9 @@
 import React from 'react';
+import './Footer.css';
 
 const Footer = ({ activeTime, inactiveTime, totalTime, isMockData }) => {
   return (
-    <div className="footer">
+    <footer className="footer">
       <div className="summary-stat">
         <div className="summary-value">{totalTime}</div>
         <div className="summary-label">Total Time</div>
@@ -23,7 +24,7 @@ const Footer = ({ activeTime, inactiveTime, totalTime, isMockData }) => {
           Using sample data for development
         </div>
       )}
-    </div>
+    </footer>
   );
 };
 

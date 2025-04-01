@@ -1,113 +1,97 @@
-const { screen } = require('electron');
+const { ipcMain } = require('electron');
 
+/**
+ * Watcher module that detects user inactivity
+ * Returns the following states:
+ * - "active": User has been active since the last heartbeat
+ * - "may_be_inactive": User has not been active since the last heartbeat 
+ * - "inactive": User has not been active for the last five heartbeats
+ */
 class InactivityWatcher {
-  constructor(activityStore) {
-    this.activityStore = activityStore;
-    this.interval = null;
-    this.lastActivityTime = Date.now();
-    this.checkInterval = 20000; // 20 seconds
-    this.inactivityThreshold = 5 * 60 * 1000; // 5 minutes
-    this.inactivityStartTime = null;
-    this.isInactive = false;
+  constructor() {
+    this.lastUserActivityTime = Date.now();
+    this.inactivityCounter = 0;
+    this.status = 'active';
+    this.boundHandleUserActivity = this.handleUserActivity.bind(this);
   }
-  
-  // Start monitoring inactivity
-  start() {
-    if (this.interval) return;
+
+  /**
+   * Initialize the watcher
+   * @param {Electron.BrowserWindow} mainWindow - The main browser window
+   */
+  init(mainWindow) {
+    if (!mainWindow) {
+      console.error('Cannot initialize InactivityWatcher without a mainWindow');
+      return Promise.reject(new Error('mainWindow is required'));
+    }
+
+    // Register IPC handler for user activity events from the renderer
+    ipcMain.on('user-activity', this.boundHandleUserActivity);
     
-    // Reset activity time on start
-    this.lastActivityTime = Date.now();
-    
-    // Listen to user input events
-    this.setupListeners();
-    
-    // Set up interval to check for inactivity
-    this.interval = setInterval(() => {
-      this.checkInactivity();
-    }, this.checkInterval);
+    // Send an instruction to the renderer to start monitoring user activity
+    mainWindow.webContents.send('start-activity-monitoring');
+
+    this.lastUserActivityTime = Date.now();
+    this.inactivityCounter = 0;
+    this.status = 'active';
+
+    return Promise.resolve();
   }
-  
-  // Stop monitoring inactivity
-  stop() {
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = null;
+
+  /**
+   * Handle user activity events from the renderer
+   */
+  handleUserActivity() {
+    this.lastUserActivityTime = Date.now();
+    this.inactivityCounter = 0;
+    this.status = 'active';
+  }
+
+  /**
+   * Check if the user is inactive since the last heartbeat
+   * @returns {boolean}
+   */
+  isInactiveSinceLastHeartbeat() {
+    // If the last activity was more than 30 seconds ago (standard heartbeat interval)
+    return (Date.now() - this.lastUserActivityTime) > 30000;
+  }
+
+  /**
+   * Get data for the heartbeat
+   * @returns {Promise<{userActivity: string}>}
+   */
+  async getHeartbeatData() {
+    if (this.isInactiveSinceLastHeartbeat()) {
+      this.inactivityCounter++;
       
-      // Clean up listeners
-      this.removeListeners();
-      
-      // Record any ongoing inactivity period
-      if (this.isInactive) {
-        this.recordInactivity();
+      // After 5 heartbeats (approximately 2.5 minutes) of inactivity
+      if (this.inactivityCounter >= 5) {
+        this.status = 'inactive';
+      } else {
+        this.status = 'may_be_inactive';
       }
+    } else {
+      this.inactivityCounter = 0;
+      this.status = 'active';
     }
+
+    return { userActivity: this.status };
   }
-  
-  // Set up user input event listeners
-  setupListeners() {
-    // Use Electron's screen module to detect cursor position changes
-    if (screen) {
-      this.cursorPositionListener = setInterval(() => {
-        const point = screen.getCursorScreenPoint();
-        
-        if (this.lastCursorPosition && 
-            (this.lastCursorPosition.x !== point.x || 
-             this.lastCursorPosition.y !== point.y)) {
-          this.updateActivity();
-        }
-        
-        this.lastCursorPosition = point;
-      }, 1000);
-    }
+
+  /**
+   * Reset inactivity counter and status
+   */
+  resetInactivity() {
+    this.lastUserActivityTime = Date.now();
+    this.inactivityCounter = 0;
+    this.status = 'active';
   }
-  
-  // Remove user input event listeners
-  removeListeners() {
-    if (this.cursorPositionListener) {
-      clearInterval(this.cursorPositionListener);
-      this.cursorPositionListener = null;
-    }
-  }
-  
-  // Update last activity time
-  updateActivity() {
-    const now = Date.now();
-    this.lastActivityTime = now;
-    
-    // If we were inactive, record the inactivity period
-    if (this.isInactive) {
-      this.recordInactivity();
-      this.isInactive = false;
-      this.inactivityStartTime = null;
-    }
-  }
-  
-  // Check for inactivity
-  checkInactivity() {
-    const now = Date.now();
-    const idleTime = now - this.lastActivityTime;
-    
-    // If idle time exceeds threshold and not already marked as inactive
-    if (idleTime >= this.inactivityThreshold && !this.isInactive) {
-      this.isInactive = true;
-      this.inactivityStartTime = this.lastActivityTime;
-    }
-  }
-  
-  // Record an inactivity period
-  recordInactivity() {
-    if (!this.inactivityStartTime) return;
-    
-    const now = Date.now();
-    const duration = now - this.inactivityStartTime;
-    
-    // Only record if duration is significant
-    if (duration >= this.inactivityThreshold) {
-      this.activityStore.storeInactivityEvent({
-        timestamp: this.inactivityStartTime,
-        duration: duration
-      });
-    }
+
+  /**
+   * Clean up resources used by the watcher
+   */
+  cleanup() {
+    ipcMain.removeListener('user-activity', this.boundHandleUserActivity);
   }
 }
 

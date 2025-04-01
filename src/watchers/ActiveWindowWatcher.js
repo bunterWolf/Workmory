@@ -1,62 +1,59 @@
 const activeWin = require('active-win');
 
+/**
+ * Watcher module that tracks the currently active window
+ */
 class ActiveWindowWatcher {
-  constructor(activityStore) {
-    this.activityStore = activityStore;
-    this.interval = null;
-    this.lastSampledWindow = null;
-    this.sampleInterval = 5000; // 5 seconds
+  constructor() {
+    this.lastActiveWindow = null;
   }
-  
-  // Start monitoring active windows
-  start() {
-    if (this.interval) return;
-    
-    this.interval = setInterval(async () => {
-      try {
-        await this.sampleActiveWindow();
-      } catch (error) {
-        console.error('Error sampling active window:', error);
-      }
-    }, this.sampleInterval);
+
+  /**
+   * Initialize the watcher
+   */
+  init() {
+    // Nothing to initialize for this watcher
+    return Promise.resolve();
   }
-  
-  // Stop monitoring active windows
-  stop() {
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = null;
-    }
-  }
-  
-  // Sample the current active window and process it
-  async sampleActiveWindow() {
+
+  /**
+   * Get the current active window information
+   * @returns {Promise<{app: string, title: string}>} Active window information
+   */
+  async getActiveWindow() {
     try {
-      const activeWindow = await activeWin();
+      const windowInfo = await activeWin();
       
-      if (!activeWindow) return;
+      if (!windowInfo) {
+        return null;
+      }
       
-      const timestamp = Date.now();
-      const appName = activeWindow.owner?.name || activeWindow.title || 'Unknown';
-      const title = activeWindow.title || 'Unknown';
-      
-      // Store the window data
-      this.activityStore.storeActiveWindowEvent({
-        timestamp,
-        appName,
-        title,
-        duration: this.sampleInterval
-      });
-      
-      // Update last sampled window
-      this.lastSampledWindow = {
-        timestamp,
-        appName,
-        title
+      this.lastActiveWindow = {
+        app: windowInfo.owner.name,
+        title: windowInfo.title
       };
+      
+      return this.lastActiveWindow;
     } catch (error) {
-      console.error('Failed to get active window:', error);
+      console.error('Error getting active window:', error);
+      return this.lastActiveWindow || null;
     }
+  }
+
+  /**
+   * Get data for the heartbeat
+   * @returns {Promise<{appWindow: {app: string, title: string} | null}>}
+   */
+  async getHeartbeatData() {
+    const activeWindow = await this.getActiveWindow();
+    return { appWindow: activeWindow };
+  }
+
+  /**
+   * Clean up resources used by the watcher
+   */
+  cleanup() {
+    this.lastActiveWindow = null;
   }
 }
 
