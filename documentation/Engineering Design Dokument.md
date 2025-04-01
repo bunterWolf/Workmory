@@ -1,5 +1,11 @@
 # Engineering Design Document: Focus - Productivity Tracker
 
+## Glossar
+
+- **Heartbeat**: Ein zeitbasierter Datenpunkt, der alle 30 Sekunden erfasst wird und den aktuellen Systemzustand dokumentiert.
+- **Watcher**: Modulare Komponenten, die spezifische Systemzustände überwachen (z.B. aktives Fenster, Benutzeraktivität).
+- **Aggregation**: Prozess der Zusammenfassung von Heartbeat-Daten in 15-Minuten-Intervalle für die Timeline-Darstellung.
+
 ## 1. System Architecture
 
 ### 1.1 Overview
@@ -21,7 +27,7 @@ Focus is an Electron-based desktop application designed to track and analyze use
 │                  Data Management                        │
 ├─────────┬───────────────────┬────────────┬─────────────┤
 │         │                   │            │             │
-│Activity │    WatcherManager │  Watchers  │ Persistence │
+│Activity │ Heartbeat-Manager │  Watchers  │ Persistence │
 │ Store   │                   │ (Modules)  │             │
 │         │                   │            │             │
 └─────────┴───────────────────┴────────────┴─────────────┘
@@ -33,8 +39,8 @@ Focus is an Electron-based desktop application designed to track and analyze use
 2. **Main Process**: Central coordination hub and backend.
 3. **Renderer Process**: User interface and visualization.
 4. **Activity Store**: Core for storing, processing, and aggregating activity data.
-5. **Watcher Manager**: Controls and abstracts all watcher logic.
-6. **Watcher Modules**: Implement different tracking logic (active window, inactivity, meetings).
+5. **Heartbeat-Manager**: Manages heartbeats and request information from watcher.
+6. **Watcher Modules**: Provide Information about user actions (active window, inactivity, meetings).
 
 ## 2. Component Design
 
@@ -47,22 +53,18 @@ Focus is an Electron-based desktop application designed to track and analyze use
 - Registers IPC handlers
 - Coordinates ActivityStore and WatcherManager instances
 - Handles graceful shutdown and cleanup
-### 2.2 ActivityStore (src/ActivityStore.ts)
+
+### 2.2 ActivityStore
 
 #### 2.2.1 Responsibilities
 
-- Manages and persists activity data
+- Manages and persists activity data/heartbeats
 - Cleans up outdated records
 - Supports customizable data storage location for synchronization across devices
-- Manages and persists Watcher Events
 - Creates and updates the Day Summary
-	- Combines the WatcherEvents: 
-	  active-window->primaryWindow, inactivity and teams-meetings
-	- Determines the more important Event per point in time to show only one:
-	  Teams > inactivity > active window.
-	- Ensures that there are no overlaps, so that less important events are cut off from more important ones in terms of start, duration and end time.
-	- Combines events that follow each other identically in type and content into one event and adjusts the startTime, endTime and duration.
-	- 
+- Aggregates heartbeat data into aggregated timeline events
+- Ensures proper event ordering and overlap handling based on priority
+
 #### 2.2.2 Data Model
 
 ```
@@ -72,133 +74,160 @@ Focus is an Electron-based desktop application designed to track and analyze use
   lastCleanup: timestamp,
   days: {
     ["YYYY-MM-DD"]: {
-	  activeTrackingDuration: number,
-	  totalActiveDuration: number,
-	  totalInactiveDuration: number
-      daySummary: [
-		  {
-			start: startTime,
-			end: endTime,
-			duration: number,
-			type: "primaryWindow",
-			title: "Figma",
-			subTitle: "UI Redesign v2", 
-		  },
-		  {
-			start: startTime,
-			end: endTime,
-			duration: number,
-			type: "teams_meeting",
-			title: "Daily Standup",
-		  },
-		  {
-			start: "09:00",
-			end: "09:15",
-			duration: number,
-			type: "inactive"
-		  },
-		  {
-			start: "09:15",
-			end: "09:45",
-			duration: number,
-			type: "primaryWindow",
-			app: "VS Code",
-			title: "focus-tracker.js"
-		  },
-		  ...
-	  ],
-	  allWatcherEvents: {
-	    "active-window": {
-		    primaryWindows: [ 
-			  {
-				start: startTime,
-				end: endTime,
-				duration: number,
-				type: "primaryWindow",
-				title: "Figma",
-				subTitle: "UI Redesign v2", 
-			  },
-			  ...
-			],
-		    allActiveWindows: [ 
-			  { 
-				  timestamp, 
-				  appName, 
-				  title, 
-				  duration 
-			  } 
-			],
+      heartbeats: [
+            {
+              timestamp: number,
+			  data: {	
+				teamsMeeting: false | {
+					title: string,
+					status: string
+				}
+				userActivity: "active" | "may_be_inactive" | "inactive",
+				appWindow: {
+					app: string,
+					title: string
+				}
+			  }
+            }
+          ]
+    	,
+      aggregated: {
+		summary: {
+			activeTrackingDuration: number,
+			totalActiveDuration: number,
+			totalInactiveDuration: number,
+			totalMeetingDuration: number
 		},
-	    "inactivity": [ { timestamp, duration } ],
-	    "teams-meetings": [ { title, startTime, endTime, duration } ]
+		timelineOverview: [ 
+			{
+			timestamp: number,
+			duration: number,
+			type: "appWindow" | "teamsMeeting" | "inactive",
+			data: {
+					...
+				}
+			}
+		]
+      }
     }
   }
 }
-
 ```
 
-### 2.3 WatcherManager (src/WatcherManager.ts)
+
+#### 2.2.3 Aggregation for Timeline Overview
+
+The Aggregation is critical and can easily create unwanted outcomes. This section of the App needs detailed documentation and should be test-driven programmed.
+
+Activities
+- Heartbeats are aggregated into activities in 15-minute intervals
+- An activity always starts or ends at fixed times: XX:00 - XX:15 - XX:30 - XX:45
+- An activity is calculated when its end time is reached.
+
+Activity Aggregation
+- Contains all heartbeats within the activity's time window
+- Heartbeats must exist for at least half of the activity duration for an activity to be created. If not - there is not activity for this timeframe.
+- Reduces each heartbeat to a data type:
+  - Meeting: If there is an active TeamsMeeting
+  - Inactive: If userActivity is inactive and there is no active TeamsMeeting
+  - appWindow: If the user is not inactive and there is no active meeting
+- Sets the activity type to the type that occurs most frequently in the heartbeats: "appWindow" | "teamsMeeting" | "inactive"
+
+Merging Activities
+After an activity is updated or created in the timeline data, it's checked whether consecutive activities with the same content can be merged.
+- If activities are identical in type and data and follow each other chronologically, they are combined into a single activity
+- This applies to all consecutive activities - not just 2.
+
+Summary calculation
+After an activity change, the summary times are updated. These are not based on the heartbeats, but are determined from the activities, their types, and the corresponding duration.
+
+### 2.3 Heartbeat-Manager
 
 #### 2.3.1 Responsibilities
 
-- Manages the lifecycle of all watchers
-- Forwards watcher events to ActivityStore
+- Creates heartbeats in a fixed interval at :15 and :45 seconds of every minute (therefore every 30 seconds)
+- Collects heartbeat data from watcher modules - See ActivityStore Data Structure
+- Forwards heartbeats to the ActivityStore
 - Supports pause/resume operations
 
 ### 2.4 Watcher Modules
 
 #### 2.4.1 Active-Window-Watcher
-
-- Monitors active window changes
+- Returns the currently active window
 - Uses `active-win` for cross-platform support
-- Sampling every 5000ms
-- Stores all activeWindows at allActiveWindows
-- Calculates the most frequently used window for a time period in primaryWindows
-	- Time periods always end on the quarter hour
-	- If the same window is recognised on several consecutive time periods, these time periods are combined into one and the startTime, endTime and duration are adjusted accordingly. 
 
 #### 2.4.2 Inactivity-Watcher
+- Detects if user is performan an mouse or keyboard action between requested heartbeats
+- Return "may-be-inactive" if the user has not performand an command since the last heartbeat request
+- Return "inactive" if the user has not performand an command since the last FIVE heartbeat request
 
-- Detects user inactivity
-- Checks every 20 seconds
-- Inactivity applies if the user is inactive for more than 5 minutes. 
 
 #### 2.4.3 Teams-Meetings-Watcher
-
-- Detects Teams meeting participation
-- Extracts meeting title, start and end time
-- A Teams meeting must be active for more than 5 minutes to be recorded.
+- Return if the user is currently in a Teams meeting or call
+- Returns meeting metadata
 
 ### 2.5 Renderer Process (React)
 
 #### 2.5.1 Responsibilities
-- Displays activity data
+- Displays aggregatedActivity data
 - Allows user interaction (pause/resume, date selection)
-- Is very minimal
-- Auto Refresh data form ActivityStore every minute
-    
+- Is very minimal    
 
 #### 2.5.2 UI Structure
 - Uses minimal **React**
 - No third-party UI libraries or routing (no React Router)
 - Styling is done using **simple CSS files**, editable directly by designers
-- Components are kept flat and small, all in a single `components/` folder
+- Components are kept flat and small
 
 ##### 2.5.2.1 Header
 - **Date Picker** with friendly labels ("Today", "Yesterday") - placed in Header
 	- Arrow Navigation Buttons
 - Button to pause or start tracking
 
-#### 2.5.2.2 Content: dayOverview 
-- Vertical Timeline (like a Day-Calendar View) showing the data of the 'daySummary'
-- By default, the timeline consists of a time window from 8:00 to 17:00 and expands when events are displayed outside this time. 
-- The events are positioned along the vertical time axis according to their start and end time
-- Each event displays its type, title, subtitle (if applicable) and duration. 
-- The 3 event types are separated by colour
-- The view should not load during updates, changes are adjusted directly.
+#### 2.5.2.2 Content: DayOverview
+
+##### A. Grundlegende Anforderungen
+1. **Zeitliche Darstellung**
+   - Vertikale Timeline im Kalender-Stil
+   - Standard-Zeitfenster: 8:00 bis 17:00 Uhr
+   - Dynamische Erweiterung bei Events außerhalb des Standard-Zeitfensters
+   - TimelineOverview event block Positionierung entsprechend der Zeitskala für Start- und Endzeit
+
+##### B. Event-Darstellung
+
+1. **Event-Block Informationen**
+   - Farbkodierung nach Event-Typ
+   - Proportionale Höhendarstellung entsprechend der Eventdauer
+   - Einheitliche Blockbreite unabhängig vom Inhalt
+   - Dauer in benutzerfreundlichem Format
+   - Meetings: Vollständiger Meeting-Titel und Status
+   - Inaktive Zeiten: Standardisierte Beschreibung
+   - Aktive Fenster: Anwendungsname und Fenstertitel
+
+##### C. Interaktives Verhalten
+
+1. **Echtzeit-Updates**
+   - Nahtlose Integration neuer Events
+   - Keine Neuladung bei Datenaktualisierung
+
+2. **Scroll-Verhalten**
+   - Vertikales Scrollen durch die Zeitskala für einen Tag
+   - Automatischer Scroll zur aktuellen Zeit bei Initialisierung
+   - Beibehaltung der Scroll-Position bei Updates
+
+##### D. Responsive Design
+
+1. **Bildschirmanpassung**
+   - Flexible Breitenanpassung
+   - Beibehaltung der 15-Minuten-Proportionen   
+
+2. **Wiederherstellung**
+   - Automatische Wiederherstellung nach Verbindungsabbrüchen
+   - Erhaltung des Anzeigestatus bei Fehlern
+   - Nahtlose Fortsetzung der Aktualisierungen
 
 #### 2.5.2.3 Fußzeile
-- Displays the total active time and the total inactive time.
+- Displays the total active time and the total inactive time calculated in the aggregated summary data.
 
 #### 2.5.4 Development & Debugging
 
@@ -223,7 +252,9 @@ Focus is an Electron-based desktop application designed to track and analyze use
 
 ### 3.1 Activity Collection
 
-OS Events -> Watcher -> WatcherManager -> ActivityStore
+```
+OS Events -> Watcher -> Heartbeat -> ActivityStore-heartbeats -> ActivityStore-aggregeted-timelineOverview
+```
 
 ### 3.2 Persistence
 
@@ -250,8 +281,6 @@ OS Events -> Watcher -> WatcherManager -> ActivityStore
 - Autosave every 5 minutes
 - Cleanup after 30 days
 
-### 4.2 Aggregation & Rounding
-- Full miniute rounding for inactivity and meetings
 ## 5. Dependencies
 
 - **Electron** for app shell
