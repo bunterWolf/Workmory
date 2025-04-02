@@ -162,11 +162,11 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
               className={`event ${event.type}`}
               style={getEventStyle(event)}
             >
-              <div className="event-title">{event.title}</div>
+              <div className="event-title">
+                {event.title} {event.subTitle && (<span className="event-subtitle">{event.subTitle}</span>)}
+              </div>
               
-              {event.subTitle && (
-                <div className="event-subtitle">{event.subTitle}</div>
-              )}
+              
               
               <div className="event-time">
                 {event.formattedStartTime} - {event.formattedEndTime}

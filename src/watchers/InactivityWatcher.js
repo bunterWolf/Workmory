@@ -1,97 +1,56 @@
-const { ipcMain } = require('electron');
+const { powerMonitor } = require('electron');
 
 /**
- * Watcher module that detects user inactivity
- * Returns the following states:
- * - "active": User has been active since the last heartbeat
- * - "may_be_inactive": User has not been active since the last heartbeat 
- * - "inactive": User has not been active for the last five heartbeats
+ * Watcher-Modul zur Erkennung von Benutzerinaktivität
+ * Verwendet die native Electron powerMonitor API für systemweite Inaktivitätserkennung
+ * 
+ * Mögliche Status:
+ * - "active": Benutzer war seit dem letzten Heartbeat aktiv
+ * - "may_be_inactive": Benutzer war seit dem letzten Heartbeat inaktiv 
+ * - "inactive": Benutzer war für die letzten fünf Heartbeats inaktiv
  */
 class InactivityWatcher {
   constructor() {
-    this.lastUserActivityTime = Date.now();
-    this.inactivityCounter = 0;
     this.status = 'active';
-    this.boundHandleUserActivity = this.handleUserActivity.bind(this);
   }
 
   /**
-   * Initialize the watcher
-   * @param {Electron.BrowserWindow} mainWindow - The main browser window
+   * Initialisiert den Watcher
    */
-  init(mainWindow) {
-    if (!mainWindow) {
-      console.error('Cannot initialize InactivityWatcher without a mainWindow');
-      return Promise.reject(new Error('mainWindow is required'));
-    }
-
-    // Register IPC handler for user activity events from the renderer
-    ipcMain.on('user-activity', this.boundHandleUserActivity);
-    
-    // Send an instruction to the renderer to start monitoring user activity
-    mainWindow.webContents.send('start-activity-monitoring');
-
-    this.lastUserActivityTime = Date.now();
-    this.inactivityCounter = 0;
-    this.status = 'active';
-
+  async init() {
     return Promise.resolve();
   }
 
   /**
-   * Handle user activity events from the renderer
-   */
-  handleUserActivity() {
-    this.lastUserActivityTime = Date.now();
-    this.inactivityCounter = 0;
-    this.status = 'active';
-  }
-
-  /**
-   * Check if the user is inactive since the last heartbeat
-   * @returns {boolean}
-   */
-  isInactiveSinceLastHeartbeat() {
-    // If the last activity was more than 30 seconds ago (standard heartbeat interval)
-    return (Date.now() - this.lastUserActivityTime) > 30000;
-  }
-
-  /**
-   * Get data for the heartbeat
+   * Liefert die aktuellen Inaktivitätsdaten für den Heartbeat
    * @returns {Promise<{userActivity: string}>}
    */
   async getHeartbeatData() {
-    if (this.isInactiveSinceLastHeartbeat()) {
-      this.inactivityCounter++;
+    try {
+      // Hole die Systemweite Inaktivitätszeit in Sekunden
+      const idleSeconds = powerMonitor.getSystemIdleTime();
       
-      // After 5 heartbeats (approximately 2.5 minutes) of inactivity
-      if (this.inactivityCounter >= 5) {
-        this.status = 'inactive';
-      } else {
+      // Bestimme den Status basierend auf der Inaktivitätszeit
+      if (idleSeconds < 30) {
+        this.status = 'active';
+      } else if (idleSeconds < 150) { // 2.5 Minuten (5 Heartbeats)
         this.status = 'may_be_inactive';
+      } else {
+        this.status = 'inactive';
       }
-    } else {
-      this.inactivityCounter = 0;
-      this.status = 'active';
+
+      return { userActivity: this.status };
+    } catch (error) {
+      console.error('Fehler beim Abrufen des Inaktivitätsstatus:', error);
+      return { userActivity: this.status }; // Behalte letzten bekannten Status bei
     }
-
-    return { userActivity: this.status };
   }
 
   /**
-   * Reset inactivity counter and status
-   */
-  resetInactivity() {
-    this.lastUserActivityTime = Date.now();
-    this.inactivityCounter = 0;
-    this.status = 'active';
-  }
-
-  /**
-   * Clean up resources used by the watcher
+   * Räumt Ressourcen auf
    */
   cleanup() {
-    ipcMain.removeListener('user-activity', this.boundHandleUserActivity);
+    // Keine spezielle Bereinigung notwendig
   }
 }
 

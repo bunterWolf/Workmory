@@ -61,19 +61,6 @@ const App = () => {
 
   // Monitor user activity for inactivity detection
   useEffect(() => {
-    const events = ['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart'];
-    
-    const handleUserActivity = () => {
-      ipcRenderer.send('user-activity');
-    };
-    
-    // Listen for start-activity-monitoring message from main process
-    ipcRenderer.on('start-activity-monitoring', () => {
-      events.forEach(event => {
-        window.addEventListener(event, handleUserActivity);
-      });
-    });
-    
     // Listen for activity data updates
     ipcRenderer.on('activity-data-updated', (event, dateKey) => {
       if (dateKey === selectedDate) {
@@ -83,10 +70,6 @@ const App = () => {
     
     // Cleanup listeners
     return () => {
-      events.forEach(event => {
-        window.removeEventListener(event, handleUserActivity);
-      });
-      ipcRenderer.removeAllListeners('start-activity-monitoring');
       ipcRenderer.removeAllListeners('activity-data-updated');
     };
   }, [selectedDate]);
