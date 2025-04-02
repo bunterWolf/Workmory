@@ -1,37 +1,73 @@
 /**
  * Handles aggregation of heartbeat data into timeline events
  * Following the rules defined in the spec:
- * - Activities are aggregated in 15-minute intervals
- * - Activities start/end at fixed times: XX:00, XX:15, XX:30, XX:45
+ * - Activities are aggregated in configurable time intervals (5, 10, or 15 minutes)
+ * - Activities start/end at fixed times (e.g., XX:00, XX:15, XX:30, XX:45 for 15-min)
  * - Activities require heartbeats for at least half of the interval
  * - Activities are merged when consecutive with same type/content
  */
 class TimelineGenerator {
+  constructor() {
+    // Default interval in minutes - can be 5, 10, or 15
+    this.aggregationInterval = 15;
+    
+    // Interval duration in milliseconds
+    this.intervalDuration = this.aggregationInterval * 60 * 1000;
+  }
+  
+  /**
+   * Set the aggregation interval
+   * @param {number} minutes - The interval size in minutes (5, 10, or 15)
+   */
+  setAggregationInterval(minutes) {
+    if (![5, 10, 15].includes(minutes)) {
+      throw new Error('Invalid interval. Must be 5, 10, or 15 minutes.');
+    }
+    
+    this.aggregationInterval = minutes;
+    this.intervalDuration = minutes * 60 * 1000;
+  }
+
   /**
    * Generate timeline events from heartbeats for a single day
    * @param {Array} heartbeats - Array of heartbeat objects for a day
+   * @param {number} [interval] - Optional interval override in minutes (5, 10, or 15)
    * @returns {Array} Timeline events
    */
-  generateTimelineEvents(heartbeats) {
+  generateTimelineEvents(heartbeats, interval) {
     if (!heartbeats || !Array.isArray(heartbeats) || heartbeats.length === 0) {
       return [];
+    }
+    
+    // Apply temporary interval override if provided
+    const originalInterval = this.aggregationInterval;
+    
+    if (interval && [5, 10, 15].includes(interval)) {
+      this.setAggregationInterval(interval);
     }
 
     // Sort heartbeats by timestamp (ascending)
     heartbeats = [...heartbeats].sort((a, b) => a.timestamp - b.timestamp);
 
-    // Group heartbeats into 15-minute intervals
+    // Group heartbeats into intervals
     const intervalGroups = this.groupHeartbeatsByInterval(heartbeats);
     
     // Generate activities from interval groups
     const activities = this.generateActivities(intervalGroups);
     
     // Merge consecutive activities with same content
-    return this.mergeConsecutiveActivities(activities);
+    const result = this.mergeConsecutiveActivities(activities);
+    
+    // Restore original interval if overridden
+    if (interval && interval !== originalInterval) {
+      this.setAggregationInterval(originalInterval);
+    }
+    
+    return result;
   }
 
   /**
-   * Group heartbeats into 15-minute intervals
+   * Group heartbeats into intervals based on current aggregation setting
    * @param {Array} heartbeats - Sorted array of heartbeat objects
    * @returns {Object} Map of interval start timestamps to heartbeats
    */
@@ -39,7 +75,7 @@ class TimelineGenerator {
     const intervalGroups = {};
 
     heartbeats.forEach(heartbeat => {
-      // Round down to the nearest 15-minute interval
+      // Round down to the nearest interval based on current setting
       const intervalStart = this.roundToNearestInterval(heartbeat.timestamp);
       
       if (!intervalGroups[intervalStart]) {
@@ -53,16 +89,16 @@ class TimelineGenerator {
   }
 
   /**
-   * Round timestamp to the nearest 15-minute interval start time
+   * Round timestamp to the nearest interval start time based on current setting
    * @param {number} timestamp - Timestamp in milliseconds
    * @returns {number} Rounded timestamp in milliseconds
    */
   roundToNearestInterval(timestamp) {
     const date = new Date(timestamp);
     const minutes = date.getMinutes();
-    const remainder = minutes % 15;
+    const remainder = minutes % this.aggregationInterval;
     
-    // Round down to nearest 15 minutes
+    // Round down to nearest interval
     date.setMinutes(minutes - remainder, 0, 0);
     
     return date.getTime();
@@ -75,15 +111,14 @@ class TimelineGenerator {
    */
   generateActivities(intervalGroups) {
     const activities = [];
-    const INTERVAL_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
     const MIN_HEARTBEATS_RATIO = 0.5; // At least half of expected heartbeats must be present
 
     Object.entries(intervalGroups).forEach(([intervalStart, heartbeats]) => {
       const intervalStartTime = parseInt(intervalStart, 10);
       
       // Calculate expected number of heartbeats in this interval
-      // With 30s heartbeats, expect 30 heartbeats in 15 min
-      const expectedHeartbeats = INTERVAL_DURATION / 30000;
+      // With 30s heartbeats, expect (interval in mins * 2) heartbeats
+      const expectedHeartbeats = this.aggregationInterval * 2;
       
       // Only create activity if we have enough heartbeats
       if (heartbeats.length >= expectedHeartbeats * MIN_HEARTBEATS_RATIO) {
@@ -93,7 +128,7 @@ class TimelineGenerator {
         // Create the activity
         activities.push({
           timestamp: intervalStartTime,
-          duration: INTERVAL_DURATION,
+          duration: this.intervalDuration,
           type: activityType,
           data: this.aggregateActivityData(heartbeats, activityType)
         });

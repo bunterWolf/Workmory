@@ -120,6 +120,22 @@ function registerIpcHandlers() {
   ipcMain.handle('is-using-mock-data', () => {
     return useMockData;
   });
+  
+  // Get current aggregation interval
+  ipcMain.handle('get-aggregation-interval', () => {
+    return activityStore.getAggregationInterval();
+  });
+  
+  // Set new aggregation interval
+  ipcMain.handle('set-aggregation-interval', async (event, interval) => {
+    try {
+      await activityStore.setAggregationInterval(interval);
+      return true;
+    } catch (error) {
+      console.error('Error setting aggregation interval:', error);
+      return false;
+    }
+  });
 }
 
 // App is ready to start
@@ -153,6 +169,8 @@ app.on('before-quit', async () => {
   ipcMain.removeHandler('get-tracking-status');
   ipcMain.removeHandler('toggle-tracking');
   ipcMain.removeHandler('is-using-mock-data');
+  ipcMain.removeHandler('get-aggregation-interval');
+  ipcMain.removeHandler('set-aggregation-interval');
   
   console.log('All resources cleaned up before quitting');
 }); 

@@ -16,6 +16,7 @@ const App = () => {
   const [isTracking, setIsTracking] = useState(false);
   const [isMockData, setIsMockData] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [aggregationInterval, setAggregationInterval] = useState(15);
 
   // Format duration in milliseconds to human-readable string
   const formatDuration = (ms) => {
@@ -42,6 +43,22 @@ const App = () => {
   const toggleTracking = async () => {
     const newStatus = await ipcRenderer.invoke('toggle-tracking', !isTracking);
     setIsTracking(newStatus);
+  };
+
+  // Handle aggregation interval changes
+  const handleIntervalChange = async (newInterval) => {
+    setIsLoading(true);
+    
+    try {
+      await ipcRenderer.invoke('set-aggregation-interval', newInterval);
+      setAggregationInterval(newInterval);
+      // Reload data to reflect the new aggregation interval
+      await loadActivityData();
+    } catch (error) {
+      console.error('Error changing aggregation interval:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Load activity data for the selected date
@@ -90,6 +107,12 @@ const App = () => {
         const dates = await ipcRenderer.invoke('get-available-dates');
         setAvailableDates(dates);
         
+        // Get current aggregation interval
+        const interval = await ipcRenderer.invoke('get-aggregation-interval');
+        if (interval) {
+          setAggregationInterval(interval);
+        }
+        
         // Load initial data
         await loadActivityData();
       } catch (error) {
@@ -135,6 +158,8 @@ const App = () => {
         isTracking={isTracking}
         onToggleTracking={toggleTracking}
         isMockData={isMockData}
+        aggregationInterval={aggregationInterval}
+        onIntervalChange={handleIntervalChange}
       />
       
       <main className="main-content">

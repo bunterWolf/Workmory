@@ -32,6 +32,7 @@ class ActivityStore {
       version: 1,
       startTime: Date.now(),
       lastCleanup: Date.now(),
+      aggregationInterval: 15, // Default to 15 minutes
       days: {}
     };
     
@@ -42,6 +43,10 @@ class ActivityStore {
     // Use mock data if specified
     if (this.options.useMockData) {
       this.data = generateMockData();
+      // Ensure mock data has the aggregationInterval property
+      if (!this.data.aggregationInterval) {
+        this.data.aggregationInterval = 15;
+      }
     } else {
       // Load data from disk if available
       this.loadDataFromDisk();
@@ -70,6 +75,12 @@ class ActivityStore {
       if (fs.existsSync(this.dataFilePath)) {
         const fileData = fs.readFileSync(this.dataFilePath, 'utf8');
         this.data = JSON.parse(fileData);
+        
+        // Ensure aggregationInterval exists (for backward compatibility)
+        if (!this.data.aggregationInterval) {
+          this.data.aggregationInterval = 15;
+        }
+        
         console.log(`Activity data loaded from ${this.dataFilePath}`);
       } else {
         console.log('No existing activity data found, starting fresh');
@@ -96,6 +107,61 @@ class ActivityStore {
     } catch (error) {
       console.error('Error saving activity data:', error);
     }
+  }
+
+  /**
+   * Get the current aggregation interval
+   * @returns {number} The current aggregation interval in minutes (5, 10, or 15)
+   */
+  getAggregationInterval() {
+    return this.data.aggregationInterval;
+  }
+
+  /**
+   * Set a new aggregation interval and update all aggregated data
+   * @param {number} interval - The new interval in minutes (5, 10, or 15)
+   * @returns {Promise<void>}
+   */
+  async setAggregationInterval(interval) {
+    // Validate interval
+    if (![5, 10, 15].includes(interval)) {
+      throw new Error('Invalid interval. Must be 5, 10, or 15 minutes.');
+    }
+    
+    // Skip if no change
+    if (interval === this.data.aggregationInterval) {
+      return;
+    }
+    
+    // Update interval
+    this.data.aggregationInterval = interval;
+    
+    // Update the timeline generator with the new interval
+    this.timelineGenerator.setAggregationInterval(interval);
+    
+    // Re-aggregate all days
+    this.reaggregateDays();
+    
+    // Save changes
+    this.saveToDisk();
+    
+    console.log(`Aggregation interval changed to ${interval} minutes`);
+  }
+
+  /**
+   * Reaggregate all days with the current interval setting
+   */
+  reaggregateDays() {
+    // Skip if using mock data
+    if (this.options.useMockData) {
+      return;
+    }
+    
+    // Re-process each day
+    Object.keys(this.data.days).forEach(dateKey => {
+      this.updateAggregatedData(dateKey);
+      this.notifyDataUpdate(dateKey);
+    });
   }
 
   /**
@@ -223,8 +289,11 @@ class ActivityStore {
       return;
     }
     
-    // Generate timeline events
-    const timelineEvents = this.timelineGenerator.generateTimelineEvents(dayData.heartbeats);
+    // Generate timeline events using the current aggregation interval
+    const timelineEvents = this.timelineGenerator.generateTimelineEvents(
+      dayData.heartbeats,
+      this.data.aggregationInterval
+    );
     
     // Calculate summary
     const summary = this.timelineGenerator.calculateSummary(timelineEvents);

@@ -45,6 +45,44 @@
 .controls {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.interval-selector-container {
+  position: relative;
+}
+
+.interval-selector {
+  background-color: white;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 7px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 30px;
+}
+
+.interval-selector:hover {
+  border-color: var(--color-primary);
+}
+
+.interval-selector:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.interval-selector-container::after {
+  content: '▼';
+  font-size: 8px;
+  color: var(--color-text);
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .tracking-button {

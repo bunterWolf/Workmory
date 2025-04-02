@@ -7,7 +7,9 @@ const Header = ({
   onDateChange, 
   isTracking, 
   onToggleTracking, 
-  isMockData 
+  isMockData,
+  aggregationInterval = 15,
+  onIntervalChange
 }) => {
   // Format date for display
   const formatDateLabel = (dateKey) => {
@@ -47,6 +49,13 @@ const Header = ({
     }
   };
 
+  // Handle interval change
+  const handleIntervalChange = (event) => {
+    if (onIntervalChange) {
+      onIntervalChange(Number(event.target.value));
+    }
+  };
+
   // Whether we can navigate to previous or next days
   const canGoPrevious = availableDates.indexOf(selectedDate) > 0;
   const canGoNext = availableDates.indexOf(selectedDate) < availableDates.length - 1;
@@ -76,6 +85,19 @@ const Header = ({
       </div>
       
       <div className="controls">
+        <div className="interval-selector-container">
+          <select 
+            className="interval-selector" 
+            value={aggregationInterval} 
+            onChange={handleIntervalChange}
+            title="Aggregationsintervall"
+          >
+            <option value="5">5 Min</option>
+            <option value="10">10 Min</option>
+            <option value="15">15 Min</option>
+          </select>
+        </div>
+        
         {!isMockData && (
           <button 
             className={`tracking-button ${isTracking ? 'tracking-active' : 'tracking-paused'}`} 

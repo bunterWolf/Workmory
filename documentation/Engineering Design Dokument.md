@@ -62,7 +62,7 @@ Focus is an Electron-based desktop application designed to track and analyze use
 - Cleans up outdated records
 - Supports customizable data storage location for synchronization across devices
 - Creates and updates the Day Summary
-- Aggregates heartbeat data into aggregated timeline events
+- Aggregates heartbeat data into aggregated timeline events based on user-selected interval (5, 10, or 15 minutes)
 - Ensures proper event ordering and overlap handling based on priority
 
 #### 2.2.2 Data Model
@@ -72,6 +72,7 @@ Focus is an Electron-based desktop application designed to track and analyze use
   version: 1,
   startTime: timestamp,
   lastCleanup: timestamp,
+  aggregationInterval: 15, // can be 5, 10, or 15 (minutes)
   days: {
     ["YYYY-MM-DD"]: {
       heartbeats: [
@@ -120,8 +121,12 @@ Focus is an Electron-based desktop application designed to track and analyze use
 The Aggregation is critical and can easily create unwanted outcomes. This section of the App needs detailed documentation and should be test-driven programmed.
 
 Activities
-- Heartbeats are aggregated into activities in 15-minute intervals
-- An activity always starts or ends at fixed times: XX:00 - XX:15 - XX:30 - XX:45
+- Heartbeats are aggregated into activities in configurable time intervals (5, 10, or 15 minutes)
+- The default interval is 15 minutes
+- An activity always starts or ends at fixed times based on the chosen interval:
+  - 15-minute intervals: XX:00 - XX:15 - XX:30 - XX:45
+  - 10-minute intervals: XX:00 - XX:10 - XX:20 - XX:30 - XX:40 - XX:50
+  - 5-minute intervals: XX:00 - XX:05 - XX:10 - XX:15 - ... - XX:55
 - An activity is calculated when its end time is reached.
 
 Activity Aggregation
@@ -182,6 +187,7 @@ After an activity change, the summary times are updated. These are not based on 
 ##### 2.5.2.1 Header
 - **Date Picker** with friendly labels ("Today", "Yesterday") - placed in Header
 	- Arrow Navigation Buttons
+- **Interval Selector** dropdown for choosing the aggregation block size (5, 10, or 15 minutes)
 - Button to pause or start tracking
 
 #### 2.5.2.2 Content: DayOverview
@@ -219,7 +225,7 @@ After an activity change, the summary times are updated. These are not based on 
 
 1. **Bildschirmanpassung**
    - Flexible Breitenanpassung
-   - Beibehaltung der 15-Minuten-Proportionen   
+   - Beibehaltung der ausgewählten Aggregationsintervall-Proportionen (5, 10 oder 15 Minuten)   
 
 2. **Wiederherstellung**
    - Automatische Wiederherstellung nach Verbindungsabbrüchen
@@ -359,3 +365,37 @@ Die Mock-Daten-Funktionalität ist folgendermaßen implementiert:
 - Konsistente Testumgebung mit vorhersehbaren Daten
 - Demonstrationen und Präsentationen ohne echtes Tracking
 - Keine Verfälschung der tatsächlichen Nutzungsdaten während der Entwicklung
+
+## 12. Konfigurierbare Aggregationsintervalle
+
+### 12.1 Übersicht
+
+Die Anwendung unterstützt konfigurierbare Zeitintervalle für die Aggregation von Heartbeat-Daten in der Timeline. Der Benutzer kann zwischen 5-, 10- und 15-Minuten-Intervallen wählen, wobei die Standardeinstellung 15 Minuten beträgt.
+
+### 12.2 Implementierungsdetails
+
+#### 12.2.1 Benutzereinstellung
+
+- Die Intervallauswahl wird als Dropdown-Menü im Header der Anwendung implementiert
+- Die Einstellung wird in der ActivityStore-Datenstruktur als `aggregationInterval`-Feld gespeichert
+- Bei Änderung der Einstellung werden alle betroffenen Tage neu aggregiert
+
+#### 12.2.2 Zeitliche Grenzen
+
+Unabhängig vom gewählten Intervall werden Aktivitätsblöcke immer an festen Uhrzeiten begonnen und beendet, um eine konsistente visuelle Darstellung zu gewährleisten:
+- 5-Minuten-Intervalle: XX:00, XX:05, XX:10, XX:15, XX:20, XX:25, XX:30, XX:35, XX:40, XX:45, XX:50, XX:55
+- 10-Minuten-Intervalle: XX:00, XX:10, XX:20, XX:30, XX:40, XX:50
+- 15-Minuten-Intervalle: XX:00, XX:15, XX:30, XX:45
+
+#### 12.2.3 Berechnung und Darstellung
+
+- Bei Änderung des Aggregationsintervalls wird die `TimelineGenerator`-Komponente die neuen Zeitgrenzen berücksichtigen
+- Die visuelle Darstellung in der DayOverview-Komponente passt sich automatisch an das gewählte Intervall an
+- Die Bedingung, dass mindestens die Hälfte eines Intervalls mit Heartbeats gefüllt sein muss, bleibt unabhängig von der Intervallgröße bestehen
+
+#### 12.2.4 Leistungsauswirkungen
+
+Mit abnehmender Intervallgröße:
+- Steigt die Anzahl der dargestellten Aktivitätsblöcke
+- Erhöht sich die Detailgenauigkeit der Zeitverfolgung
+- Kann die Leistung bei der Aggregation minimal beeinflusst werden
