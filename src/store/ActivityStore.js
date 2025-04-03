@@ -279,6 +279,11 @@ class ActivityStore {
       timestamp,
       data: heartbeatData
     };
+
+    console.log('New Heartbeat saved:', {
+      timestamp: new Date(timestamp).toISOString(),
+      ...heartbeatData
+    });
     
     // Add heartbeat to appropriate day
     this.data.days[dateKey].heartbeats.push(heartbeat);
