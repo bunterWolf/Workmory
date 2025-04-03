@@ -1,185 +1,159 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import './DayOverview.css';
 
-const DayOverview = ({ activityData, isLoading, formatDuration }) => {
-  const [timelineHours, setTimelineHours] = useState([]);
-  const [events, setEvents] = useState([]);
+const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInterval = 15 }) => {
+  // Generate array of hour numbers from 8 to 17 (8 AM to 5 PM)
+  const defaultTimelineHours = Array.from({ length: 10 }, (_, i) => i + 8);
   
-  // Generate timeline hours (8:00-17:00 by default, expanded as needed)
-  useEffect(() => {
-    if (!activityData || !activityData.daySummary || activityData.daySummary.length === 0) {
-      // Default hours (8:00-17:00)
-      const defaultHours = Array.from({ length: 10 }, (_, i) => i + 8);
-      setTimelineHours(defaultHours);
-      return;
-    }
-    
-    // Find earliest and latest event time
-    let earliestHour = 8; // Default start
-    let latestHour = 17; // Default end
-    
-    activityData.daySummary.forEach(event => {
-      const startDate = new Date(event.start);
-      const endDate = new Date(event.end);
-      
-      const startHour = startDate.getHours();
-      const endHour = endDate.getHours() + (endDate.getMinutes() > 0 ? 1 : 0);
-      
-      earliestHour = Math.min(earliestHour, startHour);
-      latestHour = Math.max(latestHour, endHour);
-    });
-    
-    // Expand to 8-17 if smaller
-    earliestHour = Math.min(earliestHour, 8);
-    latestHour = Math.max(latestHour, 17);
-    
-    // Generate all hours
-    const hours = Array.from(
-      { length: latestHour - earliestHour + 1 }, 
-      (_, i) => i + earliestHour
-    );
-    
-    setTimelineHours(hours);
-  }, [activityData]);
-  
-  // Process events for display
-  useEffect(() => {
-    if (!activityData || !activityData.daySummary) {
-      setEvents([]);
-      return;
-    }
-    
-    const processedEvents = activityData.daySummary.map(event => {
-      // Convert timestamps to Date objects
-      const startTime = new Date(event.start);
-      const endTime = new Date(event.end);
-      
-      // Format times for display
-      const formattedStartTime = startTime.toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false
-      });
-      
-      const formattedEndTime = endTime.toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false
-      });
-      
-      return {
-        ...event,
-        startTime,
-        endTime,
-        formattedStartTime,
-        formattedEndTime
-      };
-    });
-    
-    setEvents(processedEvents);
-  }, [activityData]);
-  
-  // Calculate timeline height based on hours
-  const getTimelineHeight = () => {
-    if (!timelineHours.length) return '600px'; // Default height
-    const calculatedHeight = timelineHours.length * 60; // 60px per hour
-    return calculatedHeight > 0 ? `${calculatedHeight}px` : '600px';
+  // Calculate hour height based on aggregation interval
+  const getHourHeight = () => {
+    const MIN_BLOCK_HEIGHT = 20; // Minimum height constant in pixels
+    return MIN_BLOCK_HEIGHT * (60 / aggregationInterval);
   };
   
-  // Format time for display
+  // Format hour for display (e.g., 8 -> "8:00", 13 -> "1:00 PM")
   const formatHour = (hour) => {
-    return `${hour}:00`;
+    if (hour === 12) {
+      return '12:00 PM';
+    } else if (hour < 12) {
+      return `${hour}:00 AM`;
+    } else {
+      return `${hour - 12}:00 PM`;
+    }
   };
   
-  // Set dynamic styles for an event based on its time
-  const getEventStyle = (event) => {
-    // Get the first (earliest) and last (latest) hour in the timeline
-    const minHour = timelineHours[0];
-    const maxHour = timelineHours[timelineHours.length - 1] + 1; // Add 1 to include the full last hour
+  // Format time to show as "10:30 AM" etc.
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp);
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
     
-    // Total height of the timeline in pixels (60px per hour)
-    const hourHeight = 60; // height in pixels for one hour
+    hours = hours % 12;
+    hours = hours ? hours : 12; // Convert 0 to 12
     
-    // Minutes since the start of the timeline
-    const startHour = event.startTime.getHours();
-    const startMinute = event.startTime.getMinutes();
-    const hoursSinceStart = startHour - minHour;
-    const minutesSinceStartOfHour = startMinute;
-    
-    // Calculate top position in pixels
-    const topPosition = (hoursSinceStart * hourHeight) + (minutesSinceStartOfHour / 60 * hourHeight);
-    
-    // Calculate height based on duration
-    const durationInMinutes = (event.endTime - event.startTime) / (60 * 1000);
-    const heightInPixels = (durationInMinutes / 60) * hourHeight;
-    
-    return {
-      top: `${topPosition}px`,
-      height: `${Math.max(10, heightInPixels)}px`, // Minimum height for visibility
-    };
+    return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
   };
   
-  // Create hour markers for the timeline
+  // Get height for the timeline based on hours
+  const getTimelineHeight = () => {
+    return timelineHours.length * getHourHeight();
+  };
+  
+  // Render hour markers for the timeline
   const renderHourMarkers = () => {
-    return timelineHours.map((hour, index) => (
+    return timelineHours.map(hour => (
       <div 
-        key={`marker-${hour}`} 
-        className="hour-marker" 
-        style={{ top: `${index * 60}px` }} 
+        key={hour} 
+        className="hour-marker"
+        style={{ top: (hour - timelineHours[0]) * getHourHeight() }}
       />
     ));
   };
   
-  // If loading, show placeholder
+  // Get styling for an event based on its time position and duration
+  const getEventStyle = (event) => {
+    const startHour = new Date(event.timestamp).getHours();
+    const startMinute = new Date(event.timestamp).getMinutes();
+    const durationHours = event.duration / (60 * 60 * 1000);
+    
+    // Calculate top position relative to the first hour in the timeline
+    const hourOffset = startHour - timelineHours[0];
+    const minuteOffset = startMinute / 60;
+    const top = (hourOffset + minuteOffset) * getHourHeight();
+    
+    // Calculate height based on duration
+    const height = durationHours * getHourHeight();
+    
+    return {
+      top: `${top}px`,
+      height: `${height}px`
+    };
+  };
+  
+  // If loading, show loading indicator
   if (isLoading) {
+    return <div className="loading">Loading activity data...</div>;
+  }
+  
+  // If no data or no aggregated data, show empty state
+  if (!activityData || !activityData.aggregated || !activityData.aggregated.timelineOverview || activityData.aggregated.timelineOverview.length === 0) {
     return (
-      <div className="day-overview">
-        <div className="timeline">
-          {timelineHours.map(hour => (
-            <div key={hour} className="timeline-hour">
-              {formatHour(hour)}
-            </div>
-          ))}
-        </div>
-        <div className="events-container" style={{ height: getTimelineHeight() }}>
-          {renderHourMarkers()}
-          <div className="events-content">
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              Loading activity data...
-            </div>
-          </div>
-        </div>
+      <div className="empty-state">
+        <h3>No activity data for this day</h3>
+        <p>There is no tracking data available for the selected date.</p>
       </div>
     );
   }
   
-  // If no data or empty day summary, show empty state
-  if (!activityData || !activityData.daySummary || activityData.daySummary.length === 0) {
-    return (
-      <div className="day-overview">
-        <div className="timeline">
-          {timelineHours.map(hour => (
-            <div key={hour} className="timeline-hour">
-              {formatHour(hour)}
-            </div>
-          ))}
-        </div>
-        <div className="events-container" style={{ height: getTimelineHeight() }}>
-          {renderHourMarkers()}
-          <div className="events-content">
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              No activity data for this day.
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  // Process timeline events from the aggregated data
+  const timelineEvents = activityData.aggregated.timelineOverview;
+  
+  // Determine the time range to display
+  let minHour = 8; // Default start hour (8 AM)
+  let maxHour = 17; // Default end hour (5 PM)
+  
+  // Adjust time range based on actual data
+  if (timelineEvents.length > 0) {
+    const eventStartHours = timelineEvents.map(event => new Date(event.timestamp).getHours());
+    const eventEndHours = timelineEvents.map(event => {
+      const endTimestamp = event.timestamp + event.duration;
+      const endHour = new Date(endTimestamp).getHours();
+      const endMinute = new Date(endTimestamp).getMinutes();
+      return endMinute > 0 ? endHour + 1 : endHour; // Round up if there are minutes
+    });
+    
+    minHour = Math.max(0, Math.min(...eventStartHours) - 1); // One hour earlier than earliest event
+    maxHour = Math.min(23, Math.max(...eventEndHours) + 1); // One hour later than latest event
   }
+  
+  // Generate hours array based on activity data
+  const timelineHours = Array.from({ length: maxHour - minHour + 1 }, (_, i) => i + minHour);
+  
+  // Map timeline events to display format
+  const events = timelineEvents.map(event => {
+    const startTime = formatTime(event.timestamp);
+    const endTime = formatTime(event.timestamp + event.duration);
+    
+    let type, title, subTitle;
+    
+    switch (event.type) {
+      case 'appWindow':
+        type = 'primaryWindow';
+        title = event.data.app;
+        subTitle = event.data.title;
+        break;
+      case 'teamsMeeting':
+        type = 'teams_meeting';
+        title = event.data.title;
+        subTitle = 'Teams Meeting';
+        break;
+      case 'inactive':
+        type = 'inactive';
+        title = 'Inactive';
+        subTitle = event.data.reason || 'No activity detected';
+        break;
+      default:
+        type = 'unknown';
+        title = 'Unknown Activity';
+        subTitle = '';
+    }
+    
+    return {
+      ...event,
+      type,
+      title,
+      subTitle,
+      formattedStartTime: startTime,
+      formattedEndTime: endTime
+    };
+  });
   
   return (
     <div className="day-overview">
-      <div className="timeline">
+      <div className="timeline" style={{ height: getTimelineHeight() }}>
         {timelineHours.map(hour => (
-          <div key={hour} className="timeline-hour">
+          <div key={hour} className="timeline-hour" style={{ height: `${getHourHeight()}px` }}>
             {formatHour(hour)}
           </div>
         ))}
@@ -194,17 +168,15 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
               className={`event ${event.type}`}
               style={getEventStyle(event)}
             >
-              <span className="event-title">
-                {event.type === 'primaryWindow' ? event.title : 
-                 event.type === 'teams_meeting' ? event.title :
-                 'Inactive'}
-              </span>
+              <div className="event-title">
+                {event.title} {event.subTitle && (<span className="event-subtitle">{event.subTitle}</span>)}
+              </div>
               
-              {event.type === 'primaryWindow' && event.subTitle && (
-                <span className="event-subtitle"> {event.subTitle}</span>
-              )}
               
-              <span className="event-time"> - {event.formattedStartTime} - {event.formattedEndTime}</span>
+              
+              <div className="event-time">
+                {event.formattedStartTime} - {event.formattedEndTime}
+              </div>
               
               <div className="event-duration">
                 {formatDuration(event.duration)}

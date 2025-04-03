@@ -1,0 +1,119 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  height: var(--header-height);
+  border-bottom: 1px solid var(--color-border);
+  background-color: white;
+}
+
+.date-navigation {
+  display: flex;
+  align-items: center;
+}
+
+.date-display {
+  margin: 0 15px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.nav-button {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.nav-button:hover:not(:disabled) {
+  background-color: var(--color-secondary);
+}
+
+.nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.interval-selector-container {
+  position: relative;
+}
+
+.interval-selector {
+  background-color: white;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 7px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 30px;
+}
+
+.interval-selector:hover {
+  border-color: var(--color-primary);
+}
+
+.interval-selector:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.interval-selector-container::after {
+  content: '▼';
+  font-size: 8px;
+  color: var(--color-text);
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.tracking-button {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.tracking-button:hover {
+  background-color: var(--color-primary-light);
+}
+
+.tracking-active {
+  background-color: var(--color-primary);
+}
+
+.tracking-paused {
+  background-color: var(--color-inactive);
+}
+
+.mock-indicator {
+  background-color: var(--color-mock);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+} 
