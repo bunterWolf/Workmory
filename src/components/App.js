@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { I18nextProvider } from 'react-i18next';
 import Header from './Header';
 import DayOverview from './DayOverview';
 import Footer from './Footer';
 import { ipcRenderer } from 'electron';
+import i18n from '../i18n';
 import './App.css';
 
 const App = () => {
@@ -150,34 +152,36 @@ const App = () => {
   const summary = getSummary();
 
   return (
-    <div className="app">
-      <Header 
-        selectedDate={selectedDate}
-        availableDates={availableDates}
-        onDateChange={handleDateChange}
-        isTracking={isTracking}
-        onToggleTracking={toggleTracking}
-        isMockData={isMockData}
-        aggregationInterval={aggregationInterval}
-        onIntervalChange={handleIntervalChange}
-      />
-      
-      <main className="main-content">
-        <DayOverview 
-          activityData={activityData}
-          isLoading={isLoading}
-          formatDuration={formatDuration}
+    <I18nextProvider i18n={i18n}>
+      <div className="app">
+        <Header 
+          selectedDate={selectedDate}
+          availableDates={availableDates}
+          onDateChange={handleDateChange}
+          isTracking={isTracking}
+          onToggleTracking={toggleTracking}
+          isMockData={isMockData}
           aggregationInterval={aggregationInterval}
+          onIntervalChange={handleIntervalChange}
         />
-      </main>
-      
-      <Footer 
-        activeTime={summary.activeTime}
-        inactiveTime={summary.inactiveTime}
-        totalTime={summary.totalTime}
-        isMockData={isMockData}
-      />
-    </div>
+        
+        <main className="main-content">
+          <DayOverview 
+            activityData={activityData}
+            isLoading={isLoading}
+            formatDuration={formatDuration}
+            aggregationInterval={aggregationInterval}
+          />
+        </main>
+        
+        <Footer 
+          activeTime={summary.activeTime}
+          inactiveTime={summary.inactiveTime}
+          totalTime={summary.totalTime}
+          isMockData={isMockData}
+        />
+      </div>
+    </I18nextProvider>
   );
 };
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import './Header.css';
 
 const Header = ({ 
@@ -11,6 +12,8 @@ const Header = ({
   aggregationInterval = 15,
   onIntervalChange
 }) => {
+  const { t } = useTranslation();
+
   // Format date for display
   const formatDateLabel = (dateKey) => {
     const today = new Date().toISOString().split('T')[0];
@@ -19,17 +22,12 @@ const Header = ({
     const yesterdayKey = yesterday.toISOString().split('T')[0];
     
     if (dateKey === today) {
-      return 'Today';
+      return t('timeFormats.today');
     } else if (dateKey === yesterdayKey) {
-      return 'Yesterday';
+      return t('timeFormats.yesterday');
     } else {
       const date = new Date(dateKey + 'T00:00:00');
-      return date.toLocaleDateString(undefined, {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+      return t('timeFormats.fullDate', { date });
     }
   };
 
@@ -67,7 +65,7 @@ const Header = ({
           className="nav-button" 
           onClick={goToPreviousDay} 
           disabled={!canGoPrevious}
-          title="Previous day"
+          title={t('previousDay')}
         >
           &larr;
         </button>
@@ -78,7 +76,7 @@ const Header = ({
           className="nav-button" 
           onClick={goToNextDay} 
           disabled={!canGoNext}
-          title="Next day"
+          title={t('nextDay')}
         >
           &rarr;
         </button>
@@ -90,7 +88,7 @@ const Header = ({
             className="interval-selector" 
             value={aggregationInterval} 
             onChange={handleIntervalChange}
-            title="Aggregationsintervall"
+            title={t('aggregationInterval')}
           >
             <option value="5">5 Min</option>
             <option value="10">10 Min</option>
@@ -102,15 +100,15 @@ const Header = ({
           <button 
             className={`tracking-button ${isTracking ? 'tracking-active' : 'tracking-paused'}`} 
             onClick={onToggleTracking}
-            title={isTracking ? 'Pause tracking' : 'Start tracking'}
+            title={isTracking ? t('pauseTracking') : t('startTracking')}
           >
-            {isTracking ? 'Tracking' : 'Paused'}
+            {isTracking ? t('tracking') : t('paused')}
           </button>
         )}
         
         {isMockData && (
           <div className="mock-indicator">
-            Mock Data Mode
+            {t('mockDataMode')}
           </div>
         )}
       </div>

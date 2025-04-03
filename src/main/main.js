@@ -3,6 +3,7 @@ const path = require('path');
 const url = require('url');
 const ActivityStore = require('../store/ActivityStore');
 const HeartbeatManager = require('../store/HeartbeatManager');
+require('@electron/remote/main').initialize();
 
 // Keep a global reference of the window object and other instances
 let mainWindow;
@@ -30,14 +31,17 @@ if (useMockData) {
 // Create the main browser window
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 700,
+    width: 1200,
+    height: 800,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      enableRemoteModule: true
     },
     title: 'Focus - Productivity Tracker' + (useMockData ? ' (Mock Data)' : '')
   });
+
+  require('@electron/remote/main').enable(mainWindow.webContents);
 
   // Load the index.html file
   mainWindow.loadURL(url.format({
