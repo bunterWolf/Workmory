@@ -122,15 +122,15 @@ class TimelineGenerator {
       
       // Only create activity if we have enough heartbeats
       if (heartbeats.length >= expectedHeartbeats * MIN_HEARTBEATS_RATIO) {
-        // Determine the dominant activity type
-        const activityType = this.determineDominantType(heartbeats);
+        // Determine the dominant activity with its specific data
+        const dominantActivity = this.determineDominantActivity(heartbeats);
         
         // Create the activity
         activities.push({
           timestamp: intervalStartTime,
           duration: this.intervalDuration,
-          type: activityType,
-          data: this.aggregateActivityData(heartbeats, activityType)
+          type: dominantActivity.type,
+          data: dominantActivity.data
         });
       }
     });
@@ -139,103 +139,72 @@ class TimelineGenerator {
   }
 
   /**
-   * Determine the dominant activity type from heartbeats
+   * Determine the dominant activity by comparing specific activities with their data
    * @param {Array} heartbeats - Array of heartbeat objects
-   * @returns {string} Dominant activity type
+   * @returns {Object} Object containing dominant type and its associated data
    */
-  determineDominantType(heartbeats) {
-    const typeCounts = {
-      teamsMeeting: 0,
-      inactive: 0,
-      appWindow: 0
-    };
-
+  determineDominantActivity(heartbeats) {
+    // Group heartbeats by their specific "fingerprint"
+    const activityGroups = {};
+    
     heartbeats.forEach(heartbeat => {
+      let activityKey;
+      let activityData;
+      
       if (heartbeat.data.teamsMeeting) {
-        typeCounts.teamsMeeting++;
-      } else if (heartbeat.data.userActivity === 'inactive') {
-        typeCounts.inactive++;
-      } else {
-        typeCounts.appWindow++;
-      }
-    });
-
-    // Return the type with the highest count
-    if (typeCounts.teamsMeeting >= typeCounts.inactive && 
-        typeCounts.teamsMeeting >= typeCounts.appWindow) {
-      return 'teamsMeeting';
-    } else if (typeCounts.inactive >= typeCounts.appWindow) {
-      return 'inactive';
-    } else {
-      return 'appWindow';
-    }
-  }
-
-  /**
-   * Aggregate activity data from heartbeats
-   * @param {Array} heartbeats - Array of heartbeat objects
-   * @param {string} activityType - Dominant activity type
-   * @returns {Object} Aggregated activity data
-   */
-  aggregateActivityData(heartbeats, activityType) {
-    switch (activityType) {
-      case 'teamsMeeting':
-        // For meetings, find the most recent meeting info
-        const meetingHeartbeats = heartbeats.filter(hb => hb.data.teamsMeeting);
-        const latestMeeting = meetingHeartbeats[meetingHeartbeats.length - 1];
-        return {
-          title: latestMeeting.data.teamsMeeting.title,
-          status: latestMeeting.data.teamsMeeting.status
-        };
-        
-      case 'inactive':
-        // For inactivity, just return a standard object
-        return { reason: 'User inactive' };
-        
-      case 'appWindow':
-        // For app windows, find the most common app and title
-        const appCounts = {};
-        const titleCounts = {};
-        
-        heartbeats.forEach(hb => {
-          if (hb.data.appWindow) {
-            const { app, title } = hb.data.appWindow;
-            appCounts[app] = (appCounts[app] || 0) + 1;
-            titleCounts[title] = (titleCounts[title] || 0) + 1;
+        // For Teams meetings: combine title and status
+        activityKey = `teams:${heartbeat.data.teamsMeeting.title}:${heartbeat.data.teamsMeeting.status}`;
+        activityData = {
+          type: 'teamsMeeting',
+          data: {
+            title: heartbeat.data.teamsMeeting.title,
+            status: heartbeat.data.teamsMeeting.status
           }
-        });
-        
-        return {
-          app: this.getMostFrequent(appCounts),
-          title: this.getMostFrequent(titleCounts)
         };
-        
-      default:
-        return {};
-    }
-  }
-
-  /**
-   * Get the most frequent item from a counts object
-   * @param {Object} counts - Object mapping items to counts
-   * @returns {string} Most frequent item
-   */
-  getMostFrequent(counts) {
-    let maxCount = 0;
-    let mostFrequent = '';
+      } else if (heartbeat.data.userActivity === 'inactive') {
+        // For inactivity
+        activityKey = 'inactive';
+        activityData = {
+          type: 'inactive',
+          data: { reason: 'User inactive' }
+        };
+      } else if (heartbeat.data.appWindow) {
+        // For app windows: combine app and title
+        activityKey = `app:${heartbeat.data.appWindow.app}:${heartbeat.data.appWindow.title}`;
+        activityData = {
+          type: 'appWindow',
+          data: {
+            app: heartbeat.data.appWindow.app,
+            title: heartbeat.data.appWindow.title
+          }
+        };
+      }
+      
+      if (!activityGroups[activityKey]) {
+        activityGroups[activityKey] = {
+          count: 0,
+          data: activityData
+        };
+      }
+      activityGroups[activityKey].count++;
+    });
     
-    Object.entries(counts).forEach(([item, count]) => {
-      if (count > maxCount) {
-        maxCount = count;
-        mostFrequent = item;
+    // Find the most frequent specific activity
+    let maxCount = 0;
+    let dominantActivity = null;
+    
+    Object.entries(activityGroups).forEach(([key, group]) => {
+      if (group.count > maxCount) {
+        maxCount = group.count;
+        dominantActivity = group.data;
       }
     });
     
-    return mostFrequent;
+    return dominantActivity || { type: 'appWindow', data: {} };
   }
 
   /**
-   * Merge consecutive activities with the same content
+   * Merge consecutive activities with same content
    * @param {Array} activities - Array of activity objects
    * @returns {Array} Merged activities
    */
