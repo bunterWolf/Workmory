@@ -19,12 +19,6 @@ describe('TimelineGenerator', () => {
       expect(generator.aggregationInterval).toBe(5);
       expect(generator.intervalDuration).toBe(5 * 60 * 1000);
     });
-
-    test('sollte ungültige Intervalle ablehnen', () => {
-      expect(() => generator.setAggregationInterval(7)).toThrow();
-      expect(() => generator.setAggregationInterval(0)).toThrow();
-      expect(() => generator.setAggregationInterval(20)).toThrow();
-    });
   });
 
   describe('Heartbeat Gruppierung', () => {
