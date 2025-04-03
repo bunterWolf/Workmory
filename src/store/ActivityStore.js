@@ -5,6 +5,49 @@ const TimelineGenerator = require('./TimelineGenerator');
 const { generateMockData } = require('./mockData');
 
 /**
+ * Aktualisiert eine Liste von Heartbeats, indem 'may_be_inactive' zu 'inactive' umgewandelt wird
+ * @param {Array} heartbeats - Liste von Heartbeats
+ * @param {number} currentTimestamp - Timestamp des aktuellen Heartbeats
+ * @returns {Array} Aktualisierte Liste von Heartbeats
+ */
+function updateInactiveHeartbeats(heartbeats, currentTimestamp) {
+  if (!heartbeats || !heartbeats.length) return heartbeats;
+
+  // Kopie der Heartbeats erstellen (Zeitreihenfolge beibehalten)
+  const updatedHeartbeats = [...heartbeats];
+  
+  // Finde den letzten 'active' Heartbeat vor currentTimestamp
+  let lastActiveIndex = -1;
+  for (let i = updatedHeartbeats.length - 1; i >= 0; i--) {
+    const heartbeat = updatedHeartbeats[i];
+    if (heartbeat.timestamp >= currentTimestamp) continue;
+    
+    if (heartbeat.data?.userActivity === 'active') {
+      lastActiveIndex = i;
+      break;
+    }
+  }
+  
+  // Alle 'may_be_inactive' Heartbeats nach dem letzten active zu 'inactive' konvertieren
+  for (let i = lastActiveIndex + 1; i < updatedHeartbeats.length; i++) {
+    const heartbeat = updatedHeartbeats[i];
+    if (heartbeat.timestamp >= currentTimestamp) continue;
+    
+    if (heartbeat.data?.userActivity === 'may_be_inactive') {
+      updatedHeartbeats[i] = {
+        ...heartbeat,
+        data: {
+          ...heartbeat.data,
+          userActivity: 'inactive'
+        }
+      };
+    }
+  }
+  
+  return updatedHeartbeats;
+}
+
+/**
  * Manages activity data storage, aggregation, and persistence
  */
 class ActivityStore {
@@ -261,34 +304,11 @@ class ActivityStore {
     const dayData = this.data.days[dateKey];
     if (!dayData || !dayData.heartbeats) return;
 
-    // Sortiere Heartbeats nach Timestamp (absteigend)
-    const sortedHeartbeats = [...dayData.heartbeats].sort((a, b) => b.timestamp - a.timestamp);
+    // Verwende die extrahierte Funktion für bessere Testbarkeit
+    const updatedHeartbeats = updateInactiveHeartbeats(dayData.heartbeats, currentTimestamp);
     
-    let foundActive = false;
-    let updateSequence = [];
-
-    // Gehe rückwärts durch die Heartbeats
-    for (const heartbeat of sortedHeartbeats) {
-      if (heartbeat.timestamp >= currentTimestamp) continue;
-
-      const activity = heartbeat.data.userActivity;
-
-      if (activity === 'active') {
-        // Wenn wir einen aktiven Heartbeat finden, beenden wir die Sequenz
-        foundActive = true;
-        break;
-      } else if (activity === 'may_be_inactive') {
-        // Sammle may_be_inactive Heartbeats für die Aktualisierung
-        updateSequence.push(heartbeat);
-      }
-    }
-
-    // Aktualisiere die gesammelten Heartbeats zu 'inactive'
-    if (updateSequence.length > 0) {
-      updateSequence.forEach(heartbeat => {
-        heartbeat.data.userActivity = 'inactive';
-      });
-    }
+    // Aktualisiere die Heartbeats im Speicher
+    dayData.heartbeats = updatedHeartbeats;
   }
 
   /**
@@ -446,4 +466,6 @@ class ActivityStore {
   }
 }
 
-module.exports = ActivityStore; 
+// Exportiere für Tests
+module.exports = ActivityStore;
+module.exports.updateInactiveHeartbeats = updateInactiveHeartbeats; 
