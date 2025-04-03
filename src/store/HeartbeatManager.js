@@ -1,6 +1,7 @@
 const ActiveWindowWatcher = require('../watchers/ActiveWindowWatcher');
 const InactivityWatcher = require('../watchers/InactivityWatcher');
-const TeamsMeetingsWatcher = require('../watchers/TeamsMeetingsWatcher');
+// TeamsMeetingsWatcher temporär deaktiviert, da er Probleme verursacht
+// const TeamsMeetingsWatcher = require('../watchers/TeamsMeetingsWatcher');
 
 /**
  * Manages heartbeat generation and all watchers
@@ -27,13 +28,15 @@ class HeartbeatManager {
     // Initialize watcher instances
     this.activeWindowWatcher = new ActiveWindowWatcher();
     this.inactivityWatcher = new InactivityWatcher();
-    this.teamsMeetingsWatcher = new TeamsMeetingsWatcher();
+    // TeamsMeetingsWatcher temporär deaktiviert
+    // this.teamsMeetingsWatcher = new TeamsMeetingsWatcher();
     
     // Store all watchers in an array for easier management
     this.watchers = [
       this.activeWindowWatcher,
       this.inactivityWatcher,
-      this.teamsMeetingsWatcher
+      // TeamsMeetingsWatcher temporär deaktiviert
+      // this.teamsMeetingsWatcher
     ];
   }
 
@@ -52,7 +55,8 @@ class HeartbeatManager {
       // Initialize each watcher with appropriate parameters
       await this.activeWindowWatcher.init();
       await this.inactivityWatcher.init(this.mainWindow);
-      await this.teamsMeetingsWatcher.init();
+      // TeamsMeetingsWatcher temporär deaktiviert
+      // await this.teamsMeetingsWatcher.init();
       
       this.isInitialized = true;
       console.log('HeartbeatManager watchers initialized successfully');
@@ -135,7 +139,8 @@ class HeartbeatManager {
       const results = await Promise.all([
         this.activeWindowWatcher.getHeartbeatData(),
         this.inactivityWatcher.getHeartbeatData(),
-        this.teamsMeetingsWatcher.getHeartbeatData()
+        // TeamsMeetingsWatcher temporär deaktiviert
+        // this.teamsMeetingsWatcher.getHeartbeatData()
       ]);
       
       // Merge all data into a single object
