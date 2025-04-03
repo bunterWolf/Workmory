@@ -167,6 +167,7 @@ const App = () => {
           activityData={activityData}
           isLoading={isLoading}
           formatDuration={formatDuration}
+          aggregationInterval={aggregationInterval}
         />
       </main>
       

@@ -1,9 +1,15 @@
 import React from 'react';
 import './DayOverview.css';
 
-const DayOverview = ({ activityData, isLoading, formatDuration }) => {
+const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInterval = 15 }) => {
   // Generate array of hour numbers from 8 to 17 (8 AM to 5 PM)
   const defaultTimelineHours = Array.from({ length: 10 }, (_, i) => i + 8);
+  
+  // Calculate hour height based on aggregation interval
+  const getHourHeight = () => {
+    const MIN_BLOCK_HEIGHT = 20; // Minimum height constant in pixels
+    return MIN_BLOCK_HEIGHT * (60 / aggregationInterval);
+  };
   
   // Format hour for display (e.g., 8 -> "8:00", 13 -> "1:00 PM")
   const formatHour = (hour) => {
@@ -31,7 +37,7 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
   
   // Get height for the timeline based on hours
   const getTimelineHeight = () => {
-    return timelineHours.length * 60; // 60px per hour
+    return timelineHours.length * getHourHeight();
   };
   
   // Render hour markers for the timeline
@@ -40,7 +46,7 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
       <div 
         key={hour} 
         className="hour-marker"
-        style={{ top: (hour - timelineHours[0]) * 60 }}
+        style={{ top: (hour - timelineHours[0]) * getHourHeight() }}
       />
     ));
   };
@@ -54,10 +60,10 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
     // Calculate top position relative to the first hour in the timeline
     const hourOffset = startHour - timelineHours[0];
     const minuteOffset = startMinute / 60;
-    const top = (hourOffset + minuteOffset) * 60;
+    const top = (hourOffset + minuteOffset) * getHourHeight();
     
     // Calculate height based on duration
-    const height = durationHours * 60;
+    const height = durationHours * getHourHeight();
     
     return {
       top: `${top}px`,
@@ -147,7 +153,7 @@ const DayOverview = ({ activityData, isLoading, formatDuration }) => {
     <div className="day-overview">
       <div className="timeline" style={{ height: getTimelineHeight() }}>
         {timelineHours.map(hour => (
-          <div key={hour} className="timeline-hour">
+          <div key={hour} className="timeline-hour" style={{ height: `${getHourHeight()}px` }}>
             {formatHour(hour)}
           </div>
         ))}
