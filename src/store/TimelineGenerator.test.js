@@ -101,6 +101,51 @@ describe('TimelineGenerator', () => {
       expect(result[0].type).toBe('teamsMeeting');
       expect(result[0].data.title).toBe('Sprint Planning');
     });
+
+    test('sollte Inaktivität korrekt in Timeline-Events umwandeln', () => {
+      const baseTime = new Date('2024-03-20T10:00:00Z').getTime();
+      const heartbeats = [
+        // Aktiver Heartbeat
+        {
+          timestamp: baseTime,
+          data: {
+            userActivity: 'active',
+            appWindow: { app: 'VS Code', title: 'test.js' }
+          }
+        },
+        // Bereits als inactive markierte Heartbeats (wie sie vom Store kommen würden)
+        ...Array(4).fill(null).map((_, i) => ({
+          timestamp: baseTime + ((i + 1) * 30000),
+          data: {
+            userActivity: 'inactive'
+          }
+        }))
+      ];
+
+      const result = generator.generateTimelineEvents(heartbeats);
+      
+      // Erwarte ein Event für die aktive Phase und eins für die inaktive Phase
+      expect(result).toHaveLength(2);
+      
+      // Überprüfe das aktive Event
+      expect(result[0]).toEqual({
+        timestamp: baseTime,
+        duration: generator.intervalDuration,
+        type: 'appWindow',
+        data: {
+          app: 'VS Code',
+          title: 'test.js'
+        }
+      });
+
+      // Überprüfe das inaktive Event
+      expect(result[1]).toEqual({
+        timestamp: baseTime + generator.intervalDuration,
+        duration: generator.intervalDuration,
+        type: 'inactive',
+        data: {}
+      });
+    });
   });
 
   describe('Aktivitätsaggregation', () => {

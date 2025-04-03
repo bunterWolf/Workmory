@@ -239,12 +239,56 @@ class ActivityStore {
     
     // Add heartbeat to appropriate day
     this.data.days[dateKey].heartbeats.push(heartbeat);
+
+    // Wenn ein 'inactive' Status erkannt wird, aktualisiere vorherige 'may_be_inactive' Heartbeats
+    if (heartbeatData.userActivity === 'inactive') {
+      this.updatePreviousHeartbeats(dateKey, timestamp);
+    }
     
     // Regenerate aggregated data for the day
     this.updateAggregatedData(dateKey);
     
     // Notify the renderer of the update
     this.notifyDataUpdate(dateKey);
+  }
+
+  /**
+   * Aktualisiert vorherige 'may_be_inactive' Heartbeats zu 'inactive'
+   * @param {string} dateKey - Date key
+   * @param {number} currentTimestamp - Timestamp des aktuellen Heartbeats
+   */
+  updatePreviousHeartbeats(dateKey, currentTimestamp) {
+    const dayData = this.data.days[dateKey];
+    if (!dayData || !dayData.heartbeats) return;
+
+    // Sortiere Heartbeats nach Timestamp (absteigend)
+    const sortedHeartbeats = [...dayData.heartbeats].sort((a, b) => b.timestamp - a.timestamp);
+    
+    let foundActive = false;
+    let updateSequence = [];
+
+    // Gehe rückwärts durch die Heartbeats
+    for (const heartbeat of sortedHeartbeats) {
+      if (heartbeat.timestamp >= currentTimestamp) continue;
+
+      const activity = heartbeat.data.userActivity;
+
+      if (activity === 'active') {
+        // Wenn wir einen aktiven Heartbeat finden, beenden wir die Sequenz
+        foundActive = true;
+        break;
+      } else if (activity === 'may_be_inactive') {
+        // Sammle may_be_inactive Heartbeats für die Aktualisierung
+        updateSequence.push(heartbeat);
+      }
+    }
+
+    // Aktualisiere die gesammelten Heartbeats zu 'inactive'
+    if (updateSequence.length > 0) {
+      updateSequence.forEach(heartbeat => {
+        heartbeat.data.userActivity = 'inactive';
+      });
+    }
   }
 
   /**
