@@ -172,7 +172,7 @@ describe('TimelineGenerator', () => {
       expect(result).toHaveLength(0);
     });
 
-    test('sollte temporäre Intervall-Überschreibungen korrekt handhaben', () => {
+    test('sollte das aktuelle Intervall für die Aggregation verwenden', () => {
       const baseTime = new Date('2024-03-20T10:00:00Z').getTime();
       // Genug Heartbeats für 15 Minuten (30 Heartbeats)
       const heartbeats = Array(30).fill(null).map((_, i) => ({
@@ -182,14 +182,10 @@ describe('TimelineGenerator', () => {
         }
       }));
 
-      // Ursprüngliches Intervall: 5 Minuten
-      generator.setAggregationInterval(5);
+      // Setze 15-Minuten-Intervall
+      generator.setAggregationInterval(15);
       
-      // Temporär mit 15 Minuten
-      const result = generator.generateTimelineEvents(heartbeats, 15);
-      
-      // Prüfe, ob das ursprüngliche Intervall wiederhergestellt wurde
-      expect(generator.aggregationInterval).toBe(5);
+      const result = generator.generateTimelineEvents(heartbeats);
       
       // Mit 15-Minuten-Intervall sollte es nur ein Event geben
       expect(result).toHaveLength(1);

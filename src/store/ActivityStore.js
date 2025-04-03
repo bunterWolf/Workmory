@@ -291,8 +291,7 @@ class ActivityStore {
     
     // Generate timeline events using the current aggregation interval
     const timelineEvents = this.timelineGenerator.generateTimelineEvents(
-      dayData.heartbeats,
-      this.data.aggregationInterval
+      dayData.heartbeats
     );
     
     // Calculate summary

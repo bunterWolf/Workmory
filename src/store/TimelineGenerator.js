@@ -31,19 +31,11 @@ class TimelineGenerator {
   /**
    * Generate timeline events from heartbeats for a single day
    * @param {Array} heartbeats - Array of heartbeat objects for a day
-   * @param {number} [interval] - Optional interval override in minutes (5, 10, or 15)
    * @returns {Array} Timeline events
    */
-  generateTimelineEvents(heartbeats, interval) {
+  generateTimelineEvents(heartbeats) {
     if (!heartbeats || !Array.isArray(heartbeats) || heartbeats.length === 0) {
       return [];
-    }
-    
-    // Apply temporary interval override if provided
-    const originalInterval = this.aggregationInterval;
-    
-    if (interval && [5, 10, 15].includes(interval)) {
-      this.setAggregationInterval(interval);
     }
 
     // Sort heartbeats by timestamp (ascending)
@@ -56,14 +48,7 @@ class TimelineGenerator {
     const activities = this.generateActivities(intervalGroups);
     
     // Merge consecutive activities with same content
-    const result = this.mergeConsecutiveActivities(activities);
-    
-    // Restore original interval if overridden
-    if (interval && interval !== originalInterval) {
-      this.setAggregationInterval(originalInterval);
-    }
-    
-    return result;
+    return this.mergeConsecutiveActivities(activities);
   }
 
   /**
