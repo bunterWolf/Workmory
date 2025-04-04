@@ -5,13 +5,14 @@ const TimelineGenerator = require('./TimelineGenerator');
 const { generateMockData } = require('./mockData');
 
 /**
- * Aktualisiert eine Liste von Heartbeats, indem 'may_be_inactive' zu 'inactive' umgewandelt wird
+ * Behandelt may_be_inactive Heartbeats wenn ein inactive Status erkannt wurde
  * @param {Array} heartbeats - Liste von Heartbeats
  * @param {number} currentTimestamp - Timestamp des aktuellen Heartbeats
+ * @param {Object} heartbeatData - Daten des aktuellen Heartbeats
  * @returns {Array} Aktualisierte Liste von Heartbeats
  */
-function updateInactiveHeartbeats(heartbeats, currentTimestamp) {
-  if (!heartbeats || !heartbeats.length) return heartbeats;
+function handleMayBeInactive(heartbeats, currentTimestamp, heartbeatData) {
+  if (!heartbeats || !heartbeats.length || heartbeatData.userActivity !== 'inactive') return heartbeats;
 
   // Kopie der Heartbeats erstellen (Zeitreihenfolge beibehalten)
   const updatedHeartbeats = [...heartbeats];
@@ -288,32 +289,18 @@ class ActivityStore {
     // Add heartbeat to appropriate day
     this.data.days[dateKey].heartbeats.push(heartbeat);
 
-    // Wenn ein 'inactive' Status erkannt wird, aktualisiere vorherige 'may_be_inactive' Heartbeats
-    if (heartbeatData.userActivity === 'inactive') {
-      this.updatePreviousHeartbeats(dateKey, timestamp);
-    }
+    // Behandle may_be_inactive Zustände
+    this.data.days[dateKey].heartbeats = handleMayBeInactive(
+      this.data.days[dateKey].heartbeats,
+      timestamp,
+      heartbeatData
+    );
     
     // Regenerate aggregated data for the day
     this.updateAggregatedData(dateKey);
     
     // Notify the renderer of the update
     this.notifyDataUpdate(dateKey);
-  }
-
-  /**
-   * Aktualisiert vorherige 'may_be_inactive' Heartbeats zu 'inactive'
-   * @param {string} dateKey - Date key
-   * @param {number} currentTimestamp - Timestamp des aktuellen Heartbeats
-   */
-  updatePreviousHeartbeats(dateKey, currentTimestamp) {
-    const dayData = this.data.days[dateKey];
-    if (!dayData || !dayData.heartbeats) return;
-
-    // Verwende die extrahierte Funktion für bessere Testbarkeit
-    const updatedHeartbeats = updateInactiveHeartbeats(dayData.heartbeats, currentTimestamp);
-    
-    // Aktualisiere die Heartbeats im Speicher
-    dayData.heartbeats = updatedHeartbeats;
   }
 
   /**
@@ -473,4 +460,4 @@ class ActivityStore {
 
 // Exportiere für Tests
 module.exports = ActivityStore;
-module.exports.updateInactiveHeartbeats = updateInactiveHeartbeats; 
+module.exports.handleMayBeInactive = handleMayBeInactive; 
