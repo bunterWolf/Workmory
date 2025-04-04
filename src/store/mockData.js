@@ -17,6 +17,7 @@ const generateMockData = () => {
     version: 1,
     startTime: yesterday.getTime() - (8 * 60 * 60 * 1000), // 8 hours before yesterday
     lastCleanup: now.getTime() - (24 * 60 * 60 * 1000),    // 24 hours ago
+    aggregationInterval: 15,
     days: {
       [yesterdayKey]: generateMockDay(yesterday),
       [todayKey]: generateMockDay(now)
