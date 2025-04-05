@@ -12,7 +12,8 @@
 import { Heartbeat, TimelineEvent, AggregationSummary, HeartbeatData } from './ActivityStore';
 
 // Definiere den Typ für das Aggregationsintervall
-type AggregationIntervalMinutes = 5 | 10 | 15;
+// EXPORT this type so it can be imported by ActivityStore
+export type AggregationIntervalMinutes = 5 | 10 | 15;
 
 // Typ für die internen Aktivitätsgruppen in determineDominantActivity
 interface ActivityGroup {
