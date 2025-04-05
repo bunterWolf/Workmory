@@ -67,7 +67,7 @@ export interface StoreOptions {
  * @returns {Heartbeat[]} Aktualisierte Liste von Heartbeats (kann dieselbe Referenz sein, wenn nichts geändert wurde)
  */
 // Add type annotations
-function handleMayBeInactive(heartbeats: Heartbeat[], currentTimestamp: number, heartbeatData: HeartbeatData): Heartbeat[] {
+export function handleMayBeInactive(heartbeats: Heartbeat[], currentTimestamp: number, heartbeatData: HeartbeatData): Heartbeat[] {
   // Only proceed if the current heartbeat indicates inactivity and there are heartbeats to check
   if (!heartbeats || heartbeats.length === 0 || heartbeatData.userActivity !== 'inactive') {
       return heartbeats;
@@ -711,9 +711,4 @@ class ActivityStore {
   }
 }
 
-// Export the class using ES module syntax
 export default ActivityStore;
-// Remove module.exports if it exists
-// // module.exports = ActivityStore; // Remove CommonJS export
-// // module.exports.handleMayBeInactive = handleMayBeInactive; // Remove CommonJS export
-
