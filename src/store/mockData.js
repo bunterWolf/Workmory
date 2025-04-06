@@ -47,23 +47,8 @@ const generateMockDay = (date) => {
   // Create heartbeats from 8:00 AM to 5:00 PM
   const heartbeats = generateMockHeartbeats(startOfDay);
 
-  // Generate timeline events
-  const timelineEvents = generateMockTimelineEvents(startOfDay);
-  
-  // Create summary data
-  const summary = {
-    activeTrackingDuration: 9 * 60 * 60 * 1000, // 9 hours
-    totalActiveDuration: 7 * 60 * 60 * 1000,    // 7 hours
-    totalInactiveDuration: 1 * 60 * 60 * 1000,  // 1 hour
-    totalMeetingDuration: 1 * 60 * 60 * 1000    // 1 hour
-  };
-
   return {
-    heartbeats,
-    aggregated: {
-      summary,
-      timelineOverview: timelineEvents
-    }
+    heartbeats
   };
 };
 
@@ -161,84 +146,6 @@ const generateMockHeartbeat = (timestamp) => {
     timestamp,
     data
   };
-};
-
-/**
- * Generate mock timeline events
- * @param {Date} startTime - Start time for timeline
- * @returns {Array} Array of timeline event objects
- */
-const generateMockTimelineEvents = (startTime) => {
-  const events = [];
-  const endTime = new Date(startTime);
-  endTime.setHours(17, 0, 0, 0); // 5:00 PM
-  
-  // VS Code from 8:00-10:00
-  events.push({
-    timestamp: new Date(startTime).setHours(8, 0, 0, 0),
-    duration: 2 * 60 * 60 * 1000,
-    type: 'appWindow',
-    data: {
-      app: 'VS Code',
-      title: 'ActivityStore.js - Focus2'
-    }
-  });
-  
-  // Teams meeting from 10:00-11:00
-  events.push({
-    timestamp: new Date(startTime).setHours(10, 0, 0, 0),
-    duration: 1 * 60 * 60 * 1000,
-    type: 'teamsMeeting',
-    data: {
-      title: 'Daily Standup',
-      status: 'active'
-    }
-  });
-  
-  // VS Code from 11:00-12:00
-  events.push({
-    timestamp: new Date(startTime).setHours(11, 0, 0, 0),
-    duration: 1 * 60 * 60 * 1000,
-    type: 'appWindow',
-    data: {
-      app: 'VS Code',
-      title: 'ActivityStore.js - Focus2'
-    }
-  });
-  
-  // Inactive from 12:00-13:00
-  events.push({
-    timestamp: new Date(startTime).setHours(12, 0, 0, 0),
-    duration: 1 * 60 * 60 * 1000,
-    type: 'inactive',
-    data: {
-      reason: 'User inactive'
-    }
-  });
-  
-  // Outlook from 13:00-16:00
-  events.push({
-    timestamp: new Date(startTime).setHours(13, 0, 0, 0),
-    duration: 3 * 60 * 60 * 1000,
-    type: 'appWindow',
-    data: {
-      app: 'Outlook',
-      title: 'Inbox - username@example.com'
-    }
-  });
-  
-  // Word from 16:00-17:00
-  events.push({
-    timestamp: new Date(startTime).setHours(16, 0, 0, 0),
-    duration: 1 * 60 * 60 * 1000,
-    type: 'appWindow',
-    data: {
-      app: 'Word',
-      title: 'Project Documentation - Word'
-    }
-  });
-  
-  return events;
 };
 
 module.exports = {

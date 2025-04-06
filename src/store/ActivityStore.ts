@@ -4,6 +4,9 @@ import TimelineGenerator, { AggregationIntervalMinutes } from './TimelineGenerat
 import { generateMockData } from './mockData';
 import { ActivityPersistence } from './ActivityPersistence';
 import { ActivityIpc } from './ActivityIpc';
+import { ActivityState } from './ActivityState';
+import { IntervalScheduler } from './IntervalScheduler';
+import { AggregationManager } from './AggregationManager';
 
 // ---- TYPE DEFINITIONS ----
 
@@ -133,7 +136,9 @@ export function handleMayBeInactive(heartbeats: Heartbeat[], currentTimestamp: n
 // ---- ACTIVITY STORE CLASS ----
 
 /**
- * Manages activity data storage, aggregation, and persistence
+ * Orchestrates activity tracking, persistence, and IPC communication.
+ * Delegates state management to ActivityState, timing to IntervalScheduler,
+ * and aggregation/caching to AggregationManager.
  */
 class ActivityStore {
   // ---- CLASS PROPERTY DECLARATIONS ----
@@ -142,12 +147,18 @@ class ActivityStore {
   private timelineGenerator: TimelineGenerator;
   private persistence: ActivityPersistence;
   private ipcHandler: ActivityIpc;
-  public data: StoreData;
+  private activityState: ActivityState;
+  private scheduler: IntervalScheduler;
+  private aggregationManager: AggregationManager;
   public isTracking: boolean;
-  private intervalEndTimer: NodeJS.Timeout | null = null;
   private currentDayKey: string = '';
-  private currentDayAggregatedData: AggregatedData | null = null;
 
+  /**
+   * Creates an instance of ActivityStore.
+   * Initializes state, persistence, aggregation, scheduling, and IPC components.
+   * Loads existing data or initializes defaults based on options.
+   * @param options Configuration options for the store (e.g., mock data, storage path).
+   */
   constructor(options: Partial<StoreOptions> = {}) {
     this.options = {
       useMockData: options.useMockData ?? false,
@@ -158,245 +169,190 @@ class ActivityStore {
       path.join(app.getPath('userData'), 'activity-data.json');
 
     this.persistence = new ActivityPersistence(this.dataFilePath);
-
-    this.currentDayKey = this.getDateKey(Date.now());
-
-    this.isTracking = false;
     this.timelineGenerator = new TimelineGenerator();
+    this.currentDayKey = this.getDateKey(Date.now());
+    this.isTracking = false;
 
+    let initialData: StoreData | undefined;
     if (this.options.useMockData) {
       console.log("🧪 Initializing ActivityStore with mock data.");
-      this.data = generateMockData() as StoreData;
-      this.timelineGenerator.setAggregationInterval(this.data.aggregationInterval);
-      this.preAggregateMockData();
+      initialData = generateMockData() as StoreData;
+      this.activityState = new ActivityState(initialData);
+      this.timelineGenerator.setAggregationInterval(this.activityState.getAggregationInterval());
     } else {
        console.log("💾 Initializing ActivityStore with persistent storage.");
-       const loadedData = this.persistence.loadData();
-       if (loadedData) {
-           this.data = loadedData;
+       initialData = this.persistence.loadData() ?? undefined;
+       this.activityState = new ActivityState(initialData);
+       if (initialData) {
            console.log(`[Store] Data loaded via persistence layer.`);
        } else {
-           console.log(`[Store] No valid data loaded, initializing with defaults.`);
-           this.data = {
-               version: 1,
-               startTime: Date.now(),
-               lastCleanup: 0,
-               aggregationInterval: 15,
-               days: {}
-           };
+           console.log(`[Store] No valid data loaded, ActivityState initialized with defaults.`);
        }
-       this.timelineGenerator.setAggregationInterval(this.data.aggregationInterval);
+       this.timelineGenerator.setAggregationInterval(this.activityState.getAggregationInterval());
        this.cleanupOldData();
     }
+
+    this.aggregationManager = new AggregationManager(this.timelineGenerator, this.activityState);
+    if (this.options.useMockData) {
+        this.triggerTodaysAggregation();
+    }
+
+    const intervalCallback = this.handleIntervalEnd.bind(this);
+    this.scheduler = new IntervalScheduler(this.activityState.getAggregationInterval(), intervalCallback);
 
     this.ipcHandler = new ActivityIpc(this);
     this.ipcHandler.registerHandlers();
 
-    console.log(`ActivityStore initialized. Aggregation interval: ${this.data.aggregationInterval} minutes.`);
+    console.log(`ActivityStore initialized. Aggregation interval: ${this.activityState.getAggregationInterval()} minutes.`);
   }
 
-  private preAggregateMockData(): void {
-      console.log("🧪 Pre-aggregating mock data...");
-      const todayKey = this.getDateKey(Date.now());
-      for (const dateKey in this.data.days) {
-          if (Object.prototype.hasOwnProperty.call(this.data.days, dateKey)) {
-              const dayHeartbeats = this.data.days[dateKey]?.heartbeats;
-              if (dayHeartbeats && dayHeartbeats.length > 0) {
-                  try {
-                      const aggregated = this.performAggregation(dayHeartbeats);
-                      if (dateKey === todayKey) {
-                          this.currentDayAggregatedData = aggregated;
-                      }
-                  } catch (error) {
-                      console.error(`Error pre-aggregating mock data for ${dateKey}:`, error);
-                  }
-              }
+  private handleIntervalEnd(): void {
+      console.log(`[Store] Handling interval end triggered by scheduler.`);
+      if (this.isTracking && !this.options.useMockData) {
+          if (this.triggerTodaysAggregation()) {
+             this.notifyDataUpdate(this.currentDayKey); 
           }
+          this.saveToDisk();
+      } else {
+           console.log(`[Store] Skipping interval actions (tracking: ${this.isTracking}, mock: ${this.options.useMockData})`);
       }
-      console.log("🧪 Mock data pre-aggregation complete.");
   }
 
+  private triggerTodaysAggregation(): boolean {
+      this.currentDayKey = this.getDateKey(Date.now());
+      console.log(`[Store] Triggering aggregation for today (${this.currentDayKey})...`);
+      return this.aggregationManager.aggregateAndCacheDay(this.currentDayKey);
+  }
+
+  /**
+   * Saves the current state (from ActivityState) to disk via ActivityPersistence.
+   * Does nothing if using mock data.
+   */
   saveToDisk(): void {
+    // Guard clause: Don't save if using mock data
     if (this.options.useMockData) {
       return;
     }
 
     console.log(`[Store] Saving data to disk...`);
     try {
-      this.persistence.saveData(this.data);
+      this.persistence.saveData(this.activityState.getFullStoreData());
     } catch (error) {
       console.error(`[Store] Error saving data:`, error);
     }
   }
 
+  /**
+   * Starts the activity tracking process.
+   * Sets the tracking flag, updates the current day key, clears any stale aggregation cache,
+   * starts the interval scheduler (if not using mock data), and notifies listeners.
+   */
   startTracking(): void {
+    // Guard clause: Already tracking
     if (this.isTracking) {
-      console.log('Tracking already active.');
+      console.log('[Store] Tracking already active.');
       return;
     }
-    console.log('Starting tracking...');
+
+    console.log('[Store] Starting tracking...');
     this.isTracking = true;
     this.currentDayKey = this.getDateKey(Date.now());
+    this.aggregationManager.clearCache(); // Clear cache on start
 
-    this.scheduleNextIntervalEndAction();
+    // Start scheduler only if not using mock data
+    if (!this.options.useMockData) {
+        this.scheduler.start();
+    }
 
     this.notifyTrackingStatusChange();
   }
 
+  /**
+   * Pauses the activity tracking process.
+   * Clears the tracking flag, pauses the interval scheduler,
+   * saves the current state to disk (if not using mock data), and notifies listeners.
+   */
   pauseTracking(): void {
+    // Guard clause: Not tracking
     if (!this.isTracking) {
-      return;
+        console.log('[Store] Tracking not active, cannot pause.');
+        return;
     }
-    console.log('Pausing tracking...');
+
+    console.log('[Store] Pausing tracking...');
     this.isTracking = false;
+    this.scheduler.pause(); // Pause the scheduler
 
-    if (this.intervalEndTimer) {
-        clearTimeout(this.intervalEndTimer);
-        this.intervalEndTimer = null;
-        console.log("[Store] Interval end timer stopped.");
+    // Save state only if not using mock data
+    if (!this.options.useMockData) {
+      this.saveToDisk();
     }
-
-    this.saveToDisk();
 
     this.notifyTrackingStatusChange();
   }
 
-  private calculateNextIntervalEnd(now: number): number {
-    const intervalMinutes = this.timelineGenerator.aggregationInterval;
-    const intervalMillis = intervalMinutes * 60 * 1000;
-    const nextIntervalStart = Math.ceil(now / intervalMillis) * intervalMillis;
-    return nextIntervalStart;
-  }
-
-  private scheduleNextIntervalEndAction(): void {
-      if (!this.isTracking || this.options.useMockData) {
-          return;
-      }
-
-      if (this.intervalEndTimer) {
-          clearTimeout(this.intervalEndTimer);
-      }
-
-      const now = Date.now();
-      const nextIntervalEndTime = this.calculateNextIntervalEnd(now);
-      const delay = nextIntervalEndTime - now;
-
-      if (delay < 0) {
-          console.warn(`[Store] Calculated delay is negative (${delay}ms). Scheduling for immediate run.`);
-          this.performIntervalEndActions();
-          return;
-      }
-
-      console.log(`[Store] Scheduling next interval action in ${delay} ms (at ${new Date(nextIntervalEndTime).toISOString()})`);
-
-      this.intervalEndTimer = setTimeout(() => {
-          this.performIntervalEndActions();
-      }, delay);
-      this.intervalEndTimer.unref();
-  }
-
-  private performIntervalEndActions(): void {
-      if (!this.isTracking) {
-          console.warn("[Store] performIntervalEndActions called while not tracking. Skipping.");
-          return;
-      }
-
-      console.log(`[Store] Performing actions for interval end at ${new Date().toISOString()}`);
-
-      this.aggregateAndCacheCurrentDay();
-
-      this.saveToDisk();
-
-      this.scheduleNextIntervalEndAction();
-  }
-
-  private aggregateAndCacheCurrentDay(): void {
-    if (this.options.useMockData) return;
-
-    const dateKey = this.currentDayKey;
-    const dayHeartbeats = this.data.days[dateKey]?.heartbeats;
-
-    if (!dayHeartbeats || dayHeartbeats.length === 0) {
-      if (this.currentDayAggregatedData !== null) {
-           this.currentDayAggregatedData = null;
-           this.notifyDataUpdate(dateKey);
-           console.log(`[Store] Cleared aggregation cache for ${dateKey} as no heartbeats exist.`);
-      }
-      return;
-    }
-
-    console.log(`[Store] Aggregating ${dayHeartbeats.length} heartbeats for ${dateKey}...`);
-    try {
-        const newAggregatedData = this.performAggregation(dayHeartbeats);
-
-        const hasChanged = JSON.stringify(this.currentDayAggregatedData) !== JSON.stringify(newAggregatedData);
-
-        if (hasChanged) {
-            this.currentDayAggregatedData = newAggregatedData;
-            console.log(`[Store] Aggregation cache updated for ${dateKey}.`);
-            this.notifyDataUpdate(dateKey);
-        } else {
-        }
-    } catch (error) {
-      console.error(`[Store] Error during aggregation for ${dateKey}:`, error);
-    }
-  }
-
-   private performAggregation(heartbeats: Heartbeat[]): AggregatedData | null {
-       if (!heartbeats || heartbeats.length === 0) {
-           return null;
-       }
-       try {
-           const timelineEvents = this.timelineGenerator.generateTimelineEvents(heartbeats);
-           const summary = this.timelineGenerator.calculateSummary(timelineEvents);
-           return { summary, timelineOverview: timelineEvents };
-       } catch (error) {
-           console.error(`[Store] Error in TimelineGenerator during aggregation:`, error);
-           throw error;
-       }
-   }
-
+  /**
+   * Adds a new heartbeat to the store.
+   * Handles day changes (saving previous day, updating current key).
+   * Delegates the actual storage of the heartbeat to ActivityState.
+   * Applies inactivation logic using `handleMayBeInactive`.
+   * Note: Does not trigger immediate aggregation by default.
+   * @param heartbeatData The data for the new heartbeat.
+   */
   addHeartbeat(heartbeatData: HeartbeatData): void {
+    // Guard clause: Not tracking
     if (!this.isTracking) {
       return;
     }
 
     const timestamp = Date.now();
-    const dateKey = this.getDateKey(timestamp);
+    const newDateKey = this.getDateKey(timestamp);
 
-    if (dateKey !== this.currentDayKey) {
-        console.log(`Day changed during heartbeat addition. Old: ${this.currentDayKey}, New: ${dateKey}`);
-        this.saveToDisk();
-        this.currentDayKey = dateKey;
-        this.currentDayAggregatedData = null;
+    // Handle Day Change
+    if (newDateKey !== this.currentDayKey) {
+        this.handleDayChange(newDateKey);
     }
 
-    this.ensureDayExists(dateKey);
-
-    let dayHeartbeats = this.data.days[dateKey].heartbeats;
-
-    const potentiallyUpdatedHeartbeats = handleMayBeInactive([...dayHeartbeats], timestamp, heartbeatData);
-
-    const newHeartbeat: Heartbeat = { timestamp, data: heartbeatData };
-
-    potentiallyUpdatedHeartbeats.push(newHeartbeat);
-
-    this.data.days[dateKey].heartbeats = potentiallyUpdatedHeartbeats;
+    // Update Heartbeats in State
+    this.updateHeartbeats(timestamp, heartbeatData);
   }
 
+  // --- Private helper methods for addHeartbeat ---
+
+  private handleDayChange(newDateKey: string): void {
+      console.log(`[Store] Day changed during heartbeat addition. Old: ${this.currentDayKey}, New: ${newDateKey}`);
+      // Save previous day's state before switching keys
+      if (!this.options.useMockData) {
+          this.saveToDisk();
+      }
+      this.currentDayKey = newDateKey;
+      // AggregationManager handles its cache internally, no need to clear here.
+  }
+
+  private updateHeartbeats(timestamp: number, heartbeatData: HeartbeatData): void {
+      let dayHeartbeats = this.activityState.getHeartbeats(this.currentDayKey) || [];
+      const potentiallyUpdatedHeartbeats = handleMayBeInactive([...dayHeartbeats], timestamp, heartbeatData);
+      const newHeartbeat: Heartbeat = { timestamp, data: heartbeatData };
+      potentiallyUpdatedHeartbeats.push(newHeartbeat);
+      this.activityState.setHeartbeats(this.currentDayKey, potentiallyUpdatedHeartbeats);
+  }
+
+  // --- End of private helper methods ---
+
+  /**
+   * Generates a date key string (YYYY-MM-DD) from a timestamp.
+   * @param timestamp Timestamp in milliseconds since epoch.
+   * @returns The date key string.
+   */
   getDateKey(timestamp: number): string {
     const date = new Date(timestamp);
     return date.toISOString().split('T')[0];
   }
 
-  ensureDayExists(dateKey: string): void {
-    if (!this.data.days[dateKey]) {
-      this.data.days[dateKey] = {
-        heartbeats: []
-      };
-    }
-  }
-
+  /**
+   * Notifies the renderer process about data updates for a specific day via IPC.
+   * @param dateKey The date key (YYYY-MM-DD) for which data was updated.
+   */
   notifyDataUpdate(dateKey: string): void {
     if (this.ipcHandler) {
         this.ipcHandler.notifyDataUpdate(dateKey);
@@ -405,6 +361,9 @@ class ActivityStore {
     }
   }
 
+  /**
+   * Notifies the renderer process about changes in the tracking status via IPC.
+   */
   private notifyTrackingStatusChange(): void {
       if (this.ipcHandler) {
          this.ipcHandler.notifyTrackingStatusChange(this.isTracking);
@@ -413,107 +372,125 @@ class ActivityStore {
       }
   }
 
+  /**
+   * Retrieves the data for a specific day, including heartbeats and aggregated data.
+   * Gets heartbeats from ActivityState and aggregated data from AggregationManager.
+   * Returns null if the date format is invalid or no heartbeats exist for the day.
+   * @param dateKey Optional date key (YYYY-MM-DD). Defaults to the current day.
+   * @returns A DayData object containing heartbeats and potentially aggregated data, or null.
+   */
   getDayData(dateKey?: string | null): DayData | null {
     const targetDateKey = dateKey || this.getDateKey(Date.now());
 
+    // Guard clause: Invalid date format
     if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDateKey)) {
         console.warn(`Invalid date key format requested: ${targetDateKey}`);
         return null;
     }
 
-    const dayHeartbeats = this.data.days[targetDateKey]?.heartbeats;
+    // Get heartbeats first
+    const dayHeartbeats = this.activityState.getHeartbeats(targetDateKey);
 
-    if (!dayHeartbeats) {
+    // Guard clause: No heartbeats for this day
+    if (!dayHeartbeats || dayHeartbeats.length === 0) {
         return null;
     }
 
-    let aggregatedData: AggregatedData | null = null;
+    // Get aggregated data (might be null)
+    const aggregatedData = this.aggregationManager.getAggregatedDataForDay(targetDateKey);
 
-    if (targetDateKey === this.currentDayKey && this.currentDayAggregatedData) {
-        aggregatedData = this.currentDayAggregatedData;
-    } else {
-        try {
-            aggregatedData = this.performAggregation(dayHeartbeats);
-             if (targetDateKey === this.currentDayKey) {
-                 this.currentDayAggregatedData = aggregatedData;
-             }
-        } catch (error) {
-            console.error(`Error during on-demand aggregation for ${targetDateKey}:`, error);
-            return { heartbeats: dayHeartbeats };
-        }
-    }
-
-    const result: DayData = {
-        heartbeats: dayHeartbeats
-    };
+    // Construct result
+    const result: DayData = { heartbeats: dayHeartbeats };
     if (aggregatedData) {
         result.aggregated = aggregatedData;
     }
-
     return result;
   }
 
+  /**
+   * Retrieves a sorted list of available date keys (YYYY-MM-DD) from ActivityState.
+   * @returns An array of date strings.
+   */
   getAvailableDates(): string[] {
-    return Object.keys(this.data.days)
-           .filter(key => /^\d{4}-\d{2}-\d{2}$/.test(key))
-           .sort();
+    return this.activityState.getAvailableDates();
   }
 
+  /**
+   * Checks for and removes data older than 30 days.
+   * Delegates deletion to ActivityState and cache clearing to AggregationManager if needed.
+   * Updates the last cleanup timestamp in ActivityState and saves data.
+   * Runs at most once per day.
+   * Does nothing if using mock data.
+   */
   cleanupOldData(): void {
+    // Guard clause: Using mock data
     if (this.options.useMockData) {
       return;
     }
 
     const now = Date.now();
     const oneDayMs = 24 * 60 * 60 * 1000;
-    if (this.data.lastCleanup && this.data.lastCleanup > (now - oneDayMs)) {
+
+    // Guard clause: Already cleaned up within the last day
+    if (this.activityState.getLastCleanupTime() > (now - oneDayMs)) {
       return;
     }
 
-    console.log('Running cleanup check for data older than 30 days...');
+    console.log('[Store] Running cleanup check for data older than 30 days...');
     const thirtyDaysAgoTimestamp = now - (30 * oneDayMs);
-    const datesToDelete: string[] = [];
+    const datesToDelete: string[] = this.getDatesOlderThan(thirtyDaysAgoTimestamp);
 
-    for (const dateKey in this.data.days) {
-       if (Object.prototype.hasOwnProperty.call(this.data.days, dateKey) && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
-         try {
-             const dateTimestamp = Date.parse(dateKey + 'T00:00:00Z');
-             if (!isNaN(dateTimestamp) && dateTimestamp < thirtyDaysAgoTimestamp) {
-                 datesToDelete.push(dateKey);
-             }
-         } catch (e) {
-             console.warn(`[Store] Invalid date key encountered during cleanup check: ${dateKey}`, e);
-         }
-       } else if (Object.prototype.hasOwnProperty.call(this.data.days, dateKey)) {
-            console.warn(`[Store] Unexpected key format found in data.days during cleanup: ${dateKey}`);
-       }
+    // Guard clause: No dates to delete
+    if (datesToDelete.length === 0) {
+        console.log('[Store] No old data found to clean up.');
+        // Still update cleanup time even if nothing was deleted
+        this.activityState.updateLastCleanupTime();
+        this.saveToDisk(); 
+        return;
     }
 
-    let needsSave = false;
-    if (datesToDelete.length > 0) {
-        console.log(`[Store] Cleaning up ${datesToDelete.length} days of old data: ${datesToDelete.join(', ')}`);
-        datesToDelete.forEach(dateKey => {
-          delete this.data.days[dateKey];
-        });
-        needsSave = true;
-    } else {
-    }
+    // Perform deletion
+    console.log(`[Store] Cleaning up ${datesToDelete.length} days of old data: ${datesToDelete.join(', ')}`);
+    const todayKey = this.getDateKey(Date.now());
+    datesToDelete.forEach(dateKey => {
+      this.activityState.deleteDay(dateKey);
+      // Clear aggregation cache only if today's data is deleted
+      if (dateKey === todayKey) {
+          this.aggregationManager.clearCache();
+      }
+    });
 
-    this.data.lastCleanup = now;
-    needsSave = true;
-
-    if (needsSave) {
-        console.log("[Store] Saving data after cleanup check.");
-        this.saveToDisk();
-    }
+    // Update cleanup time and save
+    this.activityState.updateLastCleanupTime();
+    console.log("[Store] Saving data after cleanup check.");
+    this.saveToDisk();
   }
 
+  // Helper for cleanupOldData
+  private getDatesOlderThan(timestampThreshold: number): string[] {
+      const datesToDelete: string[] = [];
+      for (const dateKey of this.activityState.getAvailableDates()) {
+          try {
+              const dateTimestamp = Date.parse(dateKey + 'T00:00:00Z');
+              if (!isNaN(dateTimestamp) && dateTimestamp < timestampThreshold) {
+                  datesToDelete.push(dateKey);
+              }
+          } catch (e) {
+              console.warn(`[Store] Invalid date key encountered during cleanup check: ${dateKey}`, e);
+          }
+      }
+      return datesToDelete;
+  }
+
+  /**
+   * Performs cleanup actions when the store is being shut down.
+   * Stops the interval scheduler and performs a final save to disk (if not using mock data).
+   */
   cleanup(): void {
     console.log("[Store] Cleaning up ActivityStore...");
-    if (this.intervalEndTimer) {
-        clearTimeout(this.intervalEndTimer);
-        this.intervalEndTimer = null;
-    }
+    this.scheduler.cleanup();
+
+    // Save only if not using mock data
     if (!this.options.useMockData) {
         console.log("[Store] Performing final save before exit...");
         this.saveToDisk();
@@ -521,16 +498,29 @@ class ActivityStore {
     console.log("[Store] ActivityStore cleanup complete.");
   }
 
+  /**
+   * Gets the currently configured aggregation interval (from TimelineGenerator/ActivityState).
+   * @returns The interval in minutes (5, 10, or 15).
+   */
   getAggregationInterval(): AggregationIntervalMinutes {
       return this.timelineGenerator.aggregationInterval;
   }
 
+  /**
+   * Sets the aggregation interval.
+   * Updates the interval in TimelineGenerator, ActivityState, and IntervalScheduler.
+   * Clears the aggregation cache, triggers immediate re-aggregation for the current day,
+   * saves the state, and notifies listeners.
+   * @param interval The new interval in minutes (must be 5, 10, or 15).
+   */
   setAggregationInterval(interval: AggregationIntervalMinutes): void {
+      // Guard clause: Invalid interval
       if (![5, 10, 15].includes(interval)) {
         console.error('[Store] Invalid interval passed to setAggregationInterval:', interval);
         return;
       }
 
+      // Guard clause: Interval hasn't changed
       if (interval === this.timelineGenerator.aggregationInterval) {
         console.log(`[Store] Aggregation interval is already ${interval}. No change needed.`);
         return;
@@ -538,24 +528,25 @@ class ActivityStore {
 
       console.log(`[Store] Changing aggregation interval to ${interval} minutes.`);
 
+      // Update components
       this.timelineGenerator.setAggregationInterval(interval);
-      this.data.aggregationInterval = interval;
+      this.activityState.setAggregationInterval(interval);
+      this.scheduler.setInterval(interval);
 
-      this.currentDayAggregatedData = null;
-      console.log(`[Store] Cleared aggregation cache for ${this.currentDayKey} due to interval change.`);
+      // Clear cache
+      this.aggregationManager.clearCache();
+      console.log(`[Store] Cleared aggregation cache due to interval change.`);
 
-      if (this.isTracking) {
-          console.log("[Store] Rescheduling interval timer due to interval change...");
-          if (this.intervalEndTimer) {
-              clearTimeout(this.intervalEndTimer);
-              this.intervalEndTimer = null;
+      // Trigger aggregation, notify, and save (if not mock)
+      if (!this.options.useMockData) {
+          if (this.triggerTodaysAggregation()) {
+             this.notifyDataUpdate(this.currentDayKey); // Notify only if data changed
           }
-          this.aggregateAndCacheCurrentDay();
-          this.scheduleNextIntervalEndAction();
+          this.saveToDisk();
+      } else {
+          // Still notify if using mock data, as aggregation might change appearance
+          this.notifyDataUpdate(this.currentDayKey);
       }
-
-      this.saveToDisk();
-      this.notifyDataUpdate(this.currentDayKey);
   }
 }
 
