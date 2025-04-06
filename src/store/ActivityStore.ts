@@ -144,8 +144,7 @@ class ActivityStore {
   private ipcHandler: ActivityIpc;
   public data: StoreData;
   public isTracking: boolean;
-  private autoSaveInterval: NodeJS.Timeout | null;
-  private periodicUpdateInterval: NodeJS.Timeout | null = null;
+  private intervalEndTimer: NodeJS.Timeout | null = null;
   private currentDayKey: string = '';
   private currentDayAggregatedData: AggregatedData | null = null;
 
@@ -163,8 +162,6 @@ class ActivityStore {
     this.currentDayKey = this.getDateKey(Date.now());
 
     this.isTracking = false;
-    this.autoSaveInterval = null;
-    this.periodicUpdateInterval = null;
     this.timelineGenerator = new TimelineGenerator();
 
     if (this.options.useMockData) {
@@ -224,20 +221,12 @@ class ActivityStore {
       return;
     }
 
-    if (this.autoSaveInterval) {
-      clearTimeout(this.autoSaveInterval);
+    console.log(`[Store] Saving data to disk...`);
+    try {
+      this.persistence.saveData(this.data);
+    } catch (error) {
+      console.error(`[Store] Error saving data:`, error);
     }
-
-    this.autoSaveInterval = setTimeout(() => {
-      console.log(`[Store] Scheduling save via persistence layer...`);
-      try {
-        this.persistence.saveData(this.data);
-      } catch (error) {
-        console.error(`[Store] Error occurred while trying to schedule save:`, error);
-      }
-      this.autoSaveInterval = null;
-    }, 500);
-    this.autoSaveInterval.unref();
   }
 
   startTracking(): void {
@@ -248,13 +237,8 @@ class ActivityStore {
     console.log('Starting tracking...');
     this.isTracking = true;
     this.currentDayKey = this.getDateKey(Date.now());
-    this.ensureDayExists(this.currentDayKey);
 
-    if (!this.currentDayAggregatedData) {
-        this.aggregateAndCacheCurrentDay();
-    }
-
-    this.startPeriodicAggregation();
+    this.scheduleNextIntervalEndAction();
 
     this.notifyTrackingStatusChange();
   }
@@ -266,82 +250,96 @@ class ActivityStore {
     console.log('Pausing tracking...');
     this.isTracking = false;
 
-    this.stopPeriodicAggregation();
-
-    if (this.autoSaveInterval) {
-      clearTimeout(this.autoSaveInterval);
-      this.autoSaveInterval = null;
+    if (this.intervalEndTimer) {
+        clearTimeout(this.intervalEndTimer);
+        this.intervalEndTimer = null;
+        console.log("[Store] Interval end timer stopped.");
     }
+
     this.saveToDisk();
 
     this.notifyTrackingStatusChange();
   }
 
-  private startPeriodicAggregation(): void {
-      if (this.periodicUpdateInterval) {
-          console.warn("Periodic aggregation interval already running.");
-      return;
-    }
-      console.log("Starting periodic aggregation timer (check every minute, run every 5 minutes)...");
-
-      this.periodicUpdateInterval = setInterval(() => {
-          if (!this.isTracking) {
-              this.stopPeriodicAggregation();
-              return;
-          }
-
-          const now = new Date();
-          const currentMinute = now.getMinutes();
-          const currentKey = this.getDateKey(now.getTime());
-
-          if (currentKey !== this.currentDayKey) {
-              console.log(`Day changed during tracking. Old: ${this.currentDayKey}, New: ${currentKey}`);
-              this.currentDayKey = currentKey;
-              this.currentDayAggregatedData = null;
-              this.ensureDayExists(this.currentDayKey);
-              this.aggregateAndCacheCurrentDay();
-          }
-
-          if (currentMinute % 5 === 0) {
-              console.log(`Performing periodic aggregation for ${this.currentDayKey} at minute ${currentMinute}...`);
-              this.aggregateAndCacheCurrentDay();
-          }
-
-      }, 60 * 1000);
-      this.periodicUpdateInterval.unref();
+  private calculateNextIntervalEnd(now: number): number {
+    const intervalMinutes = this.timelineGenerator.aggregationInterval;
+    const intervalMillis = intervalMinutes * 60 * 1000;
+    const nextIntervalStart = Math.ceil(now / intervalMillis) * intervalMillis;
+    return nextIntervalStart;
   }
 
-  private stopPeriodicAggregation(): void {
-      if (this.periodicUpdateInterval) {
-          console.log("Stopping periodic aggregation timer.");
-          clearInterval(this.periodicUpdateInterval);
-          this.periodicUpdateInterval = null;
-    }
+  private scheduleNextIntervalEndAction(): void {
+      if (!this.isTracking || this.options.useMockData) {
+          return;
+      }
+
+      if (this.intervalEndTimer) {
+          clearTimeout(this.intervalEndTimer);
+      }
+
+      const now = Date.now();
+      const nextIntervalEndTime = this.calculateNextIntervalEnd(now);
+      const delay = nextIntervalEndTime - now;
+
+      if (delay < 0) {
+          console.warn(`[Store] Calculated delay is negative (${delay}ms). Scheduling for immediate run.`);
+          this.performIntervalEndActions();
+          return;
+      }
+
+      console.log(`[Store] Scheduling next interval action in ${delay} ms (at ${new Date(nextIntervalEndTime).toISOString()})`);
+
+      this.intervalEndTimer = setTimeout(() => {
+          this.performIntervalEndActions();
+      }, delay);
+      this.intervalEndTimer.unref();
+  }
+
+  private performIntervalEndActions(): void {
+      if (!this.isTracking) {
+          console.warn("[Store] performIntervalEndActions called while not tracking. Skipping.");
+          return;
+      }
+
+      console.log(`[Store] Performing actions for interval end at ${new Date().toISOString()}`);
+
+      this.aggregateAndCacheCurrentDay();
+
+      this.saveToDisk();
+
+      this.scheduleNextIntervalEndAction();
   }
 
   private aggregateAndCacheCurrentDay(): void {
-      const dayData = this.data.days[this.currentDayKey];
-      if (!dayData || !dayData.heartbeats || dayData.heartbeats.length === 0) {
-          if (this.currentDayAggregatedData !== null) {
-              this.currentDayAggregatedData = null;
-              this.notifyDataUpdate(this.currentDayKey);
-          return;
-        }
-      }
+    if (this.options.useMockData) return;
 
-      try {
-          const aggregated = this.performAggregation(dayData.heartbeats);
-          if (JSON.stringify(aggregated) !== JSON.stringify(this.currentDayAggregatedData)) {
-              this.currentDayAggregatedData = aggregated;
-              this.notifyDataUpdate(this.currentDayKey);
-          }
-      } catch (error) {
-          console.error(`Error during aggregation for ${this.currentDayKey}:`, error);
-          if (this.currentDayAggregatedData !== null) {
-               this.currentDayAggregatedData = null;
-               this.notifyDataUpdate(this.currentDayKey);
-          }
+    const dateKey = this.currentDayKey;
+    const dayHeartbeats = this.data.days[dateKey]?.heartbeats;
+
+    if (!dayHeartbeats || dayHeartbeats.length === 0) {
+      if (this.currentDayAggregatedData !== null) {
+           this.currentDayAggregatedData = null;
+           this.notifyDataUpdate(dateKey);
+           console.log(`[Store] Cleared aggregation cache for ${dateKey} as no heartbeats exist.`);
       }
+      return;
+    }
+
+    console.log(`[Store] Aggregating ${dayHeartbeats.length} heartbeats for ${dateKey}...`);
+    try {
+        const newAggregatedData = this.performAggregation(dayHeartbeats);
+
+        const hasChanged = JSON.stringify(this.currentDayAggregatedData) !== JSON.stringify(newAggregatedData);
+
+        if (hasChanged) {
+            this.currentDayAggregatedData = newAggregatedData;
+            console.log(`[Store] Aggregation cache updated for ${dateKey}.`);
+            this.notifyDataUpdate(dateKey);
+        } else {
+        }
+    } catch (error) {
+      console.error(`[Store] Error during aggregation for ${dateKey}:`, error);
+    }
   }
 
    private performAggregation(heartbeats: Heartbeat[]): AggregatedData | null {
@@ -353,6 +351,7 @@ class ActivityStore {
            const summary = this.timelineGenerator.calculateSummary(timelineEvents);
            return { summary, timelineOverview: timelineEvents };
        } catch (error) {
+           console.error(`[Store] Error in TimelineGenerator during aggregation:`, error);
            throw error;
        }
    }
@@ -383,8 +382,6 @@ class ActivityStore {
     potentiallyUpdatedHeartbeats.push(newHeartbeat);
 
     this.data.days[dateKey].heartbeats = potentiallyUpdatedHeartbeats;
-
-    this.saveToDisk();
   }
 
   getDateKey(timestamp: number): string {
@@ -480,21 +477,21 @@ class ActivityStore {
     for (const dateKey in this.data.days) {
        if (Object.prototype.hasOwnProperty.call(this.data.days, dateKey) && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
          try {
-             const dateTimestamp = Date.parse(dateKey);
+             const dateTimestamp = Date.parse(dateKey + 'T00:00:00Z');
              if (!isNaN(dateTimestamp) && dateTimestamp < thirtyDaysAgoTimestamp) {
                  datesToDelete.push(dateKey);
              }
          } catch (e) {
-             console.warn(`Invalid date key encountered during cleanup check: ${dateKey}`, e);
+             console.warn(`[Store] Invalid date key encountered during cleanup check: ${dateKey}`, e);
          }
        } else if (Object.prototype.hasOwnProperty.call(this.data.days, dateKey)) {
-            console.warn(`Unexpected key format found in data.days during cleanup: ${dateKey}`);
+            console.warn(`[Store] Unexpected key format found in data.days during cleanup: ${dateKey}`);
        }
     }
 
     let needsSave = false;
     if (datesToDelete.length > 0) {
-        console.log(`Cleaning up ${datesToDelete.length} days of old data: ${datesToDelete.join(', ')}`);
+        console.log(`[Store] Cleaning up ${datesToDelete.length} days of old data: ${datesToDelete.join(', ')}`);
         datesToDelete.forEach(dateKey => {
           delete this.data.days[dateKey];
         });
@@ -506,21 +503,22 @@ class ActivityStore {
     needsSave = true;
 
     if (needsSave) {
+        console.log("[Store] Saving data after cleanup check.");
         this.saveToDisk();
     }
   }
 
   cleanup(): void {
-    console.log('[Store] Cleaning up ActivityStore...');
-    this.pauseTracking();
-
-    this.stopPeriodicAggregation();
-
-    if (this.ipcHandler) {
-        this.ipcHandler.cleanup();
+    console.log("[Store] Cleaning up ActivityStore...");
+    if (this.intervalEndTimer) {
+        clearTimeout(this.intervalEndTimer);
+        this.intervalEndTimer = null;
     }
-
-    console.log('[Store] ActivityStore cleaned up successfully.');
+    if (!this.options.useMockData) {
+        console.log("[Store] Performing final save before exit...");
+        this.saveToDisk();
+    }
+    console.log("[Store] ActivityStore cleanup complete.");
   }
 
   getAggregationInterval(): AggregationIntervalMinutes {
@@ -529,29 +527,35 @@ class ActivityStore {
 
   setAggregationInterval(interval: AggregationIntervalMinutes): void {
       if (![5, 10, 15].includes(interval)) {
-        console.error('Invalid interval passed to setAggregationInterval:', interval);
+        console.error('[Store] Invalid interval passed to setAggregationInterval:', interval);
         return;
       }
 
       if (interval === this.timelineGenerator.aggregationInterval) {
+        console.log(`[Store] Aggregation interval is already ${interval}. No change needed.`);
         return;
       }
 
-      console.log(`Changing aggregation interval to ${interval} minutes.`);
-
-      this.data.aggregationInterval = interval;
+      console.log(`[Store] Changing aggregation interval to ${interval} minutes.`);
 
       this.timelineGenerator.setAggregationInterval(interval);
+      this.data.aggregationInterval = interval;
 
       this.currentDayAggregatedData = null;
-      console.log(`Cleared aggregation cache for ${this.currentDayKey} due to interval change.`);
+      console.log(`[Store] Cleared aggregation cache for ${this.currentDayKey} due to interval change.`);
 
       if (this.isTracking) {
-          console.log("Triggering immediate aggregation for current day with new interval...");
+          console.log("[Store] Rescheduling interval timer due to interval change...");
+          if (this.intervalEndTimer) {
+              clearTimeout(this.intervalEndTimer);
+              this.intervalEndTimer = null;
+          }
           this.aggregateAndCacheCurrentDay();
+          this.scheduleNextIntervalEndAction();
       }
 
       this.saveToDisk();
+      this.notifyDataUpdate(this.currentDayKey);
   }
 }
 

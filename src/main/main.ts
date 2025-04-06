@@ -182,35 +182,6 @@ function registerIpcHandlers(): void { // Add return type void
     return useMockData;
   });
 
-  // Get current aggregation interval
-  ipcMain.handle('get-aggregation-interval', (): number | null => {
-    // Ensure activityStore exists
-    return activityStore ? activityStore.getAggregationInterval() : null;
-  });
-
-  // Set new aggregation interval
-  // Add types for event and interval
-  ipcMain.handle('set-aggregation-interval', async (event: IpcMainInvokeEvent, interval: number): Promise<boolean> => {
-    // Ensure activityStore exists
-    if (!activityStore) {
-        console.error('Cannot set aggregation interval: store not initialized.');
-        return false;
-    }
-    // Basic validation (ActivityStore also validates, but good practice here too)
-    if (![5, 10, 15].includes(interval)) {
-        console.error(`Invalid aggregation interval received: ${interval}`);
-        return false;
-    }
-
-    try {
-      // Type assertion needed because ActivityStore expects 5 | 10 | 15
-      await activityStore.setAggregationInterval(interval as 5 | 10 | 15);
-      return true;
-    } catch (error) {
-      console.error('Error setting aggregation interval:', error);
-      return false;
-    }
-  });
   console.log("IPC handlers registered.");
 }
 
@@ -264,8 +235,6 @@ app.on('before-quit', async (event) => { // Add event type if needed (Event)
       ipcMain.removeHandler('get-tracking-status');
       ipcMain.removeHandler('toggle-tracking');
       ipcMain.removeHandler('is-using-mock-data');
-      ipcMain.removeHandler('get-aggregation-interval');
-      ipcMain.removeHandler('set-aggregation-interval');
 
       console.log('All resources cleaned up before quitting.');
       // Allow quitting now
