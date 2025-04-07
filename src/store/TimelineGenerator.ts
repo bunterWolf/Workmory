@@ -70,20 +70,26 @@ export default class TimelineGenerator {
    */
   generateTimelineEvents(heartbeats: Heartbeat[]): TimelineEvent[] {
     if (!heartbeats || !Array.isArray(heartbeats) || heartbeats.length === 0) {
+      console.log("[TimelineGenerator] generateTimelineEvents: No heartbeats received.");
       return [];
     }
+    console.log(`[TimelineGenerator] generateTimelineEvents: Received ${heartbeats.length} heartbeats.`);
 
     // Sort heartbeats by timestamp (ascending)
     const sortedHeartbeats = [...heartbeats].sort((a, b) => a.timestamp - b.timestamp);
+    // console.log("[TimelineGenerator] Sorted Heartbeats:", JSON.stringify(sortedHeartbeats)); // Optional: very verbose
 
     // Group heartbeats into intervals
     const intervalGroups = this.groupHeartbeatsByInterval(sortedHeartbeats);
+    console.log("[TimelineGenerator] Interval Groups:", JSON.stringify(Object.keys(intervalGroups).reduce((acc, key) => { acc[key] = intervalGroups[parseInt(key)].length; return acc; }, {} as any))); // Log group keys and counts
     
     // Generate activities from interval groups
     const activities = this.generateActivities(intervalGroups);
+    console.log(`[TimelineGenerator] Generated ${activities.length} activities before merging.`);
     
     // Merge consecutive activities with same content
     const mergedActivities = this.mergeConsecutiveActivities(activities);
+    console.log(`[TimelineGenerator] Returning ${mergedActivities.length} merged activities.`);
 
     return mergedActivities;
   }
@@ -140,7 +146,9 @@ export default class TimelineGenerator {
    */
   generateActivities(intervalGroups: IntervalGroups): TimelineEvent[] {
     const activities: TimelineEvent[] = [];
-    const MIN_HEARTBEATS_RATIO = 0.5;
+    // Restore original threshold now that mock data is denser
+    const MIN_HEARTBEATS_RATIO = 0.5; 
+    console.log(`[TimelineGenerator] generateActivities: Using MIN_HEARTBEATS_RATIO=${MIN_HEARTBEATS_RATIO}`);
 
     Object.entries(intervalGroups).forEach(([intervalStartStr, intervalHeartbeats]: [string, Heartbeat[]]) => {
       if (!Array.isArray(intervalHeartbeats) || intervalHeartbeats.length === 0) return;
@@ -149,9 +157,12 @@ export default class TimelineGenerator {
 
       const expectedHeartbeats = this.aggregationInterval * 2;
       const minimumRequiredHeartbeats = Math.ceil(expectedHeartbeats * MIN_HEARTBEATS_RATIO);
+      console.log(`[TimelineGenerator] Interval ${new Date(intervalStartTime).toISOString()}: Found ${intervalHeartbeats.length} heartbeats (min required: ${minimumRequiredHeartbeats}).`);
 
       if (intervalHeartbeats.length >= minimumRequiredHeartbeats) {
+        console.log(`[TimelineGenerator] Interval ${new Date(intervalStartTime).toISOString()}: Processing for dominant activity...`);
         const dominantActivity = this.determineDominantActivity(intervalHeartbeats);
+        console.log(`[TimelineGenerator] Interval ${new Date(intervalStartTime).toISOString()}: Dominant activity = ${JSON.stringify(dominantActivity)}`);
 
         if (dominantActivity) {
             activities.push({
@@ -161,8 +172,10 @@ export default class TimelineGenerator {
               data: dominantActivity.data
             });
         } else {
-            console.warn(`No dominant activity determined for interval starting at ${new Date(intervalStartTime).toISOString()}`);
+            console.warn(`[TimelineGenerator] No dominant activity determined for interval starting at ${new Date(intervalStartTime).toISOString()}`);
         }
+      } else {
+          console.log(`[TimelineGenerator] Interval ${new Date(intervalStartTime).toISOString()}: Skipping due to insufficient heartbeats.`);
       }
     });
 
@@ -177,9 +190,13 @@ export default class TimelineGenerator {
    */
   private determineDominantActivity(heartbeats: Heartbeat[]): { type: string; data: any } | null {
     const activityGroups: { [key: string]: ActivityGroup } = {};
+    // console.log("[TimelineGenerator] determineDominantActivity: Input heartbeats:", JSON.stringify(heartbeats)); // Optional: Verbose
 
     heartbeats.forEach((heartbeat: Heartbeat) => {
-      if (!heartbeat || !heartbeat.data) return;
+      if (!heartbeat || !heartbeat.data) {
+        // console.log("[TimelineGenerator] determineDominantActivity: Skipping heartbeat with missing data.");
+        return;
+      }
 
       let activityKey: string | undefined;
       let activityType: string | undefined;
@@ -187,16 +204,10 @@ export default class TimelineGenerator {
 
       // --- Determine activity type and key based on heartbeat data --- 
 
-      // Check for Teams Meeting (Currently disabled as HeartbeatData doesn't include it)
-      // if (heartbeat.data.teamsMeeting) {
-      //   activityType = 'teamsMeeting';
-      //   specificData = { title: heartbeat.data.teamsMeeting.title, status: heartbeat.data.teamsMeeting.status };
-      //   activityKey = `teams:${specificData.title}:${specificData.status}`;
-      // }
       // Check for Inactivity
-      /* else */ if (heartbeat.data.userActivity === 'inactive') { // Start with if if Teams is disabled
+      if (heartbeat.data.userActivity === 'inactive') { 
         activityType = 'inactive';
-        specificData = { reason: 'User inactive' }; // Example data
+        specificData = { reason: 'User inactive' }; 
         activityKey = 'inactive';
       }
       // Check for Active Application Window
@@ -212,12 +223,14 @@ export default class TimelineGenerator {
         if (!activityGroups[activityKey]) {
           activityGroups[activityKey] = {
             count: 0,
-            data: { type: activityType, data: specificData } // Store type and data together
+            data: { type: activityType, data: specificData } 
           };
         }
         activityGroups[activityKey].count++;
       }
     });
+
+    console.log("[TimelineGenerator] determineDominantActivity: Calculated groups:", JSON.stringify(activityGroups));
 
     // Find the most frequent specific activity group
     let maxCount = 0;
@@ -231,7 +244,7 @@ export default class TimelineGenerator {
     });
 
     // Return the dominant activity's type and data, or null if no groups were found
-    return dominantActivityData; // Return null if nothing is dominant
+    return dominantActivityData; 
   }
 
   /**

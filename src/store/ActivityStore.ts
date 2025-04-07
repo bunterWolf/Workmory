@@ -1,7 +1,7 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import { app } from 'electron';
 import TimelineGenerator, { AggregationIntervalMinutes } from './TimelineGenerator';
-import { generateMockData } from './mockData';
 import { ActivityPersistence } from './ActivityPersistence';
 import { ActivityIpc } from './ActivityIpc';
 import { ActivityState } from './ActivityState';
@@ -175,8 +175,27 @@ class ActivityStore {
 
     let initialData: StoreData | undefined;
     if (this.options.useMockData) {
-      console.log("🧪 Initializing ActivityStore with mock data.");
-      initialData = generateMockData() as StoreData;
+      console.log("🧪 Initializing ActivityStore with mock data from file.");
+      // Load from mock-data.json instead of generating
+      try {
+        // Path relative to the main process execution directory (dist/main)
+        // Adjust this path if your build process places public/ differently
+        const mockDataPath = path.join(__dirname, '../../public/mock-data.json');
+        console.log(`[Store] Attempting to load mock data from: ${mockDataPath}`);
+        if (fs.existsSync(mockDataPath)) {
+            const mockDataContent = fs.readFileSync(mockDataPath, 'utf-8');
+            initialData = JSON.parse(mockDataContent) as StoreData;
+            console.log("[Store] Successfully loaded mock data from file.");
+        } else {
+            console.error(`[Store] Mock data file not found at: ${mockDataPath}. Falling back to empty state.`);
+            // Optionally initialize with empty/default state or throw error
+             initialData = undefined; // Or provide a default structure
+        }
+      } catch (error) {
+        console.error("[Store] Error loading or parsing mock data file:", error);
+        // Fallback or throw error
+        initialData = undefined; // Or provide a default structure
+      }
       this.activityState = new ActivityState(initialData);
       this.timelineGenerator.setAggregationInterval(this.activityState.getAggregationInterval());
     } else {
