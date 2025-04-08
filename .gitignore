@@ -35,4 +35,50 @@ Thumbs.db
 out/
 
 # Application data
-activity-data.json 
+activity-data.json
+
+# Build Artifacts
+/dist
+*.js.map
+*.tsbuildinfo
+
+# Generated Mock Data
+public/mock-data.json
+
+# Node Modules
+/node_modules
+
+# Electron Build Artifacts
+/release
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Environment variables
+.env*
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# IDE config files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+
+# Misc
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.sqlite3-journal
+*.db-wal
+*.sqlite3-wal
+*.db-shm
+*.sqlite3-shm 

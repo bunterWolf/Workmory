@@ -6,12 +6,13 @@
   "scripts": {
     "start": "electron .",
     "dev": "tsc && (webpack --config webpack.config.js --watch & electron .)",
-    "dev:mock": "tsc && (webpack --config webpack.config.js --watch & electron . --mock-data)",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "dev:mock": "npm run generate:mock && electron . --trace-warnings . --mock-data",
+    "test": "npm run generate:mock && jest",
+    "test:watch": "npm run generate:mock && jest --watch",
     "build": "npm test && tsc && webpack --config webpack.config.js",
     "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "generate:mock": "ts-node scripts/generate-mock-data.ts"
   },
   "build": {
     "appId": "com.focus.productivity",

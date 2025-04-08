@@ -10,9 +10,15 @@ import { AggregationManager } from './AggregationManager';
 
 // ---- TYPE DEFINITIONS ----
 
+// Export this type so it can be shared
+export interface AppWindowData {
+  app: string;
+  title: string;
+}
+
 export interface HeartbeatData {
   userActivity?: 'active' | 'may_be_inactive' | 'inactive'; // Be more specific
-  appWindow?: { app: string; title: string } | null;
+  appWindow?: AppWindowData | null; // Use the exported type
   // Add other potential properties from other watchers if known
   // teamsMeeting?: { title: string; status: string }; // Example if Teams watcher exists
 }
