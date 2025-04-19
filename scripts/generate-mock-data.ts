@@ -5,7 +5,7 @@ import { AggregationIntervalMinutes } from '../src/store/TimelineGenerator'; // 
 
 // --- Configuration ---
 const OUTPUT_PATH = path.resolve(__dirname, '../public/mock-data.json');
-const BASE_DATE_STR = '2024-01-01'; // Base date for relative times
+const BASE_DATE_STR = '2025-01-01'; // Base date for relative times
 const HEARTBEAT_INTERVAL_MS = 30 * 1000; // 30 seconds
 
 // --- Helper Functions ---
@@ -63,15 +63,11 @@ function generateInactiveBlock(
     let currentCount = 0;
 
     for (let ts = startMs; ts < endMs; ts += HEARTBEAT_INTERVAL_MS) {
-        let appWindow: AppWindowData | null = null;
-        if (initialInactiveAppData && currentCount < initialCount) {
-            appWindow = { ...initialInactiveAppData };
-        }
         heartbeats.push({
             timestamp: ts,
             data: {
                 userActivity: 'inactive',
-                appWindow: appWindow
+                appWindow: initialInactiveAppData
             }
         });
         currentCount++;
@@ -91,48 +87,9 @@ function generateMockData(): StoreData {
         ...generateAppWindowBlock('08:00', '08:30', { app: 'VS Code', title: 'Refactoring Components - Focus2' }, date1)
     );
 
-    // Block 3: 09:00-09:15 (Edge Case: VSCode A vs Chrome B)
-    // Need manual generation for mixed heartbeats
-    const block3Start = getTime('09:00', date1);
-    const block3End = getTime('09:15', date1);
-    const vsCodeA = { app: 'VS Code', title: 'File A' };
-    const chromeB = { app: 'Chrome', title: 'Docs B' };
-    let vsCodeCount = 0;
-    let chromeCount = 0;
-    const targetVsCode = 8; // Target for dominance scenario
-    const targetChrome = 7;
-    for (let ts = block3Start; ts < block3End; ts += HEARTBEAT_INTERVAL_MS) {
-        // Alternate to ensure counts are met, prioritize VS Code slightly if needed at the end
-        // This ensures 8 VSCode, 7 Chrome within the 15 heartbeats (15min / 30s = 30 heartbeats theoretical max, we aim for ~15 for the test)
-        // Let's simplify and alternate, then maybe add one at the end if counts don't match
-        const totalSlots = Math.floor((block3End - block3Start) / HEARTBEAT_INTERVAL_MS);
-        const isEvenSlot = ((ts - block3Start) / HEARTBEAT_INTERVAL_MS) % 2 === 0;
-
-        // Crude alternation - might need refinement if exact counts are critical and interval isn't perfect
-        if (isEvenSlot && vsCodeCount < targetVsCode) {
-             allHeartbeats.push({ timestamp: ts, data: { userActivity: 'active', appWindow: vsCodeA } });
-             vsCodeCount++;
-        } else if (!isEvenSlot && chromeCount < targetChrome) {
-            allHeartbeats.push({ timestamp: ts, data: { userActivity: 'active', appWindow: chromeB } });
-            chromeCount++;
-        } else if (vsCodeCount < targetVsCode) { // Fill remaining slots if needed
-             allHeartbeats.push({ timestamp: ts, data: { userActivity: 'active', appWindow: vsCodeA } });
-             vsCodeCount++;
-        } else if (chromeCount < targetChrome) {
-             allHeartbeats.push({ timestamp: ts, data: { userActivity: 'active', appWindow: chromeB } });
-             chromeCount++;
-        }
-        // Make sure we don't exceed 15 for the original test case that needed exactly 15
-         if (vsCodeCount + chromeCount >= 15) break;
-    }
-     // Ensure exactly 15 heartbeats were added for this block if the loop finished early
-     // (This logic might be slightly off, needs verification during testing)
-     console.log(`Block 3 counts: VSCode=${vsCodeCount}, Chrome=${chromeCount}`);
-
-
     // Block 4 & 5: 12:00-12:30 (Inactive) - Merged for simplicity
     allHeartbeats.push(
-        ...generateInactiveBlock('12:00', '12:30', null, 0, date1)
+        ...generateInactiveBlock('08:30', '09:00', { app: 'VS Code', title: 'Refactoring Components - Focus2' }, 0, date1)
         // Note: Original data had some variation (Chrome title, System Screensaver)
         // For simplicity, keeping it pure inactive for now. Can be added back if needed.
     );
@@ -146,45 +103,19 @@ function generateMockData(): StoreData {
         ...generateAppWindowBlock('14:39:30', '14:45:00', { app: 'Outlook', title: 'Checking Calendar' }, date1) // ~5.5 mins
     );
 
-
-    // --- Define Day 2: 2024-01-02 ---
-    const date2 = '2024-01-02';
-    // Block 1: 08:00-08:15 (VS Code Refactoring/Running Tests)
-    allHeartbeats.push(
-        ...generateAppWindowBlock('08:00', '08:08:30', { app: 'VS Code', title: 'Refactoring Components - Focus2' }, date2)
-    );
-    allHeartbeats.push(
-        ...generateAppWindowBlock('08:08:30', '08:10:00', { app: 'VS Code', title: 'Running Tests - Focus2' }, date2)
-    );
-     allHeartbeats.push(
-        ...generateAppWindowBlock('08:10:00', '08:15:00', { app: 'VS Code', title: 'Refactoring Components - Focus2' }, date2)
-    );
-
-    // Block 2: 12:00-12:15 (Inactive)
-    allHeartbeats.push(
-        ...generateInactiveBlock('12:00', '12:15', { app: 'System Settings', title: 'Checking Updates' }, 2, date2) // 2 initial with app data
-    );
-
-
     // --- Group Heartbeats by Day ---
     const daysData: { [dateKey: string]: DayData } = {};
     allHeartbeats.sort((a, b) => a.timestamp - b.timestamp); // Sort all heartbeats
-
-    allHeartbeats.forEach(hb => {
-        const dateKey = new Date(hb.timestamp).toISOString().split('T')[0];
-        if (!daysData[dateKey]) {
-            daysData[dateKey] = { heartbeats: [] };
-        }
-        daysData[dateKey].heartbeats.push(hb);
-    });
 
     // --- Final Structure ---
     const finalData: StoreData = {
         version: 1,
         startTime: allHeartbeats[0]?.timestamp ?? Date.now(), // Use first heartbeat's time
         lastCleanup: getTime('23:00', date1), // Example cleanup time
-        aggregationInterval: 15 as AggregationIntervalMinutes, // Explicitly cast or ensure type correctness
-        days: daysData,
+        aggregationInterval: 5 as AggregationIntervalMinutes, // Explicitly cast or ensure type correctness
+        days: {
+            [date1]: { heartbeats: allHeartbeats }
+        },
     };
 
     return finalData;
