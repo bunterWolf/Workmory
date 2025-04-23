@@ -48,11 +48,10 @@ npm start -- --mock-data
 ```
 
 When using mock data:
-- The application will display sample activity data for today and yesterday
-- No actual activity will be tracked
-- Tracking controls will be disabled
-- Mock data will not be saved to disk
-- The UI will show indicators that mock data is being used
+- The application will load sample activity data from `public/mock-data.json` instead of tracking real activity.
+- No actual activity will be tracked.
+- Tracking controls will be disabled.
+- Mock data will not be saved to disk.
 
 This is useful for:
 - UI development without waiting for real data

@@ -1,7 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import './DayOverview.css';
 
 const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInterval = 15 }) => {
+  const { t, i18n } = useTranslation();
+  
   // Generate array of hour numbers from 8 to 17 (8 AM to 5 PM)
   const defaultTimelineHours = Array.from({ length: 10 }, (_, i) => i + 8);
   
@@ -11,28 +14,17 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
     return MIN_BLOCK_HEIGHT * (60 / aggregationInterval);
   };
   
-  // Format hour for display (e.g., 8 -> "8:00", 13 -> "1:00 PM")
+  // Format hour for display
   const formatHour = (hour) => {
-    if (hour === 12) {
-      return '12:00 PM';
-    } else if (hour < 12) {
-      return `${hour}:00 AM`;
-    } else {
-      return `${hour - 12}:00 PM`;
-    }
+    const date = new Date();
+    date.setHours(hour, 0, 0, 0);
+    return t('timeFormats.time', { time: date });
   };
   
-  // Format time to show as "10:30 AM" etc.
+  // Format time to show
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    
-    hours = hours % 12;
-    hours = hours ? hours : 12; // Convert 0 to 12
-    
-    return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+    return t('timeFormats.time', { time: date });
   };
   
   // Get height for the timeline based on hours
@@ -171,8 +163,6 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
               <div className="event-title">
                 {event.title} {event.subTitle && (<span className="event-subtitle">{event.subTitle}</span>)}
               </div>
-              
-              
               
               <div className="event-time">
                 {event.formattedStartTime} - {event.formattedEndTime}

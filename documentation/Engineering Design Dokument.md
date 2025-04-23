@@ -342,22 +342,23 @@ npm run dev:mock
 
 #### 11.1.2 Verhalten im Mock-Daten-Modus
 
-- Die Anwendung verwendet ein vordefiniertes Datensatz anstatt echte Aktivitäten zu verfolgen
-- Die Mock-Daten enthalten Beispieldaten für den aktuellen und den vorherigen Tag
-- Tracking-Kontrollen werden deaktiviert
-- Die UI zeigt durch visuelle Indikatoren an, dass Mock-Daten verwendet werden
-- Mock-Daten werden nicht auf der Festplatte gespeichert
-- Events werden nicht aufgezeichnet
+- Die Anwendung lädt einen vordefinierten Datensatz aus `public/mock-data.json` anstatt echte Aktivitäten zu verfolgen.
+- Die Mock-Daten enthalten Beispieldaten für feste Testtage (z.B. `2024-01-01`, `2024-01-02`).
+- Tracking-Kontrollen werden deaktiviert.
+- Die UI zeigt durch visuelle Indikatoren an, dass Mock-Daten verwendet werden.
+- Mock-Daten werden nicht auf der Festplatte gespeichert.
+- Events werden nicht aufgezeichnet.
 
 #### 11.1.3 Implementierung
 
 Die Mock-Daten-Funktionalität ist folgendermaßen implementiert:
 
-- `src/store/mockData.js`: Enthält statische Beispieldaten
-- Kommandozeilen-Flag wird im `main.js` ausgewertet
-- Der `ActivityStore` erhält einen zusätzlichen Parameter `useMockData`
-- Bei aktiviertem Mock-Modus werden sämtliche Tracking-Operationen übersprungen
-- Die UI-Komponenten zeigen entsprechende Status-Hinweise an
+- `public/mock-data.json`: Enthält statische Beispieldaten im JSON-Format.
+- Kommandozeilen-Flag wird im `main.ts` ausgewertet.
+- Der `ActivityStore` erhält einen zusätzlichen Parameter `useMockData`.
+- Bei aktiviertem Mock-Modus liest der `ActivityStore` die `public/mock-data.json` statt die `generateMockData` Funktion aufzurufen oder Daten aus dem persistenten Speicher zu laden.
+- Sämtliche Tracking- und Speicheroperationen werden im Mock-Modus übersprungen.
+- Die UI-Komponenten zeigen entsprechende Status-Hinweise an.
 
 #### 11.1.4 Vorteile für die Entwicklung
 
