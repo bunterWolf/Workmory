@@ -25,10 +25,10 @@ describe('ActivityStore Utilities', () => {
   describe('handleMayBeInactive', () => {
     test('sollte may_be_inactive zu inactive umwandeln wenn userActivity inactive ist', () => {
       const currentTime = new Date('2024-03-20T10:05:00Z').getTime();
-      // Stellen Sie sicher, dass heartbeatData Partial<HeartbeatData> entspricht
+      // Ensure heartbeatData matches Partial<HeartbeatData>
       const heartbeatData: Partial<HeartbeatData> = { userActivity: 'inactive' };
 
-      // Stellen Sie sicher, dass heartbeats dem Heartbeat[] Typ entsprechen
+      // Ensure heartbeats match the Heartbeat[] type
       const heartbeats: Heartbeat[] = [
         {
           timestamp: new Date('2024-03-20T10:00:00Z').getTime(),
@@ -111,23 +111,23 @@ describe('ActivityStore Utilities', () => {
       const currentTime = Date.now();
       const heartbeatData: Partial<HeartbeatData> = { userActivity: 'inactive' };
 
-      // Prüfe leeres Array
+      // Check empty array
       expect(handleMayBeInactive([], currentTime, heartbeatData)).toEqual([]);
 
-      // Prüfe undefined und null für heartbeats - Funktion gibt sie unverändert zurück
+      // Check undefined and null for heartbeats - function returns them unchanged
       expect(handleMayBeInactive(undefined as any, currentTime, heartbeatData)).toBeUndefined();
       expect(handleMayBeInactive(null as any, currentTime, heartbeatData)).toBeNull();
 
-      // Prüfe unvollständige Heartbeat-Objekte
+      // Check incomplete Heartbeat objects
       const invalidHeartbeats: Heartbeat[] = [
-        { timestamp: currentTime - 1000, data:{} }, // Kein userActivity
-        { timestamp: currentTime - 2000, data: null } as any, // data ist null (mit Type Assertion)
-        { timestamp: currentTime - 3000, data: {} } // Leeres data-Objekt
+        { timestamp: currentTime - 1000, data:{} }, // No userActivity
+        { timestamp: currentTime - 2000, data: null } as any, // data is null (with type assertion)
+        { timestamp: currentTime - 3000, data: {} } // Empty data object
       ];
 
       const result = handleMayBeInactive(invalidHeartbeats, currentTime, heartbeatData);
       expect(result).toHaveLength(3);
-      // Hier wird erwartet, dass keine Änderungen vorgenommen werden, da keine 'may_be_inactive' existieren.
+      // It is expected here that no changes are made, as no 'may_be_inactive' exist.
       expect(result).toEqual(invalidHeartbeats);
     });
   });
@@ -136,41 +136,41 @@ describe('ActivityStore Utilities', () => {
 // Neuer Describe-Block für Integrationstests
 describe('ActivityStore Integration', () => {
   let activityStore: ActivityStore;
-  const testDateKey = '2024-04-06'; // Beispiel-Datum
-  const intervalMillis = 15 * 60 * 1000; // 15 Minuten für die Erwartungen
+  const testDateKey = '2024-04-06'; // Example date
+  const intervalMillis = 15 * 60 * 1000; // 15 minutes for the expectations
   let originalDateNow: () => number;
 
-  // Helper zum Erzeugen von Timestamps für den Testtag
+  // Helper to generate timestamps for the test day
   const getTimestamp = (hour: number, minute: number, second: number = 0) => {
     return new Date(`${testDateKey}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}Z`).getTime();
   };
 
   beforeEach(() => {
-    // Speichere die originale Date.now Funktion
+    // Store the original Date.now function
     originalDateNow = Date.now;
-    // Erstelle eine neue Instanz vor jedem Test, keine Mock-Daten
+    // Create a new instance before each test, no mock data
     activityStore = new ActivityStore({ useMockData: false, storagePath: '/tmp/nonexistent/activity-test.json' });
     activityStore.setAggregationInterval(15);
-    // Simulieren, dass das Tracking gestartet wird (setzt isTracking intern)
+    // Simulate that tracking is started (sets isTracking internally)
     activityStore.startTracking();
-    // Wir setzen den initialen Timestamp, damit der currentDayKey stimmt
+    // We set the initial timestamp so that currentDayKey is correct
     Date.now = jest.fn(() => getTimestamp(9, 0, 1));
-    activityStore.startTracking(); // Rufe erneut auf, um den gemockten Timestamp zu nutzen
+    activityStore.startTracking(); // Call again to use the mocked timestamp
 
   });
 
   afterEach(() => {
-    // Stelle die originale Date.now Funktion wieder her
+    // Restore the original Date.now function
     Date.now = originalDateNow;
-    // Bereinige nach jedem Test
+    // Clean up after each test
     activityStore.cleanup();
-    // Lösche ggf. erstellte Testdatei
+    // Delete any created test file if necessary
     try { fs.unlinkSync('/tmp/nonexistent/activity-test.json'); } catch (e) { /* Ignorieren */ }
     try { fs.rmdirSync('/tmp/nonexistent'); } catch (e) { /* Ignorieren */ }
   });
 
   test('sollte Heartbeats korrekt aggregieren und Timeline-Events generieren', () => {
-    // ---- Test-Heartbeats hinzufügen ----
+    // ---- Add test heartbeats ----
     // Helper to add heartbeat with specific timestamp
     const addTestHeartbeat = (timestamp: number, data: HeartbeatData) => {
         const originalNow = Date.now;
@@ -179,7 +179,7 @@ describe('ActivityStore Integration', () => {
         Date.now = originalNow; // Restore immediately after add
     };
 
-    // Intervall 1: 09:00 - 09:15 (Mehrheitlich VS Code)
+    // Interval 1: 09:00 - 09:15 (Mostly VS Code)
     // Simulate ~30 heartbeats for the interval
     for (let min = 0; min < 15; min++) {
         // Add 2 heartbeats per minute (approx. 30s interval)
@@ -192,7 +192,7 @@ describe('ActivityStore Integration', () => {
         }
     }
 
-    // Intervall 2: 09:15 - 09:30 (Mehrheitlich Inaktiv)
+    // Interval 2: 09:15 - 09:30 (Mostly Inactive)
     for (let min = 15; min < 30; min++) {
         if (min < 27) { // First 12 mins: Inactive
             addTestHeartbeat(getTimestamp(9, min, 15), { userActivity: 'inactive' });
@@ -203,14 +203,14 @@ describe('ActivityStore Integration', () => {
         }
     }
 
-    // Intervall 3: 09:30 - 09:45 (WENIGER als 50% Heartbeats)
+    // Interval 3: 09:30 - 09:45 (LESS than 50% heartbeats)
     // Add only a few heartbeats to test the minimum threshold
     addTestHeartbeat(getTimestamp(9, 31, 15), { appWindow: { app: 'VS Code', title: 'file1.ts' } });
     addTestHeartbeat(getTimestamp(9, 32, 45), { appWindow: { app: 'VS Code', title: 'file1.ts' } });
     addTestHeartbeat(getTimestamp(9, 34, 0), { userActivity: 'inactive' });
 
 
-    // ---- Aggregation auslösen und prüfen ----
+    // ---- Trigger aggregation and check ----
     Date.now = originalDateNow; // Ensure Date.now is restored
 
     const dayData = activityStore.getDayData(testDateKey);
@@ -222,33 +222,33 @@ describe('ActivityStore Integration', () => {
 
     const timeline = dayData!.aggregated!.timelineOverview;
 
-    // Erwartet werden 2 Events (Intervall 1 und Intervall 2). Intervall 3 hat zu wenig Daten.
+    // Expect 2 events (Interval 1 and Interval 2). Interval 3 has too little data.
     expect(timeline).toHaveLength(2);
 
-    // Prüfe Event 1 (VS Code - dominant in 09:00-09:15)
+    // Check Event 1 (VS Code - dominant in 09:00-09:15)
     expect(timeline[0]).toEqual(expect.objectContaining({
-      timestamp: getTimestamp(9, 0), // Startet um 09:00
-      duration: intervalMillis,      // Dauer 15 min
+      timestamp: getTimestamp(9, 0), // Starts at 09:00
+      duration: intervalMillis,      // Duration 15 min
       type: 'appWindow',
-      data: { app: 'VS Code', title: 'file1.ts' } // VS Code war dominant
+      data: { app: 'VS Code', title: 'file1.ts' } // VS Code was dominant
     }));
 
-    // Prüfe Event 2 (Inaktiv - dominant in 09:15-09:30)
+    // Check Event 2 (Inactive - dominant in 09:15-09:30)
     expect(timeline[1]).toEqual(expect.objectContaining({
-      timestamp: getTimestamp(9, 15), // Startet um 09:15
-      duration: intervalMillis,      // Dauer 15 min
+      timestamp: getTimestamp(9, 15), // Starts at 09:15
+      duration: intervalMillis,      // Duration 15 min
       type: 'inactive',
     }));
      expect(timeline[1].data).toBeDefined(); // Inactive data should exist
 
-    // Optional: Summary prüfen, falls relevant
+    // Optional: Check summary if relevant
     const summary = dayData!.aggregated!.summary;
     expect(summary.totalDuration).toBe(2 * intervalMillis);
-    expect(summary.activeDuration).toBe(1 * intervalMillis); // Nur das erste Intervall war aktiv dominant
-    expect(summary.inactiveDuration).toBe(1 * intervalMillis); // Das zweite war inaktiv
-    // Zähle die App-Nutzung basierend auf der dominanten Aktivität im Intervall
-    expect(summary.appUsage['VS Code']).toBe(1 * intervalMillis); // Dominant in Intervall 1
-    expect(summary.appUsage['Browser']).toBeUndefined(); // Browser war nicht dominant
+    expect(summary.activeDuration).toBe(1 * intervalMillis); // Only the first interval was actively dominant
+    expect(summary.inactiveDuration).toBe(1 * intervalMillis); // The second was inactive
+    // Count app usage based on the dominant activity in the interval
+    expect(summary.appUsage['VS Code']).toBe(1 * intervalMillis); // Dominant in Interval 1
+    expect(summary.appUsage['Browser']).toBeUndefined(); // Browser was not dominant
   });
 });
 
@@ -260,7 +260,7 @@ describe('ActivityStore Mock Data Tests', () => {
   let mockFs: any;
 
   beforeEach(() => {
-    // Mocken von Teilen von fs (nur existsSync für den Pfad und andere, die nicht lesen)
+    // Mock parts of fs (only existsSync for the path and others that do not read)
     mockFs = {
       existsSync: jest.fn((p) => {
         // Only return true for the specific mock data path the store looks for
@@ -284,8 +284,8 @@ describe('ActivityStore Mock Data Tests', () => {
     electron.app.getPath.mockReturnValue('/tmp/user-data-mock'); // For saving/loading state perhaps
     electron.app.getAppPath.mockReturnValue(projectRoot); // Point to the calculated project root
 
-    // Initialisiere den Store im Mock-Modus
-    // Wichtig: Das Laden der Module muss *nach* den jest.mock/doMock Aufrufen erfolgen
+    // Initialize the store in mock mode
+    // Important: Modules must be loaded *after* the jest.mock/doMock calls
     // Reset modules to ensure the new mocks are picked up
     jest.resetModules();
     const ActivityStoreActual = require('./ActivityStore').default;
@@ -293,12 +293,85 @@ describe('ActivityStore Mock Data Tests', () => {
   });
 
   afterEach(() => {
-    jest.resetModules(); // Wichtig, um Mocks zwischen Tests zurückzusetzen
+    jest.resetModules(); // Important to reset mocks between tests
     jest.restoreAllMocks();
     jest.dontMock('fs'); // Clean up fs mocking status
   });
 
-  it('sollte mit 15min Intervall die korrekten aggregierten und gemergten Events für 2024-01-01 liefern', () => {
+  it('Check 5 min aggregation', () => {
+    activityStore.setAggregationInterval(5);
+    const dayData = activityStore.getDayData('2024-01-01');
+
+    expect(dayData).not.toBeNull();
+    expect(dayData?.aggregated?.timelineOverview).toBeDefined();
+
+    const timeline = dayData!.aggregated!.timelineOverview;
+    const miniuteAsMillis = 60 * 1000;
+
+    // Block 1 - Direct representation of mock data heartbeats
+    expect(timeline[0]).toEqual(expect.objectContaining({
+      timestamp: new Date('2024-01-01T08:00:00.000Z').getTime(),
+      duration:5 * miniuteAsMillis,
+      type: 'appWindow',
+      data: { app: 'Google Chrome', title: 'Aggregate to visible' }
+    }));
+
+    // Block 2 - Direct representation of mock data heartbeats
+    expect(timeline[1]).toEqual(expect.objectContaining({
+      timestamp: new Date('2024-01-01T08:05:00.000Z').getTime(),
+      duration: 5* miniuteAsMillis,
+      type: 'appWindow',
+      data: { app: 'Explorer', title: 'Aggregate to visible only for 5 min' }
+    }));
+
+    // Block 3 - Direct representation of mock data heartbeats
+    expect(timeline[2]).toEqual(expect.objectContaining({
+      timestamp: new Date('2024-01-01T08:10:00.000Z').getTime(),
+      duration: 5 * miniuteAsMillis,
+      type: 'appWindow',
+      data: { app: 'Google Chrome', title: 'Aggregate to visible' }
+    }));
+
+    // Block 4 - Direct representation of mock data heartbeats
+    expect(timeline[3]).toEqual(expect.objectContaining({
+      timestamp: new Date('2024-01-01T08:15:00.000Z').getTime(),
+      duration: 10 * miniuteAsMillis,
+      type: 'inactive'
+    }));
+
+    // Block 5 - Direct representation of mock data heartbeats
+    expect(timeline[4]).toEqual(expect.objectContaining({
+      timestamp: new Date('2024-01-01T08:25:00.000Z').getTime(),
+      duration: 5 * miniuteAsMillis,
+      type: 'appWindow',    
+      data: { app: 'Excel', title: 'File A: Aggregate to visible' }
+    }));
+
+    // Block 6 - Direct representation of mock data heartbeats
+    expect(timeline[5]).toEqual(expect.objectContaining({
+      timestamp: new Date('2024-01-01T08:30:00.000Z').getTime(),
+      duration: 5 * miniuteAsMillis,
+      type: 'appWindow',
+      data: { app: 'Excel', title: 'File B: Aggregate to visible' } 
+    }));
+
+    // Block 7 - Direct representation of mock data heartbeats
+    expect(timeline[6]).toEqual(expect.objectContaining({
+      timestamp: new Date('2024-01-01T08:35:00.000Z').getTime(),
+      duration: 10 * miniuteAsMillis,
+      type: 'appWindow',
+      data: { app: 'Excel', title: 'File A: Aggregate to visible' }
+    }));
+
+
+    expect(dayData?.aggregated?.summary).toBeDefined();
+    const summary = dayData!.aggregated!.summary;
+    expect(summary.totalDuration).toBe(45 * miniuteAsMillis);
+    expect(summary.activeDuration).toBe(35 * miniuteAsMillis);
+    expect(summary.inactiveDuration).toBe(10 * miniuteAsMillis);
+  });
+
+  it('Check 15 min aggregation', () => {
     activityStore.setAggregationInterval(15);
     const dayData = activityStore.getDayData('2024-01-01');
 
@@ -306,103 +379,36 @@ describe('ActivityStore Mock Data Tests', () => {
     expect(dayData?.aggregated?.timelineOverview).toBeDefined();
 
     const timeline = dayData!.aggregated!.timelineOverview;
-    const intervalMillis = 15 * 60 * 1000;
+    const miniuteAsMillis = 60 * 1000;
 
-    // Erwartet: 4 Blöcke nach Merging
-    expect(timeline).toHaveLength(4);
-
-    // 1. Merged Block: 08:00 - 08:30 (VS Code Refactoring)
+    // Block 1 - Aggregate
     expect(timeline[0]).toEqual(expect.objectContaining({
       timestamp: new Date('2024-01-01T08:00:00.000Z').getTime(),
-      duration: intervalMillis * 2, // 30 Minuten
+      duration: 15 * miniuteAsMillis,
       type: 'appWindow',
-      data: { app: 'VS Code', title: 'Refactoring Components - Focus2' }
+      data: { app: 'Google Chrome', title: 'Aggregate to visible' }
     }));
 
-    // 2. Edge Case Block: 09:00 - 09:15 (VS Code File A)
+    // Block 2 - Aggregate to inactive
     expect(timeline[1]).toEqual(expect.objectContaining({
-      timestamp: new Date('2024-01-01T09:00:00.000Z').getTime(),
-      duration: intervalMillis, // 15 Minuten
-      type: 'appWindow',
-      data: { app: 'VS Code', title: 'File A' } 
+      timestamp: new Date('2024-01-01T08:15:00.000Z').getTime(),
+      duration: 15 * miniuteAsMillis,
+      type: 'inactive'
     }));
 
-    // 3. Merged Block: 12:00 - 12:30 (Inactive)
+    // Block 3 - Direct representation of mock data heartbeats
     expect(timeline[2]).toEqual(expect.objectContaining({
-      timestamp: new Date('2024-01-01T12:00:00.000Z').getTime(),
-      duration: intervalMillis * 2, // 30 Minuten
-      type: 'inactive',
+      timestamp: new Date('2024-01-01T08:30:00.000Z').getTime(),
+      duration: 15 * miniuteAsMillis,
+      type: 'appWindow',    
+      data: { app: 'Excel', title: 'File A: Aggregate to visible' }
     }));
-    expect(timeline[2].data).toBeDefined(); // Inactive data should exist
 
-    // 4. Nicht gemergter Block: 14:30 - 14:45 (Outlook)
-    expect(timeline[3]).toEqual(expect.objectContaining({
-      timestamp: new Date('2024-01-01T14:30:00.000Z').getTime(),
-      duration: intervalMillis, // 15 Minuten
-      type: 'appWindow',
-      data: { app: 'Outlook', title: 'Answering Emails' }
-    }));
-  });
-  
-  // ---- Weitere Tests (optional, aber empfohlen) ----
-  
-  it('sollte mit 10min Intervall eine detailliertere Ansicht liefern (weniger Merging)', () => {
-      activityStore.setAggregationInterval(10);
-      const dayData = activityStore.getDayData('2024-01-01');
-      expect(dayData).not.toBeNull();
-      const timeline = dayData!.aggregated!.timelineOverview;
-      const intervalMillis = 10 * 60 * 1000;
-      
-      // Erwartung: Mehr Blöcke, da 10-Minuten-Grenzen Merging verhindern könnten
-      // Beispiel (muss genau geprüft werden!):
-      // Block 08:00-08:10 -> VS Code Refactoring
-      // Block 08:10-08:20 -> VS Code Refactoring (merged mit vorherigem?)
-      // Block 08:20-08:30 -> VS Code Refactoring (merged?)
-      // Block 09:00-09:10 -> VS Code File A (Edge Case)
-      // Block 09:10-09:20 -> ??? (Leer oder was auch immer die Daten ergeben)
-      // Block 12:00-12:10 -> Inactive (merged?)
-      // Block 12:10-12:20 -> Inactive (merged?)
-      // Block 12:20-12:30 -> Inactive (merged?)
-      // Block 14:30-14:40 -> Outlook
-      // Block 14:40-14:50 -> Outlook
-      // Die genaue Anzahl und Struktur muss basierend auf der 10-Min-Aggregation bestimmt werden.
-      // Korrekte Erwartung mit generierten Daten: 5 Events
-      expect(timeline).toHaveLength(5);
-      // Füge spezifischere Checks für 10min hinzu...
-  });
-
-  it('sollte mit 5min Intervall die detaillierteste Ansicht liefern', () => {
-      activityStore.setAggregationInterval(5);
-      const dayData = activityStore.getDayData('2024-01-01');
-      expect(dayData).not.toBeNull();
-      const timeline = dayData!.aggregated!.timelineOverview;
-      const intervalMillis = 5 * 60 * 1000;
-
-      // Erwartung: Noch mehr Blöcke, potentiell sehr wenig Merging
-      // Die genaue Anzahl muss basierend auf der 5-Min-Aggregation bestimmt werden.
-      // Korrekte Erwartung mit generierten Daten: 5 Events
-      expect(timeline).toHaveLength(5);
-      // Füge spezifischere Checks für 5min hinzu...
-  });
-
-  it('sollte die Summary korrekt berechnen basierend auf den 15min Events', () => {
-      activityStore.setAggregationInterval(15);
-      const dayData = activityStore.getDayData('2024-01-01');
-      expect(dayData?.aggregated?.summary).toBeDefined();
-      const summary = dayData!.aggregated!.summary;
-      const intervalMillis = 15 * 60 * 1000;
-
-      // Basierend auf den 4 erwarteten 15min Events:
-      // 1x 30min VS Code Refactoring (aktiv)
-      // 1x 15min VS Code File A (aktiv)
-      // 1x 30min Inactive (inaktiv)
-      // 1x 15min Outlook (aktiv)
-      expect(summary.totalDuration).toBe(intervalMillis * (2 + 1 + 2 + 1)); // 90 min
-      expect(summary.activeDuration).toBe(intervalMillis * (2 + 1 + 1)); // 60 min
-      expect(summary.inactiveDuration).toBe(intervalMillis * 2); // 30 min
-      expect(summary.appUsage['VS Code']).toBe(intervalMillis * (2 + 1)); // 45 min (beide VS Code Blöcke)
-      expect(summary.appUsage['Outlook']).toBe(intervalMillis * 1); // 15 min
-      expect(summary.appUsage['Chrome']).toBeUndefined(); // War nicht dominant
+    expect(dayData?.aggregated?.summary).toBeDefined();
+    const summary = dayData!.aggregated!.summary;
+    expect(summary.totalDuration).toBe(45 * miniuteAsMillis);
+    expect(summary.activeDuration).toBe(30 * miniuteAsMillis);
+    expect(summary.inactiveDuration).toBe(15 * miniuteAsMillis);
   });
 
 }); 

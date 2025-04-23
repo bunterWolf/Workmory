@@ -22,12 +22,13 @@ function getTime(timeStr: string, dateStr: string = BASE_DATE_STR): number {
 }
 
 /**
- * Generates a block of active appWindow heartbeats.
+ * Generates a sequence of heartbeats within a specified time range.
  */
-function generateAppWindowBlock(
+function generateHeartbeatSequence(
     startTimeStr: string,
     endTimeStr: string,
-    appData: AppWindowData,
+    activity: 'active' | 'inactive', // Explicit activity status
+    appData: AppWindowData | null,    // App data (can be null)
     dateStr: string = BASE_DATE_STR
 ): Heartbeat[] {
     const startMs = getTime(startTimeStr, dateStr);
@@ -38,39 +39,10 @@ function generateAppWindowBlock(
         heartbeats.push({
             timestamp: ts,
             data: {
-                userActivity: 'active',
-                appWindow: { ...appData } // Create copy
+                userActivity: activity,
+                appWindow: appData ? { ...appData } : null // Create copy or set null
             }
         });
-    }
-    return heartbeats;
-}
-
-/**
- * Generates a block of inactive heartbeats.
- * Allows specifying optional appWindow data for some initial inactive heartbeats.
- */
-function generateInactiveBlock(
-    startTimeStr: string,
-    endTimeStr: string,
-    initialInactiveAppData: AppWindowData | null = null,
-    initialCount: number = 0, // How many initial heartbeats should have app data before switching to null
-    dateStr: string = BASE_DATE_STR
-): Heartbeat[] {
-    const startMs = getTime(startTimeStr, dateStr);
-    const endMs = getTime(endTimeStr, dateStr);
-    const heartbeats: Heartbeat[] = [];
-    let currentCount = 0;
-
-    for (let ts = startMs; ts < endMs; ts += HEARTBEAT_INTERVAL_MS) {
-        heartbeats.push({
-            timestamp: ts,
-            data: {
-                userActivity: 'inactive',
-                appWindow: initialInactiveAppData
-            }
-        });
-        currentCount++;
     }
     return heartbeats;
 }
@@ -82,25 +54,75 @@ function generateMockData(): StoreData {
 
     // --- Define Day 1: 2024-01-01 ---
     const date1 = '2024-01-01';
-    // Block 1 & 2: 08:00-08:30 (VS Code Refactoring) - Merged for simplicity
-    allHeartbeats.push(
-        ...generateAppWindowBlock('08:00', '08:30', { app: 'VS Code', title: 'Refactoring Components - Focus2' }, date1)
+
+    allHeartbeats.push(...generateHeartbeatSequence(
+        '08:00', '08:05',
+        'active',
+        {
+            app: 'Google Chrome',
+            title: 'Aggregate to visible'
+        },
+        date1)
     );
 
-    // Block 4 & 5: 12:00-12:30 (Inactive) - Merged for simplicity
-    allHeartbeats.push(
-        ...generateInactiveBlock('08:30', '09:00', { app: 'VS Code', title: 'Refactoring Components - Focus2' }, 0, date1)
-        // Note: Original data had some variation (Chrome title, System Screensaver)
-        // For simplicity, keeping it pure inactive for now. Can be added back if needed.
+    allHeartbeats.push(...generateHeartbeatSequence(
+        '08:05', '08:10',
+        'active',
+        {
+            app: 'Explorer',
+            title: 'Aggregate to visible only for 5 min'
+        },
+        date1)
     );
 
-    // Block 6: 14:30-14:45 (Outlook)
-    // Original data had a title change mid-way. Simulating that:
-    allHeartbeats.push(
-        ...generateAppWindowBlock('14:30', '14:39:30', { app: 'Outlook', title: 'Answering Emails' }, date1) // ~9.5 mins
+    allHeartbeats.push(...generateHeartbeatSequence(
+        '08:10', '08:15',
+        'active',
+        {
+            app: 'Google Chrome',
+            title: 'Aggregate to visible'
+        },
+        date1)
     );
-     allHeartbeats.push(
-        ...generateAppWindowBlock('14:39:30', '14:45:00', { app: 'Outlook', title: 'Checking Calendar' }, date1) // ~5.5 mins
+
+    allHeartbeats.push(...generateHeartbeatSequence(
+        '08:15', '08:25',
+        'inactive',
+        {
+            app: 'Google Chrome',
+            title: 'Inactive App'
+        },
+        date1)
+    );
+
+    allHeartbeats.push(...generateHeartbeatSequence(
+        '08:25', '08:30',
+        'active',
+        {
+            app: 'Excel',
+            title: 'File A: Aggregate to visible'
+        },
+        date1)
+    );
+
+    allHeartbeats.push(...generateHeartbeatSequence(
+        '08:30', '08:35',
+        'active',
+        {
+            app: 'Excel',
+            title: 'File B: Aggregate to visible'
+        },
+        date1)
+    );
+
+    allHeartbeats.push(...generateHeartbeatSequence(
+        '08:35', '08:45',
+        'active',
+        {
+            app: 'Excel',
+            title: 'File A: Aggregate to visible'
+        },
+        date1)
     );
 
     // --- Group Heartbeats by Day ---
@@ -130,9 +152,9 @@ try {
 
     // Optional: Validate generated data structure/counts if needed
     const day1 = mockData.days['2024-01-01'];
-    const day2 = mockData.days['2024-01-02'];
+    // const day2 = mockData.days['2024-01-02']; // day2 is not generated in this version
     console.log(`Day 1 Heartbeats: ${day1?.heartbeats?.length ?? 0}`);
-    console.log(`Day 2 Heartbeats: ${day2?.heartbeats?.length ?? 0}`);
+    // console.log(`Day 2 Heartbeats: ${day2?.heartbeats?.length ?? 0}`); // day2 is not generated
 
 
 } catch (error) {
