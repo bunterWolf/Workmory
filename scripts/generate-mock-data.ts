@@ -147,6 +147,11 @@ function generateMockData(): StoreData {
 try {
     const mockData = generateMockData();
     const jsonData = JSON.stringify(mockData, null, 2); // Pretty print JSON
+
+    // Ensure the output directory exists
+    const outputDir = path.dirname(OUTPUT_PATH);
+    fs.mkdirSync(outputDir, { recursive: true });
+
     fs.writeFileSync(OUTPUT_PATH, jsonData, 'utf-8');
     console.log(`Successfully generated mock data at: ${OUTPUT_PATH}`);
 
