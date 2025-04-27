@@ -1,6 +1,6 @@
 {
   "name": "focus",
-  "version": "1.0.1",
+  "version": "1.0.1-alpha",
   "description": "Productivity Tracker",
   "main": "dist/main/main.js",
   "scripts": {
@@ -25,6 +25,9 @@
     "directories": {
       "buildResources": "resources",
       "output": "release/${version}"
+    },
+    "win": {
+      "sign": false
     },
     "publish": [{
       "provider": "github",
