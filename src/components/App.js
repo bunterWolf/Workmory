@@ -206,6 +206,7 @@ const App = () => {
             isLoading={isLoading}
             formatDuration={formatDuration}
             aggregationInterval={aggregationInterval}
+            isTracking={isTracking}
           />
         </main>
         

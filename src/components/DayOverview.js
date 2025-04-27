@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import './DayOverview.css';
 
-const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInterval = 15 }) => {
+const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInterval = 15, isTracking = false }) => {
   const { t, i18n } = useTranslation();
+  const [currentTrackingBlock, setCurrentTrackingBlock] = useState(null);
   
   // Generate array of hour numbers from 8 to 17 (8 AM to 5 PM)
   const defaultTimelineHours = Array.from({ length: 10 }, (_, i) => i + 8);
@@ -62,6 +63,45 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
       height: `${height}px`
     };
   };
+  
+  // Calculate the current tracking block based on system time and aggregation interval
+  const calculateTrackingBlock = () => {
+    if (!isTracking) return null;
+
+    const now = new Date();
+    // Round down to the nearest interval
+    const minutes = now.getMinutes();
+    const intervalStart = Math.floor(minutes / aggregationInterval) * aggregationInterval;
+    
+    const blockStart = new Date(now);
+    blockStart.setMinutes(intervalStart);
+    blockStart.setSeconds(0);
+    blockStart.setMilliseconds(0);
+
+    return {
+      timestamp: blockStart.getTime(),
+      duration: aggregationInterval * 60 * 1000, // Convert minutes to milliseconds
+      type: 'tracking',
+      title: t('trackingActivities'),
+      subTitle: '',
+      formattedStartTime: formatTime(blockStart),
+      formattedEndTime: formatTime(blockStart.getTime() + (aggregationInterval * 60 * 1000))
+    };
+  };
+
+  // Update tracking block every minute
+  useEffect(() => {
+    if (!isTracking) return;
+
+    const updateTrackingBlock = () => {
+      setCurrentTrackingBlock(calculateTrackingBlock());
+    };
+
+    updateTrackingBlock(); // Initial calculation
+    const interval = setInterval(updateTrackingBlock, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [isTracking, aggregationInterval]);
   
   // If loading, show loading indicator
   if (isLoading) {
@@ -173,6 +213,24 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
               </div>
             </div>
           ))}
+          {currentTrackingBlock && (
+            <div 
+              className="event tracking"
+              style={getEventStyle(currentTrackingBlock)}
+            >
+              <div className="event-title">
+                {currentTrackingBlock.title}
+              </div>
+              
+              <div className="event-time">
+                {currentTrackingBlock.formattedStartTime} - {currentTrackingBlock.formattedEndTime}
+              </div>
+              
+              <div className="event-duration">
+                {formatDuration(currentTrackingBlock.duration)}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

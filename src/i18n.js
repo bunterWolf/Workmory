@@ -18,6 +18,7 @@ const resources = {
       aggregationInterval: "Aggregationsintervall",
       pauseTracking: "Aufzeichnung pausieren",
       startTracking: "Aufzeichnung starten",
+      trackingActivities: "Aktivitäten werden aufgezeichnet",
       
       // Zeitformate
       timeFormats: {
@@ -44,6 +45,7 @@ const resources = {
       aggregationInterval: "Aggregation Interval",
       pauseTracking: "Pause Tracking",
       startTracking: "Start Tracking",
+      trackingActivities: "Recording activities",
       
       // Time formats
       timeFormats: {
