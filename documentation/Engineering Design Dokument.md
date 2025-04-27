@@ -1,10 +1,14 @@
-# Engineering Design Document: Focus - Productivity Tracker
+# Engineering Design Document: Chronflow - Productivity Tracker
 
 ## Glossar
 
 - **Heartbeat**: Ein zeitbasierter Datenpunkt, der alle 30 Sekunden erfasst wird und den aktuellen Systemzustand dokumentiert.
 - **Watcher**: Modulare Komponenten, die spezifische Systemzustände überwachen (z.B. aktives Fenster, Benutzeraktivität).
 - **Aggregation**: Prozess der Zusammenfassung von Heartbeat-Daten in 15-Minuten-Intervalle für die Timeline-Darstellung.
+
+## 1. Introduction
+
+Chronflow is an Electron-based desktop application designed to track and analyze user activity on a computer. The application follows a main process/renderer process architecture connected through IPC communication.
 
 ## 1. System Architecture
 

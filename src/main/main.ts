@@ -41,8 +41,10 @@ if (useMockData) {
 // Create the main browser window
 function createWindow(): void { // Add return type void
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1024,
+    height: 768,
+    title: 'Chronflow - Passive Work Tracker' + (useMockData ? ' (Mock Data)' : ''),
+    icon: path.join(app.getAppPath(), 'build', 'icon.ico'),
     webPreferences: {
       nodeIntegration: true, // Consider disabling if possible for security
       contextIsolation: false, // Consider enabling if possible for security
@@ -50,7 +52,6 @@ function createWindow(): void { // Add return type void
       // --- Add preload script if contextIsolation is enabled ---
       // preload: path.join(__dirname, 'preload.js')
     },
-    title: 'Focus - Productivity Tracker' + (useMockData ? ' (Mock Data)' : '')
   });
 
   // Enable @electron/remote for the created window

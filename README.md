@@ -1,6 +1,6 @@
-# Focus - Productivity Tracker
+# Chronflow - Productivity Tracker
 
-Focus is an Electron-based desktop application designed to track and analyze your computer activity. It automatically records which applications you use, detects inactive periods, and identifies Teams meetings to give you a clear overview of how you spend your time.
+Chronflow is an Electron-based desktop application designed to track and analyze your computer activity. It automatically records which applications you use, detects inactive periods, and identifies Teams meetings to give you a clear overview of how you spend your time.
 
 ## Features
 
@@ -74,12 +74,8 @@ By default, activity data is stored in the app's user data directory. You can ch
 
 Data is automatically cleaned up after 30 days to avoid excessive storage usage.
 
-## Privacy
-
-Focus is designed with privacy in mind:
-- All data is stored locally on your computer
-- No data is sent to the internet or any third-party servers
-- The application will request necessary permissions to access window information
+Chronflow is designed with privacy in mind:
+- **Local Storage:** All tracked data is stored locally on your computer. No data is sent to external servers.
 
 ## License
 

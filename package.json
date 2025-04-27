@@ -15,8 +15,8 @@
     "generate:mock": "ts-node scripts/generate-mock-data.ts"
   },
   "build": {
-    "appId": "com.focus.productivity",
-    "productName": "Focus",
+    "appId": "com.electron.chronflow",
+    "productName": "Chronflow",
     "files": [
       "dist/**/*",
       "src/**/*",
@@ -24,7 +24,7 @@
     ],
     "directories": {
       "buildResources": "resources",
-      "output": "release"
+      "output": "release/${version}"
     }
   },
   "keywords": [],
