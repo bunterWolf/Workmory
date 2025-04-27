@@ -5,6 +5,7 @@ import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import * as remoteMain from '@electron/remote/main'; // Use import for @electron/remote/main
+import { autoUpdater, UpdateInfo, ProgressInfo } from 'electron-updater';
 
 // Use default imports for our TypeScript modules
 import ActivityStore from '../store/ActivityStore';
@@ -190,12 +191,85 @@ function registerIpcHandlers(): void { // Add return type void
   console.log("IPC handlers registered.");
 }
 
+// Initialize auto-updater
+function initAutoUpdater() {
+  // Konfiguriere Auto-Updater
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  // Event-Handler für Update-Status
+  autoUpdater.on('checking-for-update', () => {
+    console.log('Checking for updates...');
+    notifyAllWindows('update-status', { status: 'checking' });
+  });
+
+  autoUpdater.on('update-available', (info: UpdateInfo) => {
+    console.log('Update available:', info);
+    notifyAllWindows('update-status', { 
+      status: 'available',
+      version: info.version
+    });
+  });
+
+  autoUpdater.on('update-not-available', (info: UpdateInfo) => {
+    console.log('Update not available:', info);
+    notifyAllWindows('update-status', { status: 'not-available' });
+  });
+
+  autoUpdater.on('error', (err: Error) => {
+    console.error('Update error:', err);
+    notifyAllWindows('update-status', { 
+      status: 'error',
+      error: err.message
+    });
+  });
+
+  autoUpdater.on('download-progress', (progressObj: ProgressInfo) => {
+    console.log('Download progress:', progressObj);
+    notifyAllWindows('update-status', {
+      status: 'downloading',
+      progress: progressObj
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
+    console.log('Update downloaded:', info);
+    notifyAllWindows('update-status', {
+      status: 'downloaded',
+      version: info.version
+    });
+  });
+
+  // Prüfe regelmäßig auf Updates (alle 4 Stunden)
+  setInterval(() => {
+    autoUpdater.checkForUpdates().catch((err: Error) => {
+      console.error('Error checking for updates:', err);
+    });
+  }, 4 * 60 * 60 * 1000);
+
+  // Erste Update-Prüfung nach App-Start
+  autoUpdater.checkForUpdates().catch((err: Error) => {
+    console.error('Error checking for updates:', err);
+  });
+}
+
+// Hilfsfunktion zum Benachrichtigen aller Fenster
+function notifyAllWindows(channel: string, data: any) {
+  const windows = BrowserWindow.getAllWindows();
+  windows.forEach(window => {
+    if (!window.isDestroyed()) {
+      window.webContents.send(channel, data);
+    }
+  });
+}
+
 // App is ready to start
 app.whenReady().then(async () => {
   console.log("App ready.");
   createWindow();
   await initializeTracking();
   registerIpcHandlers();
+  initAutoUpdater(); // Initialize auto-updater
 
   app.on('activate', () => { // Use arrow function
     // On macOS it's common to re-create a window in the app when the

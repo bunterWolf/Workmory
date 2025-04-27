@@ -25,7 +25,12 @@
     "directories": {
       "buildResources": "resources",
       "output": "release/${version}"
-    }
+    },
+    "publish": [{
+      "provider": "github",
+      "owner": "bunterWolf",
+      "repo": "Chronflow"
+    }]
   },
   "keywords": [],
   "author": "",
@@ -33,6 +38,7 @@
   "dependencies": {
     "@electron/remote": "^2.1.2",
     "active-win": "^8.1.1",
+    "electron-updater": "^6.1.7",
     "i18next": "^24.2.3",
     "i18next-scanner": "^4.6.0",
     "openai": "^4.91.1",

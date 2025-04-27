@@ -19,6 +19,7 @@ const App = () => {
   const [isMockData, setIsMockData] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [aggregationInterval, setAggregationInterval] = useState(15);
+  const [updateStatus, setUpdateStatus] = useState(null);
 
   // Format duration in milliseconds to human-readable string
   const formatDuration = (ms) => {
@@ -151,6 +152,33 @@ const App = () => {
 
   const summary = getSummary();
 
+  // Update notification handler
+  useEffect(() => {
+    const handleUpdateStatus = (event, status) => {
+      setUpdateStatus(status);
+      
+      // Zeige Update-Benachrichtigung
+      if (status.status === 'available') {
+        // Neue Version verfügbar
+        console.log(`Neue Version ${status.version} verfügbar`);
+      } else if (status.status === 'downloaded') {
+        // Update heruntergeladen und bereit zur Installation
+        console.log(`Update ${status.version} heruntergeladen - wird beim nächsten Start installiert`);
+      } else if (status.status === 'error') {
+        // Update-Fehler
+        console.error('Update-Fehler:', status.error);
+      }
+    };
+
+    // Registriere Update-Event-Handler
+    ipcRenderer.on('update-status', handleUpdateStatus);
+
+    // Cleanup
+    return () => {
+      ipcRenderer.removeListener('update-status', handleUpdateStatus);
+    };
+  }, []);
+
   return (
     <I18nextProvider i18n={i18n}>
       <div className="app">
@@ -165,6 +193,13 @@ const App = () => {
           onIntervalChange={handleIntervalChange}
         />
         
+        {/* Update-Benachrichtigung */}
+        {updateStatus && updateStatus.status === 'downloaded' && (
+          <div className="update-notification">
+            Eine neue Version ist verfügbar und wird beim nächsten Start installiert.
+          </div>
+        )}
+
         <main className="main-content">
           <DayOverview 
             activityData={activityData}
