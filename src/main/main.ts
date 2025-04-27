@@ -60,14 +60,12 @@ function createWindow(): void { // Add return type void
 
 
   // Load the index.html file.
-  // In development, load from dist directory
-  let rendererPath = path.join(__dirname, '../index.html');
+  // In development, use webpack output path
+  let rendererPath;
   
-  // If the file doesn't exist (production), try the asar path
-  if (!require('fs').existsSync(rendererPath)) {
-    rendererPath = path.join(app.getAppPath(), 'dist/index.html');
-  }
-
+  // In development mode, always load from dist directory
+  rendererPath = path.join(__dirname, '../../dist/index.html');
+  
   console.log(`Attempting to load renderer from: ${rendererPath}`); // Debug log
   mainWindow.loadURL(url.format({
     pathname: rendererPath,
