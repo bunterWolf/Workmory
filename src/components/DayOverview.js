@@ -135,8 +135,16 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
       return endMinute > 0 ? endHour + 1 : endHour; // Round up if there are minutes
     });
     
+    // Ensure we have enough space for the longest events
     minHour = Math.max(0, Math.min(...eventStartHours) - 1); // One hour earlier than earliest event
-    maxHour = Math.min(23, Math.max(...eventEndHours) + 1); // One hour later than latest event
+    maxHour = Math.min(23, Math.max(...eventEndHours) + 1); // One hour later than latest event end
+    
+    // Add additional padding if we have very long events
+    const longestEventDuration = Math.max(...timelineEvents.map(event => event.duration));
+    const longestEventHours = Math.ceil(longestEventDuration / (60 * 60 * 1000));
+    if (longestEventHours > 4) { // If we have events longer than 4 hours
+      maxHour = Math.min(23, maxHour + Math.floor(longestEventHours / 2)); // Add extra padding
+    }
   }
   
   // Generate hours array based on activity data
