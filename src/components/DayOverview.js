@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import './DayOverview.css';
 
-const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInterval = 15, isTracking = false }) => {
+const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInterval = 15, isTracking = false, displayedDate }) => {
   const { t, i18n } = useTranslation();
   const [currentTrackingBlock, setCurrentTrackingBlock] = useState(null);
+  
+  // Helper to get today's date key
+  const getTodayDateKey = () => new Date().toISOString().split('T')[0];
   
   // Generate array of hour numbers from 8 to 17 (8 AM to 5 PM)
   const defaultTimelineHours = Array.from({ length: 10 }, (_, i) => i + 8);
@@ -89,57 +92,86 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
     };
   };
 
-  // Update tracking block every minute
+  // Update tracking block every minute only if tracking is active and it's today
   useEffect(() => {
-    if (!isTracking) return;
+    const todayDateKey = getTodayDateKey();
+    if (!isTracking || displayedDate !== todayDateKey) {
+        // Clear any existing tracking block if tracking stops or date changes away from today
+        if (currentTrackingBlock) {
+            setCurrentTrackingBlock(null);
+        }
+        return; // Don't calculate or set interval if not tracking today
+    }
 
     const updateTrackingBlock = () => {
-      setCurrentTrackingBlock(calculateTrackingBlock());
+      // Double-check inside interval in case date changes while interval is running
+      if (displayedDate === getTodayDateKey()) {
+          setCurrentTrackingBlock(calculateTrackingBlock());
+      } else {
+           setCurrentTrackingBlock(null); // Clear if date changed
+      }
     };
 
     updateTrackingBlock(); // Initial calculation
     const interval = setInterval(updateTrackingBlock, 60000); // Update every minute
 
     return () => clearInterval(interval);
-  }, [isTracking, aggregationInterval]);
+    // Add displayedDate to dependencies
+  }, [isTracking, aggregationInterval, displayedDate, currentTrackingBlock]); // Added currentTrackingBlock to dependencies to handle clearing correctly
   
   // If loading, show loading indicator
   if (isLoading) {
     return <div className="loading">Loading activity data...</div>;
   }
   
-  // If no data or no aggregated data, show empty state
-  if (!activityData || !activityData.aggregated || !activityData.aggregated.timelineOverview || activityData.aggregated.timelineOverview.length === 0) {
-    return (
-      <div className="empty-state">
-        <h3>No activity data for this day</h3>
-        <p>There is no tracking data available for the selected date.</p>
-      </div>
-    );
-  }
-  
-  // Process timeline events from the aggregated data
-  const timelineEvents = activityData.aggregated.timelineOverview;
+  // Process timeline events from the aggregated data, default to empty array if no data
+  const timelineEvents = activityData?.aggregated?.timelineOverview || [];
   
   // Determine the time range to display
-  let minHour = 8; // Default start hour (8 AM)
-  let maxHour = 17; // Default end hour (5 PM)
-  
-  // Adjust time range based on actual data
-  if (timelineEvents.length > 0) {
+  let minHour, maxHour;
+  const todayDateKey = getTodayDateKey();
+  const isToday = displayedDate === todayDateKey;
+
+  if (timelineEvents.length === 0) {
+    // Case 1: No events
+    if (isToday && currentTrackingBlock) {
+      // Today and tracking: Center around current block
+      const blockStartHour = new Date(currentTrackingBlock.timestamp).getHours();
+      minHour = Math.max(0, blockStartHour - 1); // One hour before
+      maxHour = Math.min(23, blockStartHour + 2); // Two hours after
+    } else {
+      // Not today, or today but not tracking: Small default range
+      minHour = 8;
+      maxHour = 12; // Show 8 AM to 12 PM
+    }
+  } else {
+    // Case 2: Events exist - determine range based on events
     const eventStartHours = timelineEvents.map(event => new Date(event.timestamp).getHours());
     const eventEndHours = timelineEvents.map(event => {
       const endTimestamp = event.timestamp + event.duration;
       const endHour = new Date(endTimestamp).getHours();
       const endMinute = new Date(endTimestamp).getMinutes();
-      return endMinute > 0 ? endHour + 1 : endHour; // Round up if there are minutes
+      // If event ends exactly on the hour, we don't need the next hour slot necessarily,
+      // unless it's the only event. However, adding +1 keeps consistent padding.
+      return endMinute > 0 ? endHour + 1 : endHour + 1; // +1 includes the hour slot the event ends within or slightly overlaps
     });
     
-    // Ensure we have enough space for the longest events
-    minHour = Math.max(0, Math.min(...eventStartHours) - 1); // One hour earlier than earliest event
-    maxHour = Math.min(23, Math.max(...eventEndHours) + 1); // One hour later than latest event end
+    // Initial range from events with padding
+    let eventMinHour = Math.max(0, Math.min(...eventStartHours) -1); // Add 1 hour padding before
+    let eventMaxHour = Math.min(23, Math.max(...eventEndHours)); // Max ensures the end hour slot is included
+
+    // If it's today, ensure the current time (if tracking) is visible
+    if (isToday && currentTrackingBlock) {
+        const blockStartHour = new Date(currentTrackingBlock.timestamp).getHours();
+        // Ensure the range includes at least one hour before and two after the current block
+        minHour = Math.min(eventMinHour, Math.max(0, blockStartHour - 1));
+        maxHour = Math.max(eventMaxHour, Math.min(23, blockStartHour + 2));
+    } else {
+        minHour = eventMinHour;
+        maxHour = eventMaxHour;
+    }
     
-    // Add additional padding if we have very long events
+    // Add additional padding if we have very long events (existing logic)
     const longestEventDuration = Math.max(...timelineEvents.map(event => event.duration));
     const longestEventHours = Math.ceil(longestEventDuration / (60 * 60 * 1000));
     if (longestEventHours > 4) { // If we have events longer than 4 hours
@@ -147,7 +179,13 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
     }
   }
   
-  // Generate hours array based on activity data
+  // Ensure min/max are valid and have a minimum span (e.g., 3 hours)
+  minHour = Math.max(0, minHour);
+  maxHour = Math.min(23, maxHour);
+  maxHour = Math.max(maxHour, minHour + 3); // Ensure at least a 3-hour visible range
+  maxHour = Math.min(23, maxHour); // Re-clamp maxHour after adding span
+
+  // Generate hours array based on the calculated range
   const timelineHours = Array.from({ length: maxHour - minHour + 1 }, (_, i) => i + minHour);
   
   // Map timeline events to display format
@@ -221,6 +259,7 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
               </div>
             </div>
           ))}
+          {/* Render tracking block only if it exists (logic moved to useEffect) */}
           {currentTrackingBlock && (
             <div 
               className="event tracking"
