@@ -26,14 +26,11 @@
       "buildResources": "resources",
       "output": "release/${version}"
     },
-    "win": {
-      "sign": false
-    },
-    "publish": [{
+    "publish": {
       "provider": "github",
       "owner": "bunterWolf",
       "repo": "Chronflow"
-    }]
+    }
   },
   "keywords": [],
   "author": "",
