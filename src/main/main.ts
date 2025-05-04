@@ -23,6 +23,25 @@ let mainWindow: BrowserWindow | null = null;
 let activityStore: ActivityStore | null = null;
 let heartbeatManager: HeartbeatManager | null = null;
 
+// Prüfe, ob bereits eine Instanz läuft
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  console.log('Eine andere Instanz der App läuft bereits. Beende diese Instanz.');
+  app.quit();
+} else {
+  // Reagiere auf den Start einer zweiten Instanz
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Wenn ein Fenster existiert, fokussiere es
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+      }
+      mainWindow.focus();
+    }
+  });
+}
+
 // Check if in development mode and enable live reload
 const isDev = process.env.NODE_ENV === 'development';
 if (isDev) {
