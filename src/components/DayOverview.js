@@ -31,67 +31,6 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
     return t('timeFormats.time', { time: date });
   };
   
-  // Get height for the timeline based on hours
-  const getTimelineHeight = () => {
-    return timelineHours.length * getHourHeight();
-  };
-  
-  // Render hour markers for the timeline
-  const renderHourMarkers = () => {
-    return timelineHours.map(hour => (
-      <div 
-        key={hour} 
-        className="hour-marker"
-        style={{ top: (hour - timelineHours[0]) * getHourHeight() }}
-      />
-    ));
-  };
-  
-  // Get styling for an event based on its time position and duration
-  const getEventStyle = (event) => {
-    const startHour = new Date(event.timestamp).getHours();
-    const startMinute = new Date(event.timestamp).getMinutes();
-    const durationHours = event.duration / (60 * 60 * 1000);
-    
-    // Calculate top position relative to the first hour in the timeline
-    const hourOffset = startHour - timelineHours[0];
-    const minuteOffset = startMinute / 60;
-    const top = (hourOffset + minuteOffset) * getHourHeight();
-    
-    // Calculate height based on duration
-    const height = durationHours * getHourHeight();
-    
-    return {
-      top: `${top}px`,
-      height: `${height}px`
-    };
-  };
-  
-  // Calculate the current tracking block based on system time and aggregation interval
-  const calculateTrackingBlock = () => {
-    if (!isTracking) return null;
-
-    const now = new Date();
-    // Round down to the nearest interval
-    const minutes = now.getMinutes();
-    const intervalStart = Math.floor(minutes / aggregationInterval) * aggregationInterval;
-    
-    const blockStart = new Date(now);
-    blockStart.setMinutes(intervalStart);
-    blockStart.setSeconds(0);
-    blockStart.setMilliseconds(0);
-
-    return {
-      timestamp: blockStart.getTime(),
-      duration: aggregationInterval * 60 * 1000, // Convert minutes to milliseconds
-      type: 'tracking',
-      title: t('trackingActivities'),
-      subTitle: '',
-      formattedStartTime: formatTime(blockStart),
-      formattedEndTime: formatTime(blockStart.getTime() + (aggregationInterval * 60 * 1000))
-    };
-  };
-
   // Update tracking block every minute only if tracking is active and it's today
   useEffect(() => {
     const todayDateKey = getTodayDateKey();
@@ -106,7 +45,31 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
     const updateTrackingBlock = () => {
       // Double-check inside interval in case date changes while interval is running
       if (displayedDate === getTodayDateKey()) {
-          setCurrentTrackingBlock(calculateTrackingBlock());
+          const now = new Date();
+          // Round down to the nearest interval
+          const minutes = now.getMinutes();
+          const intervalStart = Math.floor(minutes / aggregationInterval) * aggregationInterval;
+          
+          const blockStart = new Date(now);
+          blockStart.setMinutes(intervalStart);
+          blockStart.setSeconds(0);
+          blockStart.setMilliseconds(0);
+          
+          // Formatierung direkt hier statt Aufruf von formatTime
+          const formatTimeInner = (timestamp) => {
+            const date = new Date(timestamp);
+            return t('timeFormats.time', { time: date });
+          };
+    
+          setCurrentTrackingBlock({
+            timestamp: blockStart.getTime(),
+            duration: aggregationInterval * 60 * 1000, // Convert minutes to milliseconds
+            type: 'tracking',
+            title: t('trackingActivities'),
+            subTitle: '',
+            formattedStartTime: formatTimeInner(blockStart),
+            formattedEndTime: formatTimeInner(blockStart.getTime() + (aggregationInterval * 60 * 1000))
+          });
       } else {
            setCurrentTrackingBlock(null); // Clear if date changed
       }
@@ -116,8 +79,7 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
     const interval = setInterval(updateTrackingBlock, 60000); // Update every minute
 
     return () => clearInterval(interval);
-    // Add displayedDate to dependencies
-  }, [isTracking, aggregationInterval, displayedDate, currentTrackingBlock]); // Added currentTrackingBlock to dependencies to handle clearing correctly
+  }, [isTracking, aggregationInterval, displayedDate, t]); // Removed formatTime from dependencies
   
   // If loading, show loading indicator
   if (isLoading) {
@@ -187,6 +149,42 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
 
   // Generate hours array based on the calculated range
   const timelineHours = Array.from({ length: maxHour - minHour + 1 }, (_, i) => i + minHour);
+  
+  // Get height for the timeline based on hours
+  const getTimelineHeight = () => {
+    return timelineHours.length * getHourHeight();
+  };
+  
+  // Render hour markers for the timeline
+  const renderHourMarkers = () => {
+    return timelineHours.map(hour => (
+      <div 
+        key={hour} 
+        className="hour-marker"
+        style={{ top: (hour - timelineHours[0]) * getHourHeight() }}
+      />
+    ));
+  };
+  
+  // Get styling for an event based on its time position and duration
+  const getEventStyle = (event) => {
+    const startHour = new Date(event.timestamp).getHours();
+    const startMinute = new Date(event.timestamp).getMinutes();
+    const durationHours = event.duration / (60 * 60 * 1000);
+    
+    // Calculate top position relative to the first hour in the timeline
+    const hourOffset = startHour - timelineHours[0];
+    const minuteOffset = startMinute / 60;
+    const top = (hourOffset + minuteOffset) * getHourHeight();
+    
+    // Calculate height based on duration
+    const height = durationHours * getHourHeight();
+    
+    return {
+      top: `${top}px`,
+      height: `${height}px`
+    };
+  };
   
   // Map timeline events to display format
   const events = timelineEvents.map(event => {
