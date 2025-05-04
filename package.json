@@ -17,6 +17,7 @@
   "build": {
     "appId": "com.electron.chronflow",
     "productName": "Chronflow",
+    "artifactName": "Chronflow.Setup.${version}.exe",
     "files": [
       "dist/**/*",
       "src/**/*",
