@@ -12,7 +12,24 @@
     "build": "npm test && tsc && webpack --config webpack.config.js",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
-    "generate:mock": "ts-node scripts/generate-mock-data.ts"
+    "generate:mock": "ts-node scripts/generate-mock-data.ts",
+    "release": "standard-version"
+  },
+  "standard-version": {
+    "types": [
+      {"type": "feat", "section": "Features", "hidden": false},
+      {"type": "fix", "section": "Bug Fixes", "hidden": false},
+      {"type": "chore", "section": "Maintenance", "hidden": false},
+      {"type": "docs", "section": "Documentation", "hidden": false},
+      {"type": "style", "section": "Styling", "hidden": false},
+      {"type": "refactor", "section": "Refactoring", "hidden": false},
+      {"type": "perf", "section": "Performance", "hidden": false},
+      {"type": "test", "section": "Tests", "hidden": false}
+    ],
+    "releaseCommitMessageFormat": "chore(release): {{currentTag}} 🎉",
+    "scripts": {
+      "postchangelog": "npm run build"
+    }
   },
   "build": {
     "appId": "com.electron.chronflow",
@@ -60,6 +77,7 @@
     "electron-reload": "^2.0.0-alpha.1",
     "html-webpack-plugin": "^5.6.3",
     "jest": "^29.7.0",
+    "standard-version": "^9.5.0",
     "style-loader": "^3.3.3",
     "ts-jest": "^29.3.1",
     "ts-loader": "^9.5.2",
