@@ -7,6 +7,9 @@ import * as url from 'url';
 import * as remoteMain from '@electron/remote/main'; // Use import for @electron/remote/main
 import { autoUpdater, UpdateInfo, ProgressInfo } from 'electron-updater';
 
+// Read app version from package.json
+import { version as appVersion } from '../../package.json';
+
 // Use default imports for our TypeScript modules
 import ActivityStore from '../store/ActivityStore';
 import HeartbeatManager from '../store/HeartbeatManager';
@@ -186,6 +189,11 @@ function registerIpcHandlers(): void { // Add return type void
   // Check if using mock data
   ipcMain.handle('is-using-mock-data', (): boolean => {
     return useMockData;
+  });
+
+  // Get app version
+  ipcMain.handle('get-app-version', (): string => {
+    return appVersion;
   });
 
   console.log("IPC handlers registered.");

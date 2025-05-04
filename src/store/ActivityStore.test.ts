@@ -133,7 +133,6 @@ describe('ActivityStore Utilities', () => {
   });
 });
 
-// Neuer Describe-Block für Integrationstests
 describe('ActivityStore Integration', () => {
   let activityStore: ActivityStore;
   const testDateKey = '2024-04-06'; // Example date
@@ -411,4 +410,48 @@ describe('ActivityStore Mock Data Tests', () => {
     expect(summary.inactiveDuration).toBe(15 * miniuteAsMillis);
   });
 
+});
+
+describe('ActivityStore Mock Data Tests', () => {
+  describe('getDateKey', () => {
+    // Instantiate the class or access the static method if needed
+    // For instance methods, we need an instance
+    const storeInstance = new ActivityStore({ useMockData: true }); // Use mock data to avoid file IO
+
+    test('sollte den korrekten lokalen Datumsschlüssel für einen Zeitstempel am Mittag generieren', () => {
+      const timestamp = new Date('2024-05-15T12:00:00Z').getTime(); // Mittag UTC
+      const expectedKey = '2024-05-15'; // Sollte in den meisten westlichen Zeitzonen passen
+      expect(storeInstance.getDateKey(timestamp)).toBe(expectedKey);
+    });
+
+    test('sollte den korrekten lokalen Datumsschlüssel für kurz vor Mitternacht lokal generieren', () => {
+      // Konstruiere einen Zeitstempel, der 23:58 Uhr LOKALER Zeit entspricht
+      const localDate = new Date();
+      localDate.setHours(23, 58, 0, 0);
+      const timestamp = localDate.getTime();
+      
+      // Erwarteter Schlüssel ist der Tag von localDate
+      const year = localDate.getFullYear();
+      const month = (localDate.getMonth() + 1).toString().padStart(2, '0');
+      const day = localDate.getDate().toString().padStart(2, '0');
+      const expectedKey = `${year}-${month}-${day}`;
+
+      expect(storeInstance.getDateKey(timestamp)).toBe(expectedKey);
+    });
+
+    test('sollte den korrekten lokalen Datumsschlüssel für kurz nach Mitternacht lokal generieren', () => {
+      // Konstruiere einen Zeitstempel, der 00:02 Uhr LOKALER Zeit entspricht
+      const localDate = new Date();
+      localDate.setHours(0, 2, 0, 0);
+      const timestamp = localDate.getTime();
+      
+      // Erwarteter Schlüssel ist der Tag von localDate
+      const year = localDate.getFullYear();
+      const month = (localDate.getMonth() + 1).toString().padStart(2, '0');
+      const day = localDate.getDate().toString().padStart(2, '0');
+      const expectedKey = `${year}-${month}-${day}`;
+
+      expect(storeInstance.getDateKey(timestamp)).toBe(expectedKey);
+    });
+  });
 }); 

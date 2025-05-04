@@ -1,6 +1,6 @@
 {
   "name": "focus",
-  "version": "1.0.1-alpha",
+  "version": "1.0.3-alpha",
   "description": "Productivity Tracker",
   "main": "dist/main/main.js",
   "scripts": {
@@ -26,14 +26,11 @@
       "buildResources": "resources",
       "output": "release/${version}"
     },
-    "win": {
-      "sign": false
-    },
-    "publish": [{
+    "publish": {
       "provider": "github",
       "owner": "bunterWolf",
       "repo": "Chronflow"
-    }]
+    }
   },
   "keywords": [],
   "author": "",

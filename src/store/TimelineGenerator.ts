@@ -133,8 +133,13 @@ export default class TimelineGenerator {
 
   /**
    * Round timestamp down to the nearest interval start time based on the current setting.
-   * @param {number} timestamp - Timestamp in milliseconds.
-   * @returns {number} Rounded timestamp in milliseconds.
+   * IMPORTANT: This calculation uses UTC minutes (`getUTCMinutes`, `setUTCMinutes`).
+   * This means the aggregation intervals (e.g., 08:00-08:15, 08:15-08:30) are aligned with UTC,
+   * not the user's local time. While simpler to implement, this might feel slightly offset
+   * in the UI if the user is in a timezone significantly different from UTC.
+   * The raw timestamp itself is UTC.
+   * @param {number} timestamp - Timestamp in milliseconds (UTC).
+   * @returns {number} Rounded timestamp in milliseconds (UTC).
    */
   // Make public for testing (consider refactoring tests later)
   public roundToNearestInterval(timestamp: number): number {

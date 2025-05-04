@@ -366,12 +366,20 @@ class ActivityStore {
 
   /**
    * Generates a date key string (YYYY-MM-DD) from a timestamp.
-   * @param timestamp Timestamp in milliseconds since epoch.
-   * @returns The date key string.
+   * IMPORTANT: Uses the *local* date components (year, month, day) of the timestamp.
+   * This ensures that heartbeats are assigned to the correct calendar day from the user's perspective,
+   * even if the timestamp occurs shortly after midnight local time but before midnight UTC.
+   * Raw timestamps are stored in UTC (milliseconds since epoch), but grouping is done by local day.
+   * @param timestamp Timestamp in milliseconds since epoch (UTC).
+   * @returns The date key string in YYYY-MM-DD format based on local time.
    */
   getDateKey(timestamp: number): string {
     const date = new Date(timestamp);
-    return date.toISOString().split('T')[0];
+    // Use local date components to avoid timezone issues around midnight
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // getMonth() is 0-indexed
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   /**
@@ -492,6 +500,9 @@ class ActivityStore {
   }
 
   // Helper for cleanupOldData
+  // IMPORTANT: This function determines dates to delete based on comparing the *UTC* midnight
+  // timestamp of the dateKey with the UTC threshold timestamp.
+  // This means cleanup happens based on UTC days, not local days.
   private getDatesOlderThan(timestampThreshold: number): string[] {
       const datesToDelete: string[] = [];
       for (const dateKey of this.activityState.getAvailableDates()) {

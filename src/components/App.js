@@ -106,9 +106,17 @@ const App = () => {
         const trackingStatus = await ipcRenderer.invoke('get-tracking-status');
         setIsTracking(trackingStatus);
         
-        // Get available dates
-        const dates = await ipcRenderer.invoke('get-available-dates');
-        setAvailableDates(dates);
+        // Get available dates from backend
+        const datesFromBackend = await ipcRenderer.invoke('get-available-dates');
+        
+        // Ensure today's date is always included
+        const today = new Date().toISOString().split('T')[0];
+        const datesSet = new Set(datesFromBackend);
+        datesSet.add(today);
+        
+        // Convert back to array and sort chronologically
+        const allDates = Array.from(datesSet).sort();
+        setAvailableDates(allDates);
         
         // Get current aggregation interval
         const interval = await ipcRenderer.invoke('get-aggregation-interval');
@@ -207,6 +215,7 @@ const App = () => {
             formatDuration={formatDuration}
             aggregationInterval={aggregationInterval}
             isTracking={isTracking}
+            displayedDate={selectedDate}
           />
         </main>
         
