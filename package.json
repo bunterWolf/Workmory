@@ -1,6 +1,6 @@
 {
   "name": "focus",
-  "version": "1.0.3-alpha",
+  "version": "1.0.3",
   "description": "Productivity Tracker",
   "main": "dist/main/main.js",
   "scripts": {
@@ -17,14 +17,46 @@
   },
   "standard-version": {
     "types": [
-      {"type": "feat", "section": "Features", "hidden": false},
-      {"type": "fix", "section": "Bug Fixes", "hidden": false},
-      {"type": "chore", "section": "Maintenance", "hidden": false},
-      {"type": "docs", "section": "Documentation", "hidden": false},
-      {"type": "style", "section": "Styling", "hidden": false},
-      {"type": "refactor", "section": "Refactoring", "hidden": false},
-      {"type": "perf", "section": "Performance", "hidden": false},
-      {"type": "test", "section": "Tests", "hidden": false}
+      {
+        "type": "feat",
+        "section": "Features",
+        "hidden": false
+      },
+      {
+        "type": "fix",
+        "section": "Bug Fixes",
+        "hidden": false
+      },
+      {
+        "type": "chore",
+        "section": "Maintenance",
+        "hidden": false
+      },
+      {
+        "type": "docs",
+        "section": "Documentation",
+        "hidden": false
+      },
+      {
+        "type": "style",
+        "section": "Styling",
+        "hidden": false
+      },
+      {
+        "type": "refactor",
+        "section": "Refactoring",
+        "hidden": false
+      },
+      {
+        "type": "perf",
+        "section": "Performance",
+        "hidden": false
+      },
+      {
+        "type": "test",
+        "section": "Tests",
+        "hidden": false
+      }
     ],
     "releaseCommitMessageFormat": "chore(release): {{currentTag}} 🎉",
     "scripts": {
