@@ -85,13 +85,27 @@
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
-        "dmg"
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
       ],
-      "artifactName": "Chronflow.${version}.${ext}"
+      "artifactName": "Chronflow.${version}.${ext}",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "win": {
       "target": [
-        "nsis"
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
       ],
       "artifactName": "Chronflow.Setup.${version}.${ext}"
     },
@@ -102,8 +116,15 @@
       "oneClick": true,
       "perMachine": false,
       "allowToChangeInstallationDirectory": false,
-      "deleteAppDataOnUninstall": false
-    }
+      "deleteAppDataOnUninstall": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Chronflow",
+      "artifactName": "Chronflow.Setup.${version}.${ext}",
+      "uninstallDisplayName": "Chronflow",
+      "differentialPackage": true
+    },
+    "generateUpdatesFilesForAllChannels": true
   },
   "keywords": [],
   "author": "",
