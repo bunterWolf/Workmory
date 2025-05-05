@@ -15,7 +15,8 @@
     "dist:win": "npm run build && electron-builder --win",
     "dist:mac": "npm run build && electron-builder --mac",
     "generate:mock": "ts-node scripts/generate-mock-data.ts",
-    "release": "node scripts/release.js"
+    "release": "node scripts/release.js",
+    "release:beta": "node scripts/release-beta.js"
   },
   "standard-version": {
     "types": [
@@ -77,11 +78,21 @@
       "buildResources": "resources",
       "output": "release/${version}"
     },
-    "publish": {
-      "provider": "github",
-      "owner": "bunterWolf",
-      "repo": "Chronflow"
-    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "bunterWolf",
+        "repo": "Chronflow",
+        "releaseType": "release"
+      },
+      {
+        "provider": "github",
+        "owner": "bunterWolf",
+        "repo": "Chronflow",
+        "releaseType": "prerelease",
+        "channel": "beta"
+      }
+    ],
     "mac": {
       "category": "public.app-category.productivity",
       "target": [

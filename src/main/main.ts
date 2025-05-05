@@ -224,6 +224,14 @@ function initAutoUpdater() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
+  // Beta-Kanal Konfiguration
+  // Lies die Einstellung aus den App-Einstellungen oder Umgebungsvariablen
+  const allowPrerelease = process.env.ALLOW_PRERELEASE === 'true';
+  if (allowPrerelease) {
+    autoUpdater.channel = 'beta';
+    console.log('Beta-Updates aktiviert');
+  }
+
   // Event-Handler für Update-Status
   autoUpdater.on('checking-for-update', () => {
     console.log('Checking for updates...');
