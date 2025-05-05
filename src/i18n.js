@@ -20,6 +20,27 @@ const resources = {
       startTracking: "Aufzeichnung starten",
       trackingActivities: "Aktivitäten werden aufgezeichnet",
       
+      // Einstellungen
+      settings: "Einstellungen",
+      activityStoreLocation: "Speicherort für Aktivitätsdaten",
+      defaultPath: "Standard",
+      changePath: "Ändern...",
+      resetToDefault: "Zurücksetzen",
+      activityStoreDescription: "Du kannst den Speicherort der Aktivitätsdatei ändern. Dies ist nützlich, wenn du einen Cloud-synchronisierten Ordner (z.B. Dropbox, Google Drive) verwenden möchtest.",
+      betaReleases: "Beta-Versionen",
+      participateInBeta: "An Beta-Tests teilnehmen",
+      betaDescription: "Wenn aktiviert, erhältst du frühzeitig Zugang zu neuen Funktionen, solltest aber mit möglichen Bugs rechnen.",
+      loading: "Wird geladen...",
+      close: "Schließen",
+      fileExistsTitle: "Datei existiert bereits",
+      fileExistsMessage: "Am Zielort existiert bereits eine Aktivitätsdatei. Möchtest du diese vorhandene Datei verwenden? Deine aktuellen Daten werden dann nicht übernommen.",
+      useExistingFile: "Vorhandene Datei verwenden",
+      cancel: "Abbrechen",
+      errorLoadingSettings: "Fehler beim Laden der Einstellungen",
+      errorChangingPath: "Fehler beim Ändern des Speicherorts",
+      errorUsingExistingFile: "Fehler beim Verwenden der vorhandenen Datei",
+      errorChangingBetaSetting: "Fehler beim Ändern der Beta-Einstellung",
+      
       // Zeitformate
       timeFormats: {
         today: "Heute",
@@ -46,6 +67,27 @@ const resources = {
       pauseTracking: "Pause Tracking",
       startTracking: "Start Tracking",
       trackingActivities: "Recording activities",
+      
+      // Settings
+      settings: "Settings",
+      activityStoreLocation: "Activity Data Location",
+      defaultPath: "Default",
+      changePath: "Change...",
+      resetToDefault: "Reset",
+      activityStoreDescription: "You can change the location where activity data is stored. This is useful if you want to use a cloud-synced folder (e.g., Dropbox, Google Drive).",
+      betaReleases: "Beta Versions",
+      participateInBeta: "Participate in Beta Testing",
+      betaDescription: "When enabled, you'll get early access to new features, but might experience bugs.",
+      loading: "Loading...",
+      close: "Close",
+      fileExistsTitle: "File Already Exists",
+      fileExistsMessage: "An activity file already exists at the selected location. Do you want to use this existing file? Your current data won't be transferred.",
+      useExistingFile: "Use Existing File",
+      cancel: "Cancel",
+      errorLoadingSettings: "Error loading settings",
+      errorChangingPath: "Error changing storage location",
+      errorUsingExistingFile: "Error using existing file",
+      errorChangingBetaSetting: "Error changing beta setting",
       
       // Time formats
       timeFormats: {

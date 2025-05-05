@@ -116,4 +116,18 @@
   border-radius: 4px;
   font-size: 14px;
   font-weight: 500;
+}
+
+.settings-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.settings-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 } 

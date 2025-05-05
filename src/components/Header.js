@@ -10,7 +10,8 @@ const Header = ({
   onToggleTracking, 
   isMockData,
   aggregationInterval = 15,
-  onIntervalChange
+  onIntervalChange,
+  onOpenSettings
 }) => {
   const { t } = useTranslation();
 
@@ -83,6 +84,14 @@ const Header = ({
       </div>
       
       <div className="controls">
+        <button 
+          className="settings-button" 
+          onClick={onOpenSettings}
+          title={t('settings')}
+        >
+          ⚙️
+        </button>
+        
         <div className="interval-selector-container">
           <select 
             className="interval-selector" 

@@ -7,6 +7,7 @@ import { ActivityIpc } from './ActivityIpc';
 import { ActivityState } from './ActivityState';
 import { IntervalScheduler } from './IntervalScheduler';
 import { AggregationManager } from './AggregationManager';
+import { SettingsManager } from './SettingsManager';
 
 // ---- TYPE DEFINITIONS ----
 
@@ -151,13 +152,14 @@ class ActivityStore {
   private options: StoreOptions;
   private dataFilePath: string;
   private timelineGenerator: TimelineGenerator;
-  private persistence: ActivityPersistence;
+  public persistence: ActivityPersistence;
   private ipcHandler: ActivityIpc;
   private activityState: ActivityState;
   private scheduler: IntervalScheduler;
   private aggregationManager: AggregationManager;
   public isTracking: boolean;
   private currentDayKey: string = '';
+  private settingsManager: SettingsManager;
 
   /**
    * Creates an instance of ActivityStore.
@@ -171,8 +173,13 @@ class ActivityStore {
       storagePath: options.storagePath ?? null
     };
 
+    // Initialisiere Settings Manager
+    this.settingsManager = new SettingsManager();
+
+    // Wenn ein expliziter Pfad in den Optionen angegeben wurde, nutze diesen (für Tests),
+    // ansonsten verwende den Pfad aus den Einstellungen
     this.dataFilePath = this.options.storagePath ||
-      path.join(app.getPath('userData'), 'activity-data.json');
+      this.settingsManager.getActivityStoreFilePath();
 
     this.persistence = new ActivityPersistence(this.dataFilePath);
     this.timelineGenerator = new TimelineGenerator();
@@ -583,6 +590,96 @@ class ActivityStore {
           // Still notify if using mock data, as aggregation might change appearance
           this.notifyDataUpdate(this.currentDayKey);
       }
+  }
+
+  /**
+   * Gibt den SettingsManager zurück
+   */
+  getSettingsManager(): SettingsManager {
+    return this.settingsManager;
+  }
+
+  /**
+   * Aktualisiert den Speicherort des ActivityStore
+   * @param newDirPath Der neue Verzeichnispfad (oder null für Standard)
+   * @returns true wenn erfolgreich, false wenn ein Fehler auftrat
+   */
+  updateStoragePath(newDirPath: string | null): boolean {
+    try {
+      // Ermittle den alten und neuen vollständigen Dateipfad
+      const oldFilePath = this.dataFilePath;
+      const newFilePath = newDirPath 
+        ? path.join(newDirPath, 'chronflow-activity-store.json')
+        : path.join(app.getPath('userData'), 'chronflow-activity-store.json');
+      
+      // Prüfe, ob die Datei am neuen Pfad existiert
+      const fileExistsAtNewPath = fs.existsSync(newFilePath);
+      
+      // Wenn die alte Datei existiert und die neue nicht, verschiebe die Datei
+      if (fs.existsSync(oldFilePath) && !fileExistsAtNewPath) {
+        // Stelle sicher, dass das Zielverzeichnis existiert
+        const dirPath = path.dirname(newFilePath);
+        if (!fs.existsSync(dirPath)) {
+          fs.mkdirSync(dirPath, { recursive: true });
+        }
+        
+        // Lies die alte Datei und schreibe sie an den neuen Ort
+        const data = fs.readFileSync(oldFilePath);
+        fs.writeFileSync(newFilePath, data);
+        
+        // Lösche die alte Datei, wenn sie verschieden ist
+        if (oldFilePath !== newFilePath) {
+          fs.unlinkSync(oldFilePath);
+        }
+      }
+      
+      // Aktualisiere die Pfade im SettingsManager und im Store
+      this.settingsManager.setActivityStoreDirPath(newDirPath);
+      this.dataFilePath = newFilePath;
+      
+      // Aktualisiere die Persistence mit dem neuen Pfad
+      this.persistence = new ActivityPersistence(this.dataFilePath);
+      
+      // Lade die Daten neu
+      const data = this.persistence.loadData();
+      if (data) {
+        this.activityState.setData(data);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error(`[Store] Fehler beim Aktualisieren des Speicherpfads:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Aktualisiert den Speicherort des ActivityStore und lädt die existierende Datei
+   * @param newDirPath Der neue Verzeichnispfad
+   * @returns true wenn erfolgreich, false wenn ein Fehler auftrat
+   */
+  useExistingStoreFile(newDirPath: string): boolean {
+    try {
+      // Setzte den neuen Pfad
+      this.settingsManager.setActivityStoreDirPath(newDirPath);
+      
+      // Aktualisiere den Dateipfad
+      this.dataFilePath = path.join(newDirPath, 'chronflow-activity-store.json');
+      
+      // Aktualisiere den Persistence-Layer
+      this.persistence = new ActivityPersistence(this.dataFilePath);
+      
+      // Lade die Daten aus der existierenden Datei
+      const data = this.persistence.loadData();
+      if (data) {
+        this.activityState.setData(data);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('[Store] Fehler beim Laden der existierenden Datei:', error);
+      return false;
+    }
   }
 }
 
