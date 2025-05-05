@@ -3,6 +3,7 @@ import { I18nextProvider } from 'react-i18next';
 import Header from './Header';
 import DayOverview from './DayOverview';
 import Footer from './Footer';
+import SettingsModal from './SettingsModal';
 import { ipcRenderer } from 'electron';
 import i18n from '../i18n';
 import './App.css';
@@ -20,6 +21,7 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [aggregationInterval, setAggregationInterval] = useState(15);
   const [updateStatus, setUpdateStatus] = useState(null);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   // Format duration in milliseconds to human-readable string
   const formatDuration = (ms) => {
@@ -199,6 +201,7 @@ const App = () => {
           isMockData={isMockData}
           aggregationInterval={aggregationInterval}
           onIntervalChange={handleIntervalChange}
+          onOpenSettings={() => setSettingsModalOpen(true)}
         />
         
         {/* Update-Benachrichtigung */}
@@ -224,6 +227,12 @@ const App = () => {
           inactiveTime={summary.inactiveTime}
           totalTime={summary.totalTime}
           isMockData={isMockData}
+        />
+        
+        {/* Einstellungen Modal */}
+        <SettingsModal 
+          isOpen={settingsModalOpen}
+          onClose={() => setSettingsModalOpen(false)}
         />
       </div>
     </I18nextProvider>

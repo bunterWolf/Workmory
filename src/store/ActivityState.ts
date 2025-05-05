@@ -191,4 +191,13 @@ export class ActivityState {
     public setStartTime(startTime: number): void {
         this.data.startTime = startTime;
     }
+
+    /**
+     * Setzt die Daten des Stores vollständig neu.
+     * Nützlich, wenn Daten aus einer anderen Quelle geladen werden.
+     * @param data Die neuen StoreData
+     */
+    public setData(data: StoreData): void {
+        this.data = data;
+    }
 } 

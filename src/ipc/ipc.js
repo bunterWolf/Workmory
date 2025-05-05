@@ -19,7 +19,27 @@ const ipc = {
   
   // Update data storage location
   updateStorageLocation: async (newLocation) => {
-    return ipcRenderer.invoke('update-storage-location', newLocation);
+    return ipcRenderer.invoke('update-activity-store-path', newLocation);
+  },
+  
+  // Confirm using existing activity store file
+  confirmUseExistingStore: async (dirPath) => {
+    return ipcRenderer.invoke('confirm-use-existing-activity-store', dirPath);
+  },
+  
+  // Update beta release setting
+  updateBetaReleaseSetting: async (allowPrerelease) => {
+    return ipcRenderer.invoke('update-beta-release-setting', allowPrerelease);
+  },
+  
+  // Open directory selection dialog
+  openDirectoryDialog: async () => {
+    return ipcRenderer.invoke('open-directory-dialog');
+  },
+  
+  // Get current settings
+  getSettings: async () => {
+    return ipcRenderer.invoke('get-settings');
   },
   
   // Check if mock data is being used
