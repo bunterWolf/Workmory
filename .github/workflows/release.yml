@@ -19,14 +19,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Environment info
         run: |
@@ -34,8 +32,12 @@ jobs:
           npm -v
           npm config list
 
+      - name: Update package-lock.json
+        run: npm install --package-lock-only
+        timeout-minutes: 5
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
         timeout-minutes: 15
 
       - name: Build application
