@@ -6,8 +6,11 @@ on:
       - 'v*'
 
 jobs:
-  release:
-    runs-on: windows-latest
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout code
@@ -27,15 +30,33 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create Release
+      - name: Create Distribution
         run: npm run dist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Speichere die Builds als Artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-artifacts
+          path: |
+            release/**/*.exe
+            release/**/*.dmg
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: "release/**/*.exe"
+          files: |
+            *-artifacts/*.exe
+            *-artifacts/*.dmg
           draft: false
           prerelease: false
         env:

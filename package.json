@@ -12,8 +12,10 @@
     "build": "npm test && tsc && webpack --config webpack.config.js",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
     "generate:mock": "ts-node scripts/generate-mock-data.ts",
-    "release": "standard-version"
+    "release": "node scripts/release.js"
   },
   "standard-version": {
     "types": [
@@ -66,7 +68,6 @@
   "build": {
     "appId": "com.electron.chronflow",
     "productName": "Chronflow",
-    "artifactName": "Chronflow.Setup.${version}.exe",
     "files": [
       "dist/**/*",
       "src/**/*",
@@ -80,6 +81,24 @@
       "provider": "github",
       "owner": "bunterWolf",
       "repo": "Chronflow"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": ["dmg"],
+      "artifactName": "Chronflow.${version}.${ext}"
+    },
+    "win": {
+      "target": ["nsis"],
+      "artifactName": "Chronflow.Setup.${version}.${ext}"
+    },
+    "dmg": {
+      "sign": false
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "deleteAppDataOnUninstall": false
     }
   },
   "keywords": [],

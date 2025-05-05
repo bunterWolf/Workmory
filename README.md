@@ -12,7 +12,20 @@ Chronflow is an Electron-based desktop application designed to track and analyze
 - **Activity Summary**: See total active and inactive time at a glance
 - **Pause/Resume**: Control when tracking occurs
 - **Local Data Storage**: All your data stays on your computer
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+- **Cross-Platform**: Works on Windows and macOS
+- **Automatic Updates**: Seamlessly receive and install new versions
+
+## Supported Platforms
+
+- **Windows**: Installer (.exe)
+  - One-click installation
+  - Automatic updates
+  - Windows 10 and newer
+
+- **macOS**: DMG installer
+  - Easy drag & drop installation
+  - Automatic updates
+  - macOS 10.15 (Catalina) and newer
 
 ## Development
 
