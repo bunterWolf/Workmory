@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/bunterWolf/Chronflow/compare/v1.0.3...v1.1.0) (2025-05-05)
+
+
+### Features
+
+* Upgrade GitHub Actions auf v4 ([067e89b](https://github.com/bunterWolf/Chronflow/commit/067e89b0b079b9311c0adfd6ca42c10962ea494c))
+
+
+### Bug Fixes
+
+* Downgrade GitHub Actions auf v3 ([1160c87](https://github.com/bunterWolf/Chronflow/commit/1160c8794bdfd477c724dd7b5155c83b4e46765b))
+* Verwende npm install statt npm ci in GitHub Action ([0652085](https://github.com/bunterWolf/Chronflow/commit/065208554b7bb5f1756dd324986b6fe5bb553dea))
+
 ## [1.2.0](https://github.com/bunterWolf/Chronflow/compare/v1.0.4...v1.2.0) (2025-05-05)
 
 
