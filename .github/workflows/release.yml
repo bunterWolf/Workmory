@@ -53,6 +53,15 @@ jobs:
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        
+      - name: Check if beta release
+        id: check-beta
+        run: |
+          if [[ ${{ github.ref }} == *"beta"* ]]; then
+            echo "is_beta=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_beta=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -61,6 +70,6 @@ jobs:
             *-artifacts/*.exe
             *-artifacts/*.dmg
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.check-beta.outputs.is_beta }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
