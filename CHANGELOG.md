@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0-beta.4](https://github.com/bunterWolf/Chronflow/compare/v1.2.0-beta.3...v1.2.0-beta.4) (2025-05-05)
+
+
+### Bug Fixes
+
+* Beta Build Process ([462270c](https://github.com/bunterWolf/Chronflow/commit/462270c806fee991fb288d61ff93f7fbc5cd1608))
+
 ## [1.2.0-beta.3](https://github.com/bunterWolf/Chronflow/compare/v1.2.0-beta.2...v1.2.0-beta.3) (2025-05-05)
 
 
