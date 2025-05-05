@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0-beta.0](https://github.com/bunterWolf/Chronflow/compare/v1.1.0...v1.2.0-beta.0) (2025-05-05)
+
+
+### Features
+
+* App Settings with User Interface ([4f38121](https://github.com/bunterWolf/Chronflow/commit/4f38121715e43c4c5331714796c564231f2c0dcb))
+
+
+### Bug Fixes
+
+* Duration Display Position ([5a28e78](https://github.com/bunterWolf/Chronflow/commit/5a28e782ccdbbf559302dbc9db4b05ad4d4a438b))
+
 ## [1.1.0](https://github.com/bunterWolf/Chronflow/compare/v1.0.3...v1.1.0) (2025-05-05)
 
 
