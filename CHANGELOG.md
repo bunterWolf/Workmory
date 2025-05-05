@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0-beta.1](https://github.com/bunterWolf/Chronflow/compare/v1.1.0...v1.2.0-beta.1) (2025-05-05)
+
+
+### Features
+
+* App Settings with User Interface ([4f38121](https://github.com/bunterWolf/Chronflow/commit/4f38121715e43c4c5331714796c564231f2c0dcb))
+
+
+### Bug Fixes
+
+* Beta Build Process ([8759cfb](https://github.com/bunterWolf/Chronflow/commit/8759cfb59c55bada81814cbd462edcfb8de67b55))
+* Beta Build Process ([2de7bee](https://github.com/bunterWolf/Chronflow/commit/2de7bee61bca594fad6dcce1d0e3ba4719d0b32c))
+* Beta Build Process ([462270c](https://github.com/bunterWolf/Chronflow/commit/462270c806fee991fb288d61ff93f7fbc5cd1608))
+* Beta Build Process ([2811e4e](https://github.com/bunterWolf/Chronflow/commit/2811e4eaa6af45f89d59ac5435ca43f395081b60))
+* Beta Update Process ([be6912a](https://github.com/bunterWolf/Chronflow/commit/be6912adbe37ad9ebec8bfc1be89ef11d6dcd5ab))
+* Duration Display Position ([5a28e78](https://github.com/bunterWolf/Chronflow/commit/5a28e782ccdbbf559302dbc9db4b05ad4d4a438b))
+
 ## [1.2.0-beta.2](https://github.com/bunterWolf/Chronflow/compare/v1.2.0-beta.9...v1.2.0-beta.2) (2025-05-05)
 
 ## [1.2.0-beta.1](https://github.com/bunterWolf/Chronflow/compare/v1.2.0-beta.9...v1.2.0-beta.1) (2025-05-05)
