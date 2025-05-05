@@ -16,7 +16,8 @@
     "dist:mac": "npm run build && electron-builder --mac",
     "generate:mock": "ts-node scripts/generate-mock-data.ts",
     "release": "node scripts/release.js",
-    "release:beta": "node scripts/release-beta.js"
+    "release:beta": "node scripts/release-beta.js",
+    "beta:create": "node scripts/create-beta-branch.js"
   },
   "standard-version": {
     "types": [
