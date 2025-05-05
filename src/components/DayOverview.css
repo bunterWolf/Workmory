@@ -136,7 +136,7 @@
 .event-duration {
   position: absolute;
   right: 10px;
-  top: 8px;
+  top: 0px;
   font-size: 12px;
   font-weight: 500;
 } 
