@@ -91,7 +91,8 @@
         "owner": "bunterWolf",
         "repo": "Chronflow",
         "releaseType": "prerelease",
-        "channel": "beta"
+        "channel": "beta",
+        "forceDev": true
       }
     ],
     "mac": {
