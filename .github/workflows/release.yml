@@ -45,7 +45,7 @@ jobs:
           name: ${{ matrix.os }}-artifacts
           path: |
             release/**/*.exe
-            release/**/*.dmg
+            release/**/*.zip
 
   release:
     needs: build
@@ -68,7 +68,7 @@ jobs:
         with:
           files: |
             *-artifacts/*.exe
-            *-artifacts/*.dmg
+            *-artifacts/*.zip
           draft: false
           prerelease: ${{ steps.check-beta.outputs.is_beta }}
         env:

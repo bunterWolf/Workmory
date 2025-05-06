@@ -1,6 +1,6 @@
 {
   "name": "chronflow",
-  "version": "1.2.0-beta.2",
+  "version": "1.1.1",
   "description": "Productivity Tracker",
   "main": "dist/main/main.js",
   "scripts": {
@@ -98,13 +98,6 @@
       "category": "public.app-category.productivity",
       "target": [
         {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
           "target": "zip",
           "arch": [
             "x64",
@@ -112,7 +105,7 @@
           ]
         }
       ],
-      "artifactName": "Chronflow.${version}.${ext}",
+      "artifactName": "Chronflow-${version}-mac-${arch}.${ext}",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
@@ -125,12 +118,15 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "artifactName": "Chronflow.Setup.${version}.${ext}"
-    },
-    "dmg": {
-      "sign": false
+      "artifactName": "Chronflow-${version}-win-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": true,
@@ -140,7 +136,7 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Chronflow",
-      "artifactName": "Chronflow.Setup.${version}.${ext}",
+      "artifactName": "Chronflow-Setup-${version}-win-${arch}.${ext}",
       "uninstallDisplayName": "Chronflow",
       "differentialPackage": true
     },
