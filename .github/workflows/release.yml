@@ -38,6 +38,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BETA_RELEASE: ${{ env.BETA_RELEASE }}
+          EP_PRE_RELEASE: ${{ env.EP_PRE_RELEASE }}
+          CHANNEL: ${{ env.CHANNEL }}
 
       # Speichere die Builds als Artifacts
       - name: Upload artifacts
@@ -61,9 +63,13 @@ jobs:
           if [[ ${{ github.ref }} == *"beta"* ]]; then
             echo "is_beta=true" >> $GITHUB_OUTPUT
             echo "BETA_RELEASE=true" >> $GITHUB_ENV
+            echo "EP_PRE_RELEASE=true" >> $GITHUB_ENV
+            echo "CHANNEL=beta" >> $GITHUB_ENV
           else
             echo "is_beta=false" >> $GITHUB_OUTPUT
             echo "BETA_RELEASE=false" >> $GITHUB_ENV
+            echo "EP_PRE_RELEASE=false" >> $GITHUB_ENV
+            echo "CHANNEL=latest" >> $GITHUB_ENV
           fi
 
       - name: Create GitHub Release

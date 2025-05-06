@@ -79,13 +79,20 @@
       "buildResources": "resources",
       "output": "release/${version}"
     },
-    "publish": {
-      "provider": "github",
-      "owner": "bunterWolf",
-      "repo": "Chronflow",
-      "releaseType": "${process.env.BETA_RELEASE === 'true' ? 'prerelease' : 'release'}",
-      "channel": "${process.env.BETA_RELEASE === 'true' ? 'beta' : 'latest'}"
-    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "bunterWolf",
+        "repo": "Chronflow",
+        "channel": "latest"
+      },
+      {
+        "provider": "github",
+        "owner": "bunterWolf",
+        "repo": "Chronflow",
+        "channel": "beta"
+      }
+    ],
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
