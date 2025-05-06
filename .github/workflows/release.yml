@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -28,6 +30,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Check if beta release
+        id: check-beta
+        run: |
+          if [[ ${{ github.ref }} == *"beta"* ]]; then
+            echo "is_beta=true" >> $GITHUB_OUTPUT
+            echo "EP_PRE_RELEASE=true" >> $GITHUB_ENV
+          else
+            echo "is_beta=false" >> $GITHUB_OUTPUT
+            echo "EP_PRE_RELEASE=false" >> $GITHUB_ENV
+          fi
+
       - name: Build application
         run: npm run build
         env:
@@ -37,9 +50,7 @@ jobs:
         run: npm run dist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BETA_RELEASE: ${{ env.BETA_RELEASE }}
           EP_PRE_RELEASE: ${{ env.EP_PRE_RELEASE }}
-          CHANNEL: ${{ env.CHANNEL }}
 
       # Speichere die Builds als Artifacts
       - name: Upload artifacts
@@ -49,35 +60,41 @@ jobs:
           path: |
             release/**/*.exe
             release/**/*.zip
+            release/**/*.yml
+            release/**/*.blockmap
 
-  release:
+  # Diese Job läuft nur, wenn der GitHub Release von electron-builder fehlschlägt
+  fallback-release:
     needs: build
     runs-on: ubuntu-latest
+    if: failure()
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        
+      - name: List downloaded artifacts
+        run: |
+          echo "Listing downloaded artifacts:"
+          find . -type f | sort
         
       - name: Check if beta release
         id: check-beta
         run: |
           if [[ ${{ github.ref }} == *"beta"* ]]; then
             echo "is_beta=true" >> $GITHUB_OUTPUT
-            echo "BETA_RELEASE=true" >> $GITHUB_ENV
-            echo "EP_PRE_RELEASE=true" >> $GITHUB_ENV
-            echo "CHANNEL=beta" >> $GITHUB_ENV
           else
             echo "is_beta=false" >> $GITHUB_OUTPUT
-            echo "BETA_RELEASE=false" >> $GITHUB_ENV
-            echo "EP_PRE_RELEASE=false" >> $GITHUB_ENV
-            echo "CHANNEL=latest" >> $GITHUB_ENV
           fi
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release as fallback
+        id: create_release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            *-artifacts/*.exe
-            *-artifacts/*.zip
+            **/*.exe
+            **/*.zip
+            **/*.yml
+            **/*.blockmap
           draft: false
           prerelease: ${{ steps.check-beta.outputs.is_beta }}
         env:
