@@ -83,14 +83,7 @@
       {
         "provider": "github",
         "owner": "bunterWolf",
-        "repo": "Chronflow",
-        "channel": "latest"
-      },
-      {
-        "provider": "github",
-        "owner": "bunterWolf",
-        "repo": "Chronflow",
-        "channel": "beta"
+        "repo": "Chronflow"
       }
     ],
     "mac": {

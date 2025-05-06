@@ -3,8 +3,7 @@ const standardVersion = require('standard-version');
 
 async function releaseBeta() {
     try {
-        // Setze die Umgebungsvariablen für electron-builder
-        process.env.BETA_RELEASE = 'true';
+        // Setze die Umgebungsvariable für electron-builder
         process.env.EP_PRE_RELEASE = 'true'; // Für electron-builder
 
         // 1. Stelle sicher, dass alles committed ist
