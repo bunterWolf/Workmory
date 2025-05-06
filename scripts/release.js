@@ -3,8 +3,9 @@ const standardVersion = require('standard-version');
 
 async function release() {
     try {
-        // Setze die Umgebungsvariable für electron-builder
+        // Setze die Umgebungsvariablen für electron-builder
         process.env.BETA_RELEASE = 'false';
+        process.env.EP_PRE_RELEASE = 'false'; // Für electron-builder
 
         // 1. Stelle sicher, dass wir auf main sind und alles committed ist
         const status = execSync('git status --porcelain').toString();
