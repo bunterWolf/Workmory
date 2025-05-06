@@ -29,17 +29,48 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-
-      - name: Check if beta release
-        id: check-beta
+        
+      # Windows und Unix brauchen unterschiedliche Syntax
+      - name: Check if beta release (Unix)
+        if: runner.os != 'Windows'
+        id: check-beta-unix
+        shell: bash
         run: |
-          if [[ ${{ github.ref }} == *"beta"* ]]; then
+          if [[ "${{ github.ref }}" == *"beta"* ]]; then
             echo "is_beta=true" >> $GITHUB_OUTPUT
             echo "EP_PRE_RELEASE=true" >> $GITHUB_ENV
           else
             echo "is_beta=false" >> $GITHUB_OUTPUT
             echo "EP_PRE_RELEASE=false" >> $GITHUB_ENV
           fi
+          
+      - name: Check if beta release (Windows)
+        if: runner.os == 'Windows'
+        id: check-beta-windows
+        shell: pwsh
+        run: |
+          if ("${{ github.ref }}" -like "*beta*") {
+            "is_beta=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "EP_PRE_RELEASE=true" | Out-File -FilePath $env:GITHUB_ENV -Append
+          } else {
+            "is_beta=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "EP_PRE_RELEASE=false" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+
+      # Verwende die Ausgabe vom richtigen Check
+      - name: Set EP_PRE_RELEASE (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          EP_PRE_RELEASE=${{ steps.check-beta-unix.outputs.is_beta == 'true' && 'true' || 'false' }}
+          echo "EP_PRE_RELEASE=$EP_PRE_RELEASE" >> $GITHUB_ENV
+          
+      - name: Set EP_PRE_RELEASE (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $EP_PRE_RELEASE = if ("${{ steps.check-beta-windows.outputs.is_beta }}" -eq "true") { "true" } else { "false" }
+          "EP_PRE_RELEASE=$EP_PRE_RELEASE" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Build application
         run: npm run build
@@ -79,8 +110,9 @@ jobs:
         
       - name: Check if beta release
         id: check-beta
+        shell: bash
         run: |
-          if [[ ${{ github.ref }} == *"beta"* ]]; then
+          if [[ "${{ github.ref }}" == *"beta"* ]]; then
             echo "is_beta=true" >> $GITHUB_OUTPUT
           else
             echo "is_beta=false" >> $GITHUB_OUTPUT
@@ -96,6 +128,6 @@ jobs:
             **/*.yml
             **/*.blockmap
           draft: false
-          prerelease: ${{ steps.check-beta.outputs.is_beta }}
+          prerelease: ${{ steps.check-beta.outputs.is_beta == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
