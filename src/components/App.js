@@ -166,7 +166,7 @@ const App = () => {
   useEffect(() => {
     const handleUpdateStatus = (event, status) => {
       setUpdateStatus(status);
-      
+
       // Zeige Update-Benachrichtigung
       if (status.status === 'available') {
         // Neue Version verfügbar
@@ -177,6 +177,11 @@ const App = () => {
       } else if (status.status === 'error') {
         // Update-Fehler
         console.error('Update-Fehler:', status.error);
+        
+        // Analysiere den Fehler für spezifische Probleme
+        if (status.error && status.error.includes('latest.yml') && status.error.includes('beta')) {
+          console.log('Beta-Update-Konfigurationsproblem erkannt. Überprüfe die Einstellungen.');
+        }
       }
     };
 

@@ -72,6 +72,28 @@ jobs:
           $EP_PRE_RELEASE = if ("${{ steps.check-beta-windows.outputs.is_beta }}" -eq "true") { "true" } else { "false" }
           "EP_PRE_RELEASE=$EP_PRE_RELEASE" | Out-File -FilePath $env:GITHUB_ENV -Append
 
+      # Set channel based on beta status (Unix)
+      - name: Set channel for electron-builder (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          if [[ "${{ steps.check-beta-unix.outputs.is_beta }}" == "true" ]]; then
+            echo "CHANNEL=beta" >> $GITHUB_ENV
+          else
+            echo "CHANNEL=latest" >> $GITHUB_ENV
+          fi
+
+      # Set channel based on beta status (Windows)
+      - name: Set channel for electron-builder (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if ("${{ steps.check-beta-windows.outputs.is_beta }}" -eq "true") {
+            "CHANNEL=beta" | Out-File -FilePath $env:GITHUB_ENV -Append
+          } else {
+            "CHANNEL=latest" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+
       - name: Build application
         run: npm run build
         env:
@@ -82,6 +104,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EP_PRE_RELEASE: ${{ env.EP_PRE_RELEASE }}
+          ELECTRON_BUILDER_PUBLISH_CHANNEL: ${{ env.CHANNEL }}
 
       # Speichere die Builds als Artifacts
       - name: Upload artifacts

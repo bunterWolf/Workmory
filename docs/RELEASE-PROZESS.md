@@ -63,6 +63,9 @@ Sobald das Tag gepusht wird:
 - `EP_PRE_RELEASE`: Steuert, ob electron-builder ein Pre-Release oder reguläres Release erstellt
   - `true` = Pre-Release (Beta)
   - `false` = Reguläres Release
+- `ELECTRON_BUILDER_PUBLISH_CHANNEL`: Bestimmt den Veröffentlichungskanal
+  - `beta` = Beta-Kanal (generiert `beta.yml` für Updates)
+  - `latest` = Standard-Kanal (generiert `latest.yml` für Updates)
 
 ### Konfiguration
 
@@ -70,6 +73,15 @@ Die Hauptkonfiguration für den Release-Prozess befindet sich in:
 - `package.json` - electron-builder Konfiguration
 - `.github/workflows/release.yml` - GitHub Actions Workflow
 - `scripts/release.js` und `scripts/release-beta.js` - Lokale Release-Skripte
+- `src/main/main.ts` - Auto-Updater-Konfiguration
+
+### Update-Dateien
+
+Für die automatischen Updates werden folgende Dateien generiert:
+- `latest.yml` - Für Standard-Updates
+- `beta.yml` - Für Beta-Updates
+
+Der Auto-Updater sucht je nach Konfiguration nach der entsprechenden Datei.
 
 ### Fallback-Mechanismus
 

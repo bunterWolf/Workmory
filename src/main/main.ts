@@ -316,13 +316,18 @@ function initAutoUpdater() {
   // Konfiguriere Auto-Updater
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.logger = console;
+  autoUpdater.forceDevUpdateConfig = false;
 
   // Beta-Kanal Konfiguration
   // Lies die Einstellung aus den Settings statt aus der Umgebungsvariable
   const allowPrerelease = activityStore?.getSettingsManager().getAllowPrerelease() || false;
   if (allowPrerelease) {
     autoUpdater.channel = 'beta';
-    console.log('Beta-Updates aktiviert');
+    console.log('Beta-Updates aktiviert. Kanal:', autoUpdater.channel);
+  } else {
+    autoUpdater.channel = 'latest';
+    console.log('Standard-Updates aktiviert. Kanal:', autoUpdater.channel);
   }
 
   // Event-Handler für Update-Status
