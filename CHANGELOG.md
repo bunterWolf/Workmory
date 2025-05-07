@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-beta.13](https://github.com/bunterWolf/Chronflow/compare/v0.0.1-beta.9...v0.0.1-beta.13) (2025-05-07)
+
+
+### Features
+
+* App auto start option ([07e5020](https://github.com/bunterWolf/Chronflow/commit/07e5020b47a0fd859e37d43b52e395089c0ad2f8))
+
 ### [0.0.1-beta.10](https://github.com/bunterWolf/Chronflow/compare/v0.0.1-beta.9...v0.0.1-beta.10) (2025-05-07)
 
 
