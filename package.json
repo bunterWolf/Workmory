@@ -82,9 +82,7 @@
     "publish": {
       "provider": "github",
       "owner": "bunterWolf",
-      "repo": "Chronflow",
-      "releaseType": "${env.EP_PRE_RELEASE === 'true' ? 'prerelease' : 'release'}",
-      "channel": "${env.EP_PRE_RELEASE === 'true' ? 'beta' : 'latest'}"
+      "repo": "Chronflow"
     },
     "mac": {
       "category": "public.app-category.productivity",
