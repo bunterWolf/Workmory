@@ -95,7 +95,20 @@ Wenn doppelte Releases angezeigt werden, könnte das folgende Ursachen haben:
 - Manuelles Erstellen eines Releases mit demselben Tag
 - Fehler in der Release-Konfiguration
 
-Lösung: Achte darauf, dass du nicht manuell ein Release erstellst, und stelle sicher, dass die Konfiguration korrekt ist.
+**Lösung**: 
+Die publish-Konfiguration in package.json wurde aktualisiert, um eine dynamische Konfiguration basierend auf der EP_PRE_RELEASE-Umgebungsvariable zu verwenden. Dies verhindert, dass beim Beta-Release sowohl ein reguläres als auch ein Beta-Release erstellt wird.
+
+```json
+"publish": {
+  "provider": "github",
+  "owner": "bunterWolf",
+  "repo": "Chronflow",
+  "releaseType": "${env.EP_PRE_RELEASE === 'true' ? 'prerelease' : 'release'}",
+  "channel": "${env.EP_PRE_RELEASE === 'true' ? 'beta' : 'latest'}"
+}
+```
+
+Diese Änderung stellt sicher, dass jetzt nur noch ein Release pro Tag erstellt wird.
 
 ### Fehlende Artefakte
 

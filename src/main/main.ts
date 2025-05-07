@@ -7,6 +7,7 @@ import * as url from 'url';
 import * as remoteMain from '@electron/remote/main'; // Use import for @electron/remote/main
 import { autoUpdater, UpdateInfo, ProgressInfo } from 'electron-updater';
 import * as fs from 'fs';
+import AutoLaunch from 'auto-launch'; // Auto-Launch-Import
 
 // Read app version from package.json
 import { version as appVersion } from '../../package.json';
@@ -14,6 +15,9 @@ import { version as appVersion } from '../../package.json';
 // Use default imports for our TypeScript modules
 import ActivityStore from '../store/ActivityStore';
 import HeartbeatManager from '../store/HeartbeatManager';
+
+// Auto-Launcher-Instanz
+let autoLauncher: AutoLaunch;
 
 // Initialize @electron/remote
 remoteMain.initialize();
@@ -137,6 +141,33 @@ async function initializeTracking(): Promise<void> { // Add return type Promise<
       // Initialize the watchers inside the heartbeat manager
       await heartbeatManager.init();
       console.log("HeartbeatManager initialized.");
+
+      // Initialisiere AutoLaunch
+      try {
+        autoLauncher = new AutoLaunch({
+          name: 'Chronflow',
+          path: app.getPath('exe'),
+        });
+
+        // Synchronisiere mit den gespeicherten Einstellungen
+        if (activityStore) {
+          const settingsManager = activityStore.getSettingsManager();
+          const shouldAutoLaunch = settingsManager.getAutoLaunchEnabled();
+          
+          const isEnabled = await autoLauncher.isEnabled();
+          
+          // Nur ändern, wenn nötig
+          if (shouldAutoLaunch && !isEnabled) {
+            await autoLauncher.enable();
+            console.log('Auto-Start aktiviert');
+          } else if (!shouldAutoLaunch && isEnabled) {
+            await autoLauncher.disable();
+            console.log('Auto-Start deaktiviert');
+          }
+        }
+      } catch (error) {
+        console.error('Fehler bei der Initialisierung von AutoLaunch:', error);
+      }
 
       // Start tracking (only if not using mock data)
       if (!useMockData && activityStore && heartbeatManager) {
@@ -308,6 +339,45 @@ function registerIpcHandlers(): void { // Add return type void
     return result.filePaths[0];
   });
 
+  // Auto-Launch-Einstellungen abrufen
+  ipcMain.handle('get-auto-launch-settings', async (): Promise<any> => {
+    if (!activityStore) {
+      console.error('Cannot get auto-launch settings: activity store not initialized.');
+      return { enabled: false, error: 'Activity store not initialized' };
+    }
+    
+    const settingsManager = activityStore.getSettingsManager();
+    const enabled = settingsManager.getAutoLaunchEnabled();
+    
+    return { enabled };
+  });
+  
+  // Auto-Launch-Einstellungen aktualisieren
+  ipcMain.handle('update-auto-launch-settings', async (event: IpcMainInvokeEvent, enabled: boolean): Promise<any> => {
+    if (!activityStore || !autoLauncher) {
+      console.error('Cannot update auto-launch settings: components not initialized.');
+      return { success: false, error: 'Components not initialized' };
+    }
+    
+    try {
+      // Einstellung in SettingsManager speichern
+      const settingsManager = activityStore.getSettingsManager();
+      settingsManager.setAutoLaunchEnabled(enabled);
+      
+      // AutoLaunch aktualisieren
+      if (enabled) {
+        await autoLauncher.enable();
+      } else {
+        await autoLauncher.disable();
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren der Auto-Launch-Einstellungen:', error);
+      return { success: false, error: 'Fehler beim Aktualisieren der Einstellungen' };
+    }
+  });
+
   console.log("IPC handlers registered.");
 }
 
@@ -447,6 +517,8 @@ app.on('before-quit', async (event) => { // Add event type if needed (Event)
       ipcMain.removeHandler('get-tracking-status');
       ipcMain.removeHandler('toggle-tracking');
       ipcMain.removeHandler('is-using-mock-data');
+      ipcMain.removeHandler('get-auto-launch-settings');
+      ipcMain.removeHandler('update-auto-launch-settings');
 
       console.log('All resources cleaned up before quitting.');
       // Allow quitting now

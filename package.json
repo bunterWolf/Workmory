@@ -79,21 +79,11 @@
       "buildResources": "resources",
       "output": "release/${version}"
     },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "bunterWolf",
-        "repo": "Chronflow",
-        "releaseType": "release"
-      },
-      {
-        "provider": "github",
-        "owner": "bunterWolf",
-        "repo": "Chronflow",
-        "releaseType": "prerelease",
-        "channel": "beta"
-      }
-    ],
+    "publish": {
+      "provider": "github",
+      "owner": "bunterWolf",
+      "repo": "Chronflow"
+    },
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
@@ -148,6 +138,7 @@
   "dependencies": {
     "@electron/remote": "^2.1.2",
     "active-win": "^8.1.1",
+    "auto-launch": "^5.0.6",
     "electron-updater": "^6.1.7",
     "i18next": "^24.2.3",
     "i18next-scanner": "^4.6.0",
@@ -160,6 +151,7 @@
     "@babel/core": "^7.23.5",
     "@babel/preset-env": "^7.23.5",
     "@babel/preset-react": "^7.23.3",
+    "@types/auto-launch": "^5.0.5",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.14.0",
     "babel-loader": "^9.1.3",
