@@ -6,6 +6,7 @@ import { app } from 'electron';
 export interface AppSettings {
   activityStoreDirPath: string | null; // null = Standard (userData)
   allowPrerelease: boolean;
+  autoLaunchEnabled: boolean; // Neue Eigenschaft für Auto-Start
 }
 
 /**
@@ -22,7 +23,8 @@ export class SettingsManager {
     // Standardeinstellungen
     this.settings = {
       activityStoreDirPath: null,
-      allowPrerelease: false
+      allowPrerelease: false,
+      autoLaunchEnabled: false // Standard: Auto-Start deaktiviert
     };
 
     // Lade Einstellungen aus der Datei, wenn sie existiert
@@ -49,6 +51,12 @@ export class SettingsManager {
           if ('allowPrerelease' in parsedSettings && 
               typeof parsedSettings.allowPrerelease === 'boolean') {
             this.settings.allowPrerelease = parsedSettings.allowPrerelease;
+          }
+          
+          // autoLaunchEnabled (boolean)
+          if ('autoLaunchEnabled' in parsedSettings && 
+              typeof parsedSettings.autoLaunchEnabled === 'boolean') {
+            this.settings.autoLaunchEnabled = parsedSettings.autoLaunchEnabled;
           }
         }
         
@@ -116,6 +124,22 @@ export class SettingsManager {
    */
   setAllowPrerelease(allow: boolean): void {
     this.settings.allowPrerelease = allow;
+    this.saveSettings();
+  }
+
+  /**
+   * Gibt zurück, ob Auto-Start aktiviert ist
+   */
+  getAutoLaunchEnabled(): boolean {
+    return this.settings.autoLaunchEnabled;
+  }
+
+  /**
+   * Setzt einen neuen Wert für autoLaunchEnabled
+   * @param enabled Ob Auto-Start aktiviert sein soll
+   */
+  setAutoLaunchEnabled(enabled: boolean): void {
+    this.settings.autoLaunchEnabled = enabled;
     this.saveSettings();
   }
 } 
