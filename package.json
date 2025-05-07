@@ -1,6 +1,6 @@
 {
   "name": "chronflow",
-  "version": "0.0.1-beta.10",
+  "version": "0.0.1-beta.11",
   "description": "Productivity Tracker",
   "main": "dist/main/main.js",
   "scripts": {
