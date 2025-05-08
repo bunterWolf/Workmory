@@ -1,6 +1,6 @@
-# Release-Prozess für Chronflow
+# Release-Prozess für Workmory
 
-Dieses Dokument beschreibt den vollständigen Release-Prozess für Chronflow, einschließlich Beta-Releases und stabilen Releases.
+Dieses Dokument beschreibt den vollständigen Release-Prozess für Workmory, einschließlich Beta-Releases und stabilen Releases.
 
 ## Übersicht
 
@@ -102,7 +102,7 @@ Die publish-Konfiguration in package.json wurde aktualisiert, um eine dynamische
 "publish": {
   "provider": "github",
   "owner": "bunterWolf",
-  "repo": "Chronflow",
+  "repo": "Workmory",
   "releaseType": "${env.EP_PRE_RELEASE === 'true' ? 'prerelease' : 'release'}",
   "channel": "${env.EP_PRE_RELEASE === 'true' ? 'beta' : 'latest'}"
 }
