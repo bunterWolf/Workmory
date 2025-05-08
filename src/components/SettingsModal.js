@@ -14,6 +14,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
   const [activityStorePath, setActivityStorePath] = useState(null);
   const [displayPath, setDisplayPath] = useState(t('defaultPath')); 
   const [allowPrerelease, setAllowPrerelease] = useState(false);
+  const [autoLaunchEnabled, setAutoLaunchEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [pendingPath, setPendingPath] = useState(null);
@@ -28,6 +29,9 @@ const SettingsModal = ({ isOpen, onClose }) => {
         setActivityStorePath(settings.activityStoreDirPath);
         setDisplayPath(settings.activityStoreDirPath || t('defaultPath'));
         setAllowPrerelease(settings.allowPrerelease);
+        
+        const autoLaunchSettings = await ipcRenderer.invoke('get-auto-launch-settings');
+        setAutoLaunchEnabled(autoLaunchSettings.enabled);
       } catch (error) {
         console.error('Fehler beim Laden der Einstellungen:', error);
         setErrorMessage(t('errorLoadingSettings'));
@@ -124,6 +128,22 @@ const SettingsModal = ({ isOpen, onClose }) => {
     }
   };
 
+  // Auto-Start-Einstellung ändern
+  const handleToggleAutoLaunch = async (e) => {
+    const checked = e.target.checked;
+    try {
+      const result = await ipcRenderer.invoke('update-auto-launch-settings', checked);
+      if (result.success) {
+        setAutoLaunchEnabled(checked);
+      } else {
+        setErrorMessage(t('errorChangingAutoLaunchSetting'));
+      }
+    } catch (error) {
+      console.error('Fehler beim Ändern der Auto-Start-Einstellung:', error);
+      setErrorMessage(t('errorChangingAutoLaunchSetting'));
+    }
+  };
+
   // Fehlermeldung zurücksetzen
   const clearError = () => setErrorMessage('');
 
@@ -162,6 +182,24 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 </div>
                 <p className="settings-description">
                   {t('activityStoreDescription')}
+                </p>
+              </div>
+
+              {/* Auto-Start-Einstellung */}
+              <div className="settings-section">
+                <h3>{t('autoLaunch')}</h3>
+                <div className="settings-control">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={autoLaunchEnabled}
+                      onChange={handleToggleAutoLaunch}
+                    />
+                    {t('autoLaunchEnabled')}
+                  </label>
+                </div>
+                <p className="settings-description">
+                  {t('autoLaunchDescription')}
                 </p>
               </div>
 
