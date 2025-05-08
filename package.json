@@ -1,5 +1,5 @@
 {
-  "name": "chronflow",
+  "name": "workmory",
   "version": "1.1.1",
   "description": "Productivity Tracker",
   "main": "dist/main/main.js",
@@ -68,8 +68,8 @@
     }
   },
   "build": {
-    "appId": "com.electron.chronflow",
-    "productName": "Chronflow",
+    "appId": "com.electron.workmory",
+    "productName": "Workmory",
     "files": [
       "dist/**/*",
       "src/**/*",
@@ -82,7 +82,7 @@
     "publish": {
       "provider": "github",
       "owner": "bunterWolf",
-      "repo": "Chronflow"
+      "repo": "Workmory"
     },
     "mac": {
       "category": "public.app-category.productivity",
@@ -95,7 +95,7 @@
           ]
         }
       ],
-      "artifactName": "Chronflow-${version}-mac-${arch}.${ext}",
+      "artifactName": "Workmory-${version}-mac-${arch}.${ext}",
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
       "identity": null
@@ -115,19 +115,19 @@
           ]
         }
       ],
-      "artifactName": "Chronflow-${version}-win-${arch}.${ext}"
-    },
-    "nsis": {
-      "oneClick": true,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": false,
-      "deleteAppDataOnUninstall": false,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Chronflow",
-      "artifactName": "Chronflow-Setup-${version}-win-${arch}.${ext}",
-      "uninstallDisplayName": "Chronflow",
-      "differentialPackage": true
+      "artifactName": "Workmory-${version}-win-${arch}.${ext}",
+      "nsis": {
+        "oneClick": true,
+        "perMachine": false,
+        "allowToChangeInstallationDirectory": false,
+        "deleteAppDataOnUninstall": false,
+        "createDesktopShortcut": true,
+        "createStartMenuShortcut": true,
+        "shortcutName": "Workmory",
+        "artifactName": "Workmory-Setup-${version}-win-${arch}.${ext}",
+        "uninstallDisplayName": "Workmory",
+        "differentialPackage": true
+      }
     },
     "generateUpdatesFilesForAllChannels": true
   },

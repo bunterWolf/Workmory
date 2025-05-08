@@ -1,4 +1,4 @@
-# Engineering Design Document: Chronflow - Productivity Tracker
+# Engineering Design Document: Workmory - Automatic time tracking made easy and free
 
 ## Glossar
 
@@ -8,13 +8,13 @@
 
 ## 1. Introduction
 
-Chronflow is an Electron-based desktop application designed to track and analyze user activity on a computer. The application follows a main process/renderer process architecture connected through IPC communication.
+Workmory is an Electron-based desktop application designed to track and analyze user activity on a computer. The application follows a main process/renderer process architecture connected through IPC communication.
 
 ## 1. System Architecture
 
 ### 1.1 Overview
 
-Focus is an Electron-based desktop application designed to track and analyze user activity on a computer. The application follows a main process/renderer process architecture connected through IPC communication.
+Workmory is an Electron-based desktop application designed to track and analyze user activity on a computer. The application follows a main process/renderer process architecture connected through IPC communication.
 
 ### 1.2 Architectural Components
 

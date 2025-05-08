@@ -66,7 +66,7 @@ function createWindow(): void { // Add return type void
   mainWindow = new BrowserWindow({
     width: 1024,
     height: 768,
-    title: 'Chronflow - Passive Work Tracker' + (useMockData ? ' (Mock Data)' : ''),
+    title: 'Workmory - Automatic time tracking made easy and free' + (useMockData ? ' (Mock Data)' : ''),
     icon: path.join(app.getAppPath(), 'build', 'icon.ico'),
     webPreferences: {
       nodeIntegration: true, // Consider disabling if possible for security

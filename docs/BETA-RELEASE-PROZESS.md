@@ -1,6 +1,6 @@
-# Beta-Release-Prozess
+# Beta Release Prozess
 
-Dieses Dokument beschreibt den Prozess zur Erstellung von Beta-Releases für Chronflow.
+Dieses Dokument beschreibt den Prozess zur Erstellung von Beta-Releases für Workmory.
 
 ## Übersicht
 

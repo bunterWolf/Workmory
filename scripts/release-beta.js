@@ -47,7 +47,7 @@ Die GitHub Action wird nun automatisch:
 3. Die Installer hochladen
 
 Du kannst den Fortschritt hier verfolgen:
-https://github.com/bunterWolf/Chronflow/actions
+https://github.com/bunterWolf/Workmory/actions
 
 Beta-Tester können die neue Version über den Beta-Kanal erhalten.
 Die Auto-Update-Funktion wird nur auf Geräten ausgeführt, die für Beta-Updates konfiguriert sind.
