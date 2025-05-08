@@ -136,7 +136,9 @@
   "license": "ISC",
   "dependencies": {
     "@electron/remote": "^2.1.2",
+    "@types/auto-launch": "^5.0.5",
     "active-win": "^8.1.1",
+    "auto-launch": "^5.0.6",
     "electron-updater": "^6.1.7",
     "i18next": "^24.2.3",
     "i18next-scanner": "^4.6.0",
