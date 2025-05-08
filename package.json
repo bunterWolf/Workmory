@@ -1,6 +1,6 @@
 {
   "name": "workmory",
-  "version": "0.0.2-beta.1",
+  "version": "0.0.1-beta.0",
   "description": "Productivity Tracker",
   "main": "dist/main/main.js",
   "scripts": {
@@ -115,19 +115,19 @@
           ]
         }
       ],
-      "artifactName": "Workmory-${version}-win-${arch}.${ext}",
-      "nsis": {
-        "oneClick": true,
-        "perMachine": false,
-        "allowToChangeInstallationDirectory": false,
-        "deleteAppDataOnUninstall": false,
-        "createDesktopShortcut": true,
-        "createStartMenuShortcut": true,
-        "shortcutName": "Workmory",
-        "artifactName": "Workmory-Setup-${version}-win-${arch}.${ext}",
-        "uninstallDisplayName": "Workmory",
-        "differentialPackage": true
-      }
+      "artifactName": "Workmory-${version}-win-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "deleteAppDataOnUninstall": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Workmory",
+      "artifactName": "Workmory-Setup-${version}-win-${arch}.${ext}",
+      "uninstallDisplayName": "Workmory",
+      "differentialPackage": true
     },
     "generateUpdatesFilesForAllChannels": true
   },
