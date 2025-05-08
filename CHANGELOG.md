@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.0.2-beta.1 (2025-05-08)
+
+
+### Features
+
+* Add cross-platform support for Windows and macOS ([7d671ea](https://github.com/bunterWolf/Workmory/commit/7d671ea526a9fce04e15c1e44f62fae108d4bbf5))
+* App auto start option ([07e5020](https://github.com/bunterWolf/Workmory/commit/07e5020b47a0fd859e37d43b52e395089c0ad2f8))
+* App Settings with User Interface ([4f38121](https://github.com/bunterWolf/Workmory/commit/4f38121715e43c4c5331714796c564231f2c0dcb))
+* Upgrade GitHub Actions auf v4 ([067e89b](https://github.com/bunterWolf/Workmory/commit/067e89b0b079b9311c0adfd6ca42c10962ea494c))
+
+
+### Bug Fixes
+
+* Beta Build Process ([8759cfb](https://github.com/bunterWolf/Workmory/commit/8759cfb59c55bada81814cbd462edcfb8de67b55))
+* Beta Build Process ([2de7bee](https://github.com/bunterWolf/Workmory/commit/2de7bee61bca594fad6dcce1d0e3ba4719d0b32c))
+* Beta Build Process ([462270c](https://github.com/bunterWolf/Workmory/commit/462270c806fee991fb288d61ff93f7fbc5cd1608))
+* Beta Build Process ([2811e4e](https://github.com/bunterWolf/Workmory/commit/2811e4eaa6af45f89d59ac5435ca43f395081b60))
+* Beta Update Process ([be6912a](https://github.com/bunterWolf/Workmory/commit/be6912adbe37ad9ebec8bfc1be89ef11d6dcd5ab))
+* Downgrade GitHub Actions auf v3 ([1160c87](https://github.com/bunterWolf/Workmory/commit/1160c8794bdfd477c724dd7b5155c83b4e46765b))
+* Duration Display Position ([5a28e78](https://github.com/bunterWolf/Workmory/commit/5a28e782ccdbbf559302dbc9db4b05ad4d4a438b))
+* Electron Builder Konfiguration verbessert ([2894545](https://github.com/bunterWolf/Workmory/commit/2894545272d5ad9a2f73fefc635b0ab6684173be))
+* GitHub Actions Berechtigungen hinzugefügt ([c28efb4](https://github.com/bunterWolf/Workmory/commit/c28efb4ea1076a5db8bd34683fc13c4053bf2381))
+* Korrigiere GitHub Action und setze Version zurück auf 1.0.3 ([2842aa1](https://github.com/bunterWolf/Workmory/commit/2842aa1b084f29450a9a935bb836e1d998795694))
+* Verwende npm install statt npm ci in GitHub Action ([0652085](https://github.com/bunterWolf/Workmory/commit/065208554b7bb5f1756dd324986b6fe5bb553dea))
+
 ### [0.0.2-beta.0](https://github.com/bunterWolf/Chronflow/compare/v0.0.1-beta.16...v0.0.2-beta.0) (2025-05-08)
 
 ### [0.0.1-beta.13](https://github.com/bunterWolf/Chronflow/compare/v0.0.1-beta.12...v0.0.1-beta.13) (2025-05-07)
