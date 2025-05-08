@@ -140,7 +140,6 @@
     "electron-updater": "^6.1.7",
     "i18next": "^24.2.3",
     "i18next-scanner": "^4.6.0",
-    "openai": "^4.91.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^15.4.1"
