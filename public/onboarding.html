@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>Chronflow Onboarding</title>
+  <style>
+    /* Apply border-box sizing globally */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    
+    /* Base styles */
+    html, body {
+      user-select: none;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+        Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    
+    /* Create a custom titlebar */
+    .titlebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 28px;
+      background-color: #f5f6f8;
+      -webkit-app-region: drag;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid #e1e4e8;
+    }
+    
+    .titlebar-title {
+      font-size: 12px;
+      color: #24292e;
+      opacity: 0.8;
+    }
+    
+    /* Adjust main content to account for titlebar */
+    #app {
+      height: 100%;
+      overflow: hidden;
+      padding-top: 28px;
+    }
+    
+    /* Ermöglicht Interaktion mit Schaltflächen */
+    button, a, input, select {
+      -webkit-app-region: no-drag;
+    }
+  </style>
+</head>
+<body>
+  <div class="titlebar">
+    <div class="titlebar-title">Chronflow Onboarding</div>
+  </div>
+  <div id="app"></div>
+  <!-- Onboarding-spezifischer Code wird hier geladen -->
+  <script src="../dist/onboardingRenderer.js"></script>
+</body>
+</html> 

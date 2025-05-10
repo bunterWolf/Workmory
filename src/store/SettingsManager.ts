@@ -7,6 +7,11 @@ export interface AppSettings {
   activityStoreDirPath: string | null; // null = Standard (userData)
   allowPrerelease: boolean;
   autoLaunchEnabled: boolean; // Neue Eigenschaft für Auto-Start
+  onboardingCompleted: boolean; // Status des Onboarding-Prozesses
+  permissionsGranted: { // Berechtigungsstatus
+    accessibility: boolean;
+    screenRecording: boolean;
+  };
 }
 
 /**
@@ -24,7 +29,12 @@ export class SettingsManager {
     this.settings = {
       activityStoreDirPath: null,
       allowPrerelease: false,
-      autoLaunchEnabled: false // Standard: Auto-Start deaktiviert
+      autoLaunchEnabled: false, // Standard: Auto-Start deaktiviert
+      onboardingCompleted: false, // Standard: Onboarding nicht abgeschlossen
+      permissionsGranted: {
+        accessibility: false,
+        screenRecording: false
+      }
     };
 
     // Lade Einstellungen aus der Datei, wenn sie existiert
@@ -57,6 +67,28 @@ export class SettingsManager {
           if ('autoLaunchEnabled' in parsedSettings && 
               typeof parsedSettings.autoLaunchEnabled === 'boolean') {
             this.settings.autoLaunchEnabled = parsedSettings.autoLaunchEnabled;
+          }
+          
+          // onboardingCompleted (boolean)
+          if ('onboardingCompleted' in parsedSettings && 
+              typeof parsedSettings.onboardingCompleted === 'boolean') {
+            this.settings.onboardingCompleted = parsedSettings.onboardingCompleted;
+          }
+          
+          // permissionsGranted (object)
+          if ('permissionsGranted' in parsedSettings && 
+              typeof parsedSettings.permissionsGranted === 'object' &&
+              parsedSettings.permissionsGranted !== null) {
+            // Einzelne Berechtigungen prüfen
+            const permissions = parsedSettings.permissionsGranted;
+            
+            if ('accessibility' in permissions && typeof permissions.accessibility === 'boolean') {
+              this.settings.permissionsGranted.accessibility = permissions.accessibility;
+            }
+            
+            if ('screenRecording' in permissions && typeof permissions.screenRecording === 'boolean') {
+              this.settings.permissionsGranted.screenRecording = permissions.screenRecording;
+            }
           }
         }
         
@@ -140,6 +172,38 @@ export class SettingsManager {
    */
   setAutoLaunchEnabled(enabled: boolean): void {
     this.settings.autoLaunchEnabled = enabled;
+    this.saveSettings();
+  }
+
+  /**
+   * Gibt zurück, ob das Onboarding abgeschlossen wurde
+   */
+  getOnboardingCompleted(): boolean {
+    return this.settings.onboardingCompleted;
+  }
+
+  /**
+   * Setzt den Status des Onboarding-Prozesses
+   * @param completed Ob das Onboarding abgeschlossen wurde
+   */
+  setOnboardingCompleted(completed: boolean): void {
+    this.settings.onboardingCompleted = completed;
+    this.saveSettings();
+  }
+
+  /**
+   * Gibt den aktuellen Status der Berechtigungen zurück
+   */
+  getPermissionsGranted(): { accessibility: boolean; screenRecording: boolean } {
+    return { ...this.settings.permissionsGranted };
+  }
+
+  /**
+   * Setzt den Status der Berechtigungen
+   * @param permissions Objekt mit dem Status der Berechtigungen
+   */
+  setPermissionsGranted(permissions: { accessibility: boolean; screenRecording: boolean }): void {
+    this.settings.permissionsGranted = { ...permissions };
     this.saveSettings();
   }
 } 

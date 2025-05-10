@@ -1,0 +1,147 @@
+/* OnboardingApp.css */
+
+.onboarding-app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  overflow: hidden;
+  --color-primary: #4573d2;
+  --color-primary-light: #6b97ef;
+  --color-secondary: #f5f6f8;
+  --color-border: #e1e4e8;
+  --color-text: #24292e;
+  --color-inactive: #6c757d;
+  --color-success: #28a745;
+  --color-warning: #ffc107;
+  --color-danger: #dc3545;
+  box-sizing: border-box;
+  /* Ensure content in this app doesn't have app-region: drag */
+  -webkit-app-region: no-drag;
+}
+
+/* Ensure all elements use border-box sizing */
+.onboarding-app *,
+.onboarding-app *::before,
+.onboarding-app *::after {
+  box-sizing: border-box;
+}
+
+/* Ensure proper scrolling behavior */
+.onboarding-app > div {
+  height: 100%;
+  max-height: 100%;
+}
+
+/* Fix for scroll containers */
+.onboarding-app .slider-step {
+  -webkit-app-region: no-drag;
+}
+
+/* Ensure scrollable elements don't inherit drag behavior */
+.onboarding-permission,
+.onboarding-app h1, 
+.onboarding-app h2,
+.onboarding-app p,
+.onboarding-app ul,
+.onboarding-app li {
+  -webkit-app-region: no-drag;
+}
+
+.onboarding-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: 16px;
+  color: var(--color-inactive);
+}
+
+/* Redefine common styles for onboarding components */
+.onboarding-app h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: var(--color-text);
+}
+
+.onboarding-app h2 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: var(--color-text);
+}
+
+.onboarding-app p {
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  color: var(--color-text);
+}
+
+.onboarding-app button {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.onboarding-app button:hover {
+  background-color: var(--color-primary-light);
+}
+
+.onboarding-app button:disabled {
+  background-color: var(--color-inactive);
+  cursor: not-allowed;
+}
+
+.onboarding-permission {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-secondary);
+}
+
+.onboarding-permission-granted {
+  background-color: rgba(40, 167, 69, 0.1);
+  border-color: var(--color-success);
+}
+
+.onboarding-permission-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.platform-info {
+  margin-top: 20px;
+  padding: 12px;
+  background-color: rgba(69, 115, 210, 0.1);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* Scrollbar styling */
+.onboarding-app ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.onboarding-app ::-webkit-scrollbar-track {
+  background: var(--color-secondary);
+}
+
+.onboarding-app ::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.onboarding-app ::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+} 

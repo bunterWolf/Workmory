@@ -52,6 +52,101 @@ const resources = {
         fullDate: "{{date, date}}",
         time: "{{time, time}}",
         duration: "{{hours}}h {{minutes}}m"
+      },
+      
+      // Onboarding
+      onboarding: {
+        loading: "Wird geladen...",
+        navigation: {
+          back: "Zurück",
+          next: "Weiter",
+          complete: "Los geht's"
+        },
+        welcome: {
+          title: "Willkommen bei Chronflow",
+          description: "Wir helfen dir, deine Zeit automatisch zu erfassen und zu verstehen, wie du sie nutzt.",
+          windows: "Diese App zeichnet auf, welche Programme du wann benutzt. Sie kann ganz einfach im Hintergrund laufen oder jederzeit pausiert werden.",
+          macOS: "Diese App zeichnet auf, welche Programme du wann benutzt. Dafür benötigt sie einige Berechtigungen, die wir dir in den nächsten Schritten erklären werden."
+        },
+        privacy: {
+          title: "Deine Daten gehören dir",
+          description: "Chronflow speichert alle Daten nur lokal auf deinem Gerät. Die einzige Online-Aktivität ist das Prüfen auf App-Updates.",
+          whatWeStore: {
+            title: "Was wird gespeichert?",
+            appNames: "Namen der genutzten Apps",
+            windowTitles: "Fenstertitel der aktiven Anwendungen",
+            activityTimestamps: "Zeitstempel deiner Aktivitäten"
+          },
+          whereWeStore: {
+            title: "Wo werden die Daten gespeichert?",
+            description: "Alle Daten werden ausschließlich auf deinem Gerät gespeichert. Du kannst den Speicherort in den Einstellungen ändern."
+          },
+          connections: {
+            title: "Verbindungen ins Internet",
+            description: "Die App prüft nur auf Updates. Es werden keine Aktivitätsdaten ins Internet übertragen."
+          }
+        },
+        accessibility: {
+          title: "Bedienungshilfen-Zugriff",
+          description: "Chronflow benötigt Zugriff auf die Bedienungshilfen, um zu erkennen, welche Apps du nutzt.",
+          permission: {
+            title: "Bedienungshilfen-Berechtigung",
+            description: "Diese Berechtigung ermöglicht es der App, den Namen der aktiven Anwendung zu erkennen."
+          },
+          requestPermission: "Berechtigung anfordern",
+          openSettings: "Einstellungen öffnen",
+          granted: "Berechtigung erteilt!",
+          hint: "Wenn die Dialogbox erscheint, klicke auf 'OK' und aktiviere das Kästchen neben 'Chronflow'.",
+          help: {
+            title: "Hilfe bei Problemen",
+            description: "Wenn die Berechtigung nicht angefordert wird oder du sie nicht erteilen kannst:",
+            step1: "Öffne die Systemeinstellungen → Sicherheit → Datenschutz → Bedienungshilfen",
+            step2: "Entsperre die Einstellungen mit dem Schloss-Symbol unten links",
+            step3: "Aktiviere das Kästchen neben 'Chronflow'"
+          }
+        },
+        screenRecording: {
+          title: "Bildschirmaufnahme-Zugriff",
+          description: "Chronflow benötigt die Berechtigung, den Bildschirm aufzunehmen, um Fenstertitel für eine detailliertere Zeiterfassung zu erkennen.",
+          permission: {
+            title: "Bildschirmaufnahme-Berechtigung",
+            description: "Diese Berechtigung ermöglicht es der App, Fenstertitel zu erkennen. Es werden keine Screenshots gespeichert."
+          },
+          requestPermission: "Berechtigung anfordern",
+          openSettings: "Einstellungen öffnen",
+          granted: "Berechtigung erteilt!",
+          hint: "Wenn die Dialogbox erscheint, klicke auf 'OK' und aktiviere das Kästchen neben 'Chronflow'.",
+          help: {
+            title: "Hilfe bei Problemen",
+            description: "Wenn die Berechtigung nicht angefordert wird oder du sie nicht erteilen kannst:",
+            step1: "Öffne die Systemeinstellungen → Sicherheit → Datenschutz → Bildschirmaufnahme",
+            step2: "Entsperre die Einstellungen mit dem Schloss-Symbol unten links",
+            step3: "Aktiviere das Kästchen neben 'Chronflow'"
+          },
+          note: "Keine Sorge: Wir zeichnen keine Screenshots oder Videos auf. Die Berechtigung wird nur benötigt, um Titel von Fenstern zu lesen."
+        },
+        completion: {
+          title: "Alles bereit!",
+          description: "Du bist startklar, um deine Zeit automatisch zu erfassen.",
+          checkpoints: {
+            setup: {
+              title: "Einrichtung abgeschlossen",
+              description: "Die App ist jetzt für dich konfiguriert."
+            },
+            privacy: {
+              title: "Datenschutz gesichert",
+              description: "Deine Daten werden nur lokal gespeichert."
+            },
+            permissions: {
+              title: "Berechtigungen erteilt",
+              description: "Alle notwendigen Zugriffsrechte wurden gewährt."
+            }
+          },
+          ready: {
+            title: "Los geht's!",
+            description: "Klicke auf 'Los geht's', um mit der automatischen Zeiterfassung zu starten."
+          }
+        }
       }
     }
   },
@@ -104,6 +199,101 @@ const resources = {
         fullDate: "{{date, date}}",
         time: "{{time, time}}",
         duration: "{{hours}}h {{minutes}}m"
+      },
+      
+      // Onboarding
+      onboarding: {
+        loading: "Loading...",
+        navigation: {
+          back: "Back",
+          next: "Next",
+          complete: "Let's Go"
+        },
+        welcome: {
+          title: "Welcome to Chronflow",
+          description: "We help you automatically track your time and understand how you use it.",
+          windows: "This app records which programs you use and when. It can run in the background or be paused at any time.",
+          macOS: "This app records which programs you use and when. For this, it needs some permissions, which we'll explain in the next steps."
+        },
+        privacy: {
+          title: "Your Data Belongs to You",
+          description: "Chronflow stores all data locally on your device. The only online activity is checking for app updates.",
+          whatWeStore: {
+            title: "What is stored?",
+            appNames: "Names of used applications",
+            windowTitles: "Window titles of active applications",
+            activityTimestamps: "Timestamps of your activities"
+          },
+          whereWeStore: {
+            title: "Where is data stored?",
+            description: "All data is stored exclusively on your device. You can change the storage location in the settings."
+          },
+          connections: {
+            title: "Internet Connections",
+            description: "The app only checks for updates. No activity data is transmitted to the internet."
+          }
+        },
+        accessibility: {
+          title: "Accessibility Access",
+          description: "Chronflow needs access to accessibility features to recognize which apps you use.",
+          permission: {
+            title: "Accessibility Permission",
+            description: "This permission allows the app to recognize the name of the active application."
+          },
+          requestPermission: "Request Permission",
+          openSettings: "Open Settings",
+          granted: "Permission granted!",
+          hint: "When the dialog appears, click 'OK' and check the box next to 'Chronflow'.",
+          help: {
+            title: "Help with Problems",
+            description: "If the permission is not requested or you cannot grant it:",
+            step1: "Open System Preferences → Security → Privacy → Accessibility",
+            step2: "Unlock the settings with the lock icon in the bottom left",
+            step3: "Check the box next to 'Chronflow'"
+          }
+        },
+        screenRecording: {
+          title: "Screen Recording Access",
+          description: "Chronflow needs permission to record the screen to recognize window titles for more detailed time tracking.",
+          permission: {
+            title: "Screen Recording Permission",
+            description: "This permission allows the app to recognize window titles. No screenshots are saved."
+          },
+          requestPermission: "Request Permission",
+          openSettings: "Open Settings",
+          granted: "Permission granted!",
+          hint: "When the dialog appears, click 'OK' and check the box next to 'Chronflow'.",
+          help: {
+            title: "Help with Problems",
+            description: "If the permission is not requested or you cannot grant it:",
+            step1: "Open System Preferences → Security → Privacy → Screen Recording",
+            step2: "Unlock the settings with the lock icon in the bottom left",
+            step3: "Check the box next to 'Chronflow'"
+          },
+          note: "Don't worry: We don't record any screenshots or videos. The permission is only needed to read window titles."
+        },
+        completion: {
+          title: "All Set!",
+          description: "You're ready to automatically track your time.",
+          checkpoints: {
+            setup: {
+              title: "Setup Complete",
+              description: "The app is now configured for you."
+            },
+            privacy: {
+              title: "Privacy Secured",
+              description: "Your data is stored locally only."
+            },
+            permissions: {
+              title: "Permissions Granted",
+              description: "All necessary access rights have been granted."
+            }
+          },
+          ready: {
+            title: "Let's Start!",
+            description: "Click 'Let's Go' to start automatic time tracking."
+          }
+        }
       }
     }
   }

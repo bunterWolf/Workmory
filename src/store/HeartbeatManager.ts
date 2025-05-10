@@ -1,5 +1,6 @@
 // Import necessary classes and types
 import { BrowserWindow } from 'electron';
+import { EventEmitter } from 'events';
 import ActivityStore, { HeartbeatData } from './ActivityStore'; // Assuming HeartbeatData is exported from ActivityStore
 import ActiveWindowWatcher from '../watchers/ActiveWindowWatcher';
 import InactivityWatcher from '../watchers/InactivityWatcher';
@@ -21,7 +22,7 @@ interface HeartbeatManagerOptions {
 /**
  * Manages heartbeat generation and orchestrates all watchers.
  */
-class HeartbeatManager {
+class HeartbeatManager extends EventEmitter {
   // ---- CLASS PROPERTY DECLARATIONS ----
   private activityStore: ActivityStore;
   private mainWindow: BrowserWindow;
@@ -43,6 +44,8 @@ class HeartbeatManager {
    * @param {HeartbeatManagerOptions} options - Configuration options
    */
   constructor(options: HeartbeatManagerOptions) {
+    super(); // Initialize EventEmitter
+    
     if (!options || !options.activityStore || !options.mainWindow) {
       throw new Error('HeartbeatManager requires activityStore and mainWindow in options');
     }
@@ -199,31 +202,50 @@ class HeartbeatManager {
   }
 
   /**
-   * Generate a single heartbeat by collecting data and sending it to the ActivityStore.
+   * Check if required permissions are granted
+   * @returns {boolean} True if all permissions are okay
+   */
+  private async checkPermissions(): Promise<boolean> {
+    if (process.platform !== 'darwin') {
+      return true; // Windows doesn't require special permissions
+    }
+
+    try {
+      // We can't directly check permissions here, 
+      // we'll emit an event that the main process can handle
+      this.emit('permissions-required');
+      return true; // Return true as we can't know immediately
+    } catch (error) {
+      console.error('Error checking permissions:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Generate a heartbeat with data from all watchers.
    */
   private async generateHeartbeat(): Promise<void> {
-    if (!this.isRunning || !this.activityStore) {
-        if (!this.isRunning) console.warn("generateHeartbeat called while not running.");
-        if (!this.activityStore) console.warn("generateHeartbeat called without activityStore.");
+    if (!this.isRunning || !this.isInitialized) {
+      console.warn('generateHeartbeat called but manager is not running or initialized.');
+      return;
+    }
+
+    // Check permissions before generating heartbeat
+    if (!await this.checkPermissions()) {
+      console.warn('Permissions check failed, not generating heartbeat');
       return;
     }
 
     try {
       // Collect data from all watchers
       const heartbeatData = await this.collectHeartbeatData();
-
-      if (Object.keys(heartbeatData).length === 0) {
-          console.warn("Skipping heartbeat generation: No data collected from watchers.");
-          return;
+      
+      // Store in ActivityStore (which handles persistence)
+      if (this.activityStore) {
+        await this.activityStore.addHeartbeat(heartbeatData);
       }
-
-      // Log the collected data with pretty-printing (indentation)
-      console.log('Generated Heartbeat:', JSON.stringify(heartbeatData, null, 2));
-
-      // Add the combined heartbeat data to the activity store
-      this.activityStore.addHeartbeat(heartbeatData);
     } catch (error) {
-      console.error('Error generating or adding heartbeat:', error);
+      console.error('Error generating heartbeat:', error);
     }
   }
 

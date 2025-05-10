@@ -1,7 +1,7 @@
 // Remove ts-node/register as this file will be compiled
 // require('ts-node/register');
 
-import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, dialog, globalShortcut } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import * as remoteMain from '@electron/remote/main'; // Use import for @electron/remote/main
@@ -15,6 +15,9 @@ import { version as appVersion } from '../../package.json';
 // Use default imports for our TypeScript modules
 import ActivityStore from '../store/ActivityStore';
 import HeartbeatManager from '../store/HeartbeatManager';
+import OnboardingWindow from './OnboardingWindow';
+import { PermissionsManager } from '../store/PermissionsManager';
+import { SettingsManager } from '../store/SettingsManager';
 
 // Auto-Launcher-Instanz
 let autoLauncher: AutoLaunch;
@@ -27,6 +30,9 @@ remoteMain.initialize();
 let mainWindow: BrowserWindow | null = null;
 let activityStore: ActivityStore | null = null;
 let heartbeatManager: HeartbeatManager | null = null;
+let onboardingWindow: OnboardingWindow | null = null;
+let permissionsManager: PermissionsManager | null = null;
+let settingsManager: SettingsManager | null = null;
 
 // Prüfe, ob bereits eine Instanz läuft
 const gotTheLock = app.requestSingleInstanceLock();
@@ -115,6 +121,37 @@ function createWindow(): void { // Add return type void
   }
 }
 
+// Create and show the onboarding window
+function createOnboardingWindow(): OnboardingWindow {
+  onboardingWindow = new OnboardingWindow();
+  onboardingWindow.createWindow();
+  
+  // Set callback for when the window is attempted to be closed
+  onboardingWindow.setOnCloseCallback(() => {
+    // Prevent closing the onboarding window if it's required
+    if (settingsManager && !settingsManager.getOnboardingCompleted()) {
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Onboarding erforderlich',
+        message: 'Bitte schließen Sie das Onboarding ab, um die App zu nutzen.',
+        buttons: ['OK']
+      });
+    } else {
+      // If onboarding is complete, allow closing
+      onboardingWindow?.close();
+      onboardingWindow = null;
+      
+      // Open the main window if it doesn't exist
+      if (!mainWindow) {
+        createWindow();
+        initializeTracking();
+      }
+    }
+  });
+  
+  return onboardingWindow;
+}
+
 // Initialize activity tracking components
 async function initializeTracking(): Promise<void> { // Add return type Promise<void>
    if (!mainWindow) {
@@ -186,13 +223,34 @@ async function initializeTracking(): Promise<void> { // Add return type Promise<
       if (activityStore) {
           activityStore.cleanupOldData();
       }
-  } catch (error) {
+
+      // Add permission check in heartbeatManager initialization
+      if (heartbeatManager) {
+        heartbeatManager.on('permissions-required', () => {
+          // Check if permissions are still valid
+          if (permissionsManager) {
+            permissionsManager.checkPermissions().then(status => {
+              if (!status.accessibility || !status.screenRecording) {
+                // If permissions are missing, update settings and show onboarding
+                if (settingsManager) {
+                  settingsManager.setPermissionsGranted(status);
+                  settingsManager.setOnboardingCompleted(false);
+                  
+                  // Show onboarding window
+                  createOnboardingWindow();
+                }
+              }
+            });
+          }
+        });
+      }
+    } catch (error) {
       console.error("Error during tracking initialization:", error);
       // Handle initialization error appropriately (e.g., show error message to user)
       // Reset instances maybe?
       activityStore = null;
       heartbeatManager = null;
-  }
+    }
 }
 
 // Register IPC handlers
@@ -378,7 +436,110 @@ function registerIpcHandlers(): void { // Add return type void
     }
   });
 
+  // Register onboarding-specific IPC handlers
+  registerOnboardingHandlers();
+
   console.log("IPC handlers registered.");
+}
+
+// Register Onboarding-specific IPC handlers
+function registerOnboardingHandlers(): void {
+  // Get platform
+  ipcMain.handle('onboarding:get-platform', async () => {
+    return process.platform;
+  });
+  
+  // Check permissions
+  ipcMain.handle('onboarding:check-permissions', async () => {
+    if (!permissionsManager) {
+      permissionsManager = new PermissionsManager();
+    }
+    return await permissionsManager.checkPermissions();
+  });
+  
+  // Request accessibility permission
+  ipcMain.handle('onboarding:request-accessibility', async () => {
+    if (!permissionsManager) {
+      permissionsManager = new PermissionsManager();
+    }
+    
+    const result = await permissionsManager.requestAccessibilityPermission();
+    
+    // Update settings
+    if (settingsManager) {
+      const permissions = settingsManager.getPermissionsGranted();
+      permissions.accessibility = result;
+      settingsManager.setPermissionsGranted(permissions);
+    }
+    
+    // Notify renderer of permission change
+    if (onboardingWindow && onboardingWindow.getWindow()) {
+      onboardingWindow.getWindow()?.webContents.send('onboarding:permission-changed', 'accessibility', result);
+    }
+    
+    return result;
+  });
+  
+  // Request screen recording permission
+  ipcMain.handle('onboarding:request-screen-recording', async () => {
+    if (!permissionsManager) {
+      permissionsManager = new PermissionsManager();
+    }
+    
+    const result = await permissionsManager.requestScreenRecordingPermission();
+    
+    // Update settings
+    if (settingsManager) {
+      const permissions = settingsManager.getPermissionsGranted();
+      permissions.screenRecording = result;
+      settingsManager.setPermissionsGranted(permissions);
+    }
+    
+    // Notify renderer of permission change
+    if (onboardingWindow && onboardingWindow.getWindow()) {
+      onboardingWindow.getWindow()?.webContents.send('onboarding:permission-changed', 'screenRecording', result);
+    }
+    
+    return result;
+  });
+  
+  // Open accessibility settings
+  ipcMain.handle('onboarding:open-accessibility-settings', async () => {
+    if (!permissionsManager) {
+      permissionsManager = new PermissionsManager();
+    }
+    return await permissionsManager.openAccessibilityPreferences();
+  });
+  
+  // Open screen recording settings
+  ipcMain.handle('onboarding:open-screen-recording-settings', async () => {
+    if (!permissionsManager) {
+      permissionsManager = new PermissionsManager();
+    }
+    return await permissionsManager.openScreenRecordingPreferences();
+  });
+  
+  // Complete onboarding
+  ipcMain.handle('onboarding:complete', async () => {
+    if (settingsManager) {
+      settingsManager.setOnboardingCompleted(true);
+    }
+    
+    // Close onboarding window and open main window
+    if (onboardingWindow) {
+      onboardingWindow.close();
+      onboardingWindow = null;
+    }
+    
+    if (!mainWindow) {
+      createWindow();
+      await initializeTracking();
+    } else {
+      mainWindow.show();
+    }
+    
+    return true;
+  });
 }
 
 // Initialize auto-updater
@@ -466,32 +627,91 @@ function notifyAllWindows(channel: string, data: any) {
   });
 }
 
-// App is ready to start
+// App ready event handler
 app.whenReady().then(async () => {
-  console.log("App ready.");
-  createWindow();
-  await initializeTracking();
   registerIpcHandlers();
-  initAutoUpdater(); // Initialize auto-updater
-
-  app.on('activate', () => { // Use arrow function
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) {
-        console.log("App activated with no windows open, creating window.");
-        createWindow();
+  
+  // Initialize Settings Manager first
+  settingsManager = new SettingsManager();
+  
+  // Initialize Permissions Manager
+  permissionsManager = new PermissionsManager();
+  
+  // Check if onboarding is completed
+  const onboardingCompleted = settingsManager.getOnboardingCompleted();
+  
+  if (!onboardingCompleted) {
+    // If onboarding is not completed, show onboarding window
+    createOnboardingWindow();
+  } else {
+    // Check permissions again to be sure
+    const permissions = await permissionsManager.checkPermissions();
+    
+    if (!permissions.accessibility || !permissions.screenRecording) {
+      // If permissions are missing, update settings and show onboarding
+      settingsManager.setPermissionsGranted(permissions);
+      settingsManager.setOnboardingCompleted(false);
+      createOnboardingWindow();
+    } else {
+      // If all is well, proceed with normal startup
+      createWindow();
+      await initializeTracking();
     }
-  });
+  }
+  
+  initAutoUpdater();
 });
 
 // Quit when all windows are closed, except on macOS
-app.on('window-all-closed', () => { // Use arrow function
+app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
     console.log("All windows closed, quitting app (non-macOS).");
     app.quit();
   }
+});
+
+app.on('activate', () => {
+  // On macOS it's common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (BrowserWindow.getAllWindows().length === 0) {
+      console.log("App activated with no windows open, creating window.");
+      createWindow();
+  }
+});
+
+// Add Ctrl+Shift+O shortcut to restart onboarding
+app.on('browser-window-focus', () => {
+  globalShortcut.register('CommandOrControl+Shift+O', () => {
+    if (settingsManager) {
+      settingsManager.setOnboardingCompleted(false);
+      
+      if (onboardingWindow && onboardingWindow.isVisible()) {
+        // If already open, reset permissions
+        if (settingsManager) {
+          settingsManager.setPermissionsGranted({
+            accessibility: false,
+            screenRecording: false
+          });
+        }
+        // Reload onboarding window
+        onboardingWindow.getWindow()?.reload();
+      } else {
+        // Create new onboarding window
+        createOnboardingWindow();
+        
+        // Hide main window
+        if (mainWindow) {
+          mainWindow.hide();
+        }
+      }
+    }
+  });
+});
+
+app.on('browser-window-blur', () => {
+  globalShortcut.unregister('CommandOrControl+Shift+O');
 });
 
 // Save data and clean up before quitting
