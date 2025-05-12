@@ -243,18 +243,20 @@ describe('TimelineGenerator', () => {
 
       const summary = generator.calculateSummary(events);
 
-      expect(summary.totalDuration).toBe(150 * 60 * 1000);
-      expect(summary.activeDuration).toBe(120 * 60 * 1000);
-      expect(summary.inactiveDuration).toBe(30 * 60 * 1000);
+      expect(summary.activeTrackingDuration).toBe(150 * 60 * 1000);
+      expect(summary.totalActiveDuration).toBe(120 * 60 * 1000);
+      expect(summary.totalInactiveDuration).toBe(30 * 60 * 1000);
+      expect(summary.totalMeetingDuration).toBe(0);
       expect(summary.appUsage['VS Code']).toBe(90 * 60 * 1000);
       expect(summary.appUsage['Chrome']).toBe(30 * 60 * 1000);
     });
 
     test('sollte leere Zusammenfassung für keine Events zurückgeben', () => {
       const summary = generator.calculateSummary([]);
-      expect(summary.totalDuration).toBe(0);
-      expect(summary.activeDuration).toBe(0);
-      expect(summary.inactiveDuration).toBe(0);
+      expect(summary.activeTrackingDuration).toBe(0);
+      expect(summary.totalActiveDuration).toBe(0);
+      expect(summary.totalInactiveDuration).toBe(0);
+      expect(summary.totalMeetingDuration).toBe(0);
       expect(summary.appUsage).toEqual({});
     });
   });

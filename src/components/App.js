@@ -145,9 +145,9 @@ const App = () => {
   const getSummary = () => {
     if (!activityData || !activityData.aggregated || !activityData.aggregated.summary) {
       return {
-        totalTime: '0h',
-        activeTime: '0h',
-        inactiveTime: '0h'
+        totalTime: '0m',
+        activeTime: '0m',
+        inactiveTime: '0m'
       };
     }
     
