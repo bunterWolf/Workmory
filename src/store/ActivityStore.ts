@@ -41,8 +41,11 @@ export interface TimelineEvent {
 // Define a more specific type for the summary if possible
 // For now, using 'any' as placeholder - Needs alignment with TimelineGenerator output
 export interface AggregationSummary {
-     // Define structure based on TimelineGenerator output
-    [key: string]: any;
+    activeTrackingDuration: number;
+    totalActiveDuration: number;
+    totalInactiveDuration: number;
+    totalMeetingDuration: number;
+    appUsage: { [appName: string]: number };
 }
 
 // Type for the aggregated data structure (used in memory and returned by getDayData)

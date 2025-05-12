@@ -242,9 +242,10 @@ describe('ActivityStore Integration', () => {
 
     // Optional: Check summary if relevant
     const summary = dayData!.aggregated!.summary;
-    expect(summary.totalDuration).toBe(2 * intervalMillis);
-    expect(summary.activeDuration).toBe(1 * intervalMillis); // Only the first interval was actively dominant
-    expect(summary.inactiveDuration).toBe(1 * intervalMillis); // The second was inactive
+    expect(summary.activeTrackingDuration).toBe(2 * intervalMillis);
+    expect(summary.totalActiveDuration).toBe(1 * intervalMillis); // Only the first interval was actively dominant
+    expect(summary.totalInactiveDuration).toBe(1 * intervalMillis); // The second was inactive
+    expect(summary.totalMeetingDuration).toBe(0);
     // Count app usage based on the dominant activity in the interval
     expect(summary.appUsage['VS Code']).toBe(1 * intervalMillis); // Dominant in Interval 1
     expect(summary.appUsage['Browser']).toBeUndefined(); // Browser was not dominant
@@ -365,9 +366,10 @@ describe('ActivityStore Mock Data Tests', () => {
 
     expect(dayData?.aggregated?.summary).toBeDefined();
     const summary = dayData!.aggregated!.summary;
-    expect(summary.totalDuration).toBe(45 * miniuteAsMillis);
-    expect(summary.activeDuration).toBe(35 * miniuteAsMillis);
-    expect(summary.inactiveDuration).toBe(10 * miniuteAsMillis);
+    expect(summary.activeTrackingDuration).toBe(45 * miniuteAsMillis);
+    expect(summary.totalActiveDuration).toBe(35 * miniuteAsMillis);
+    expect(summary.totalInactiveDuration).toBe(10 * miniuteAsMillis);
+    expect(summary.totalMeetingDuration).toBe(0);
   });
 
   it('Check 15 min aggregation', () => {
@@ -405,9 +407,10 @@ describe('ActivityStore Mock Data Tests', () => {
 
     expect(dayData?.aggregated?.summary).toBeDefined();
     const summary = dayData!.aggregated!.summary;
-    expect(summary.totalDuration).toBe(45 * miniuteAsMillis);
-    expect(summary.activeDuration).toBe(30 * miniuteAsMillis);
-    expect(summary.inactiveDuration).toBe(15 * miniuteAsMillis);
+    expect(summary.activeTrackingDuration).toBe(45 * miniuteAsMillis);
+    expect(summary.totalActiveDuration).toBe(30 * miniuteAsMillis);
+    expect(summary.totalInactiveDuration).toBe(15 * miniuteAsMillis);
+    expect(summary.totalMeetingDuration).toBe(0);
   });
 
 });

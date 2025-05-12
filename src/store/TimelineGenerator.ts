@@ -359,9 +359,10 @@ export default class TimelineGenerator {
   // Make public for testing
   public calculateSummary(timelineEvents: TimelineEvent[]): AggregationSummary {
     const summary: AggregationSummary = {
-      totalDuration: 0,
-      activeDuration: 0,
-      inactiveDuration: 0,
+      activeTrackingDuration: 0,
+      totalActiveDuration: 0,
+      totalInactiveDuration: 0,
+      totalMeetingDuration: 0,
       appUsage: {},
     };
     
@@ -371,20 +372,20 @@ export default class TimelineGenerator {
     
     // Calculate total tracking duration (sum of all events)
     timelineEvents.forEach((event: TimelineEvent) => {
-      summary.totalDuration += event.duration;
+      summary.activeTrackingDuration += event.duration;
       
       switch (event.type) {
         case 'teamsMeeting':
-          summary.activeDuration += event.duration;
-          summary.inactiveDuration += event.duration;
+          summary.totalActiveDuration += event.duration;
+          summary.totalMeetingDuration += event.duration;
           break;
           
         case 'inactive':
-          summary.inactiveDuration += event.duration;
+          summary.totalInactiveDuration += event.duration;
           break;
           
         case 'appWindow':
-          summary.activeDuration += event.duration;
+          summary.totalActiveDuration += event.duration;
           if (event.data && typeof event.data.app === 'string') {
             const appName = event.data.app;
             summary.appUsage[appName] = (summary.appUsage[appName] || 0) + event.duration;
