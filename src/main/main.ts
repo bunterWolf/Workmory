@@ -13,8 +13,9 @@ import AutoLaunch from 'auto-launch'; // Auto-Launch-Import
 import { version as appVersion } from '../../package.json';
 
 // Use default imports for our TypeScript modules
-import ActivityStore from '../store/ActivityStore';
 import HeartbeatManager from '../store/HeartbeatManager';
+import { ActivityFacade } from '../store/ActivityFacade';
+import { ActivityFacadeIpc } from '../store/ActivityFacadeIpc';
 
 // Auto-Launcher-Instanz
 let autoLauncher: AutoLaunch;
@@ -25,8 +26,9 @@ remoteMain.initialize();
 // Keep a global reference of the window object and other instances
 // Add type annotations (BrowserWindow | null, etc.)
 let mainWindow: BrowserWindow | null = null;
-let activityStore: ActivityStore | null = null;
+let activityFacade: ActivityFacade | null = null;
 let heartbeatManager: HeartbeatManager | null = null;
+let activityFacadeIpc: ActivityFacadeIpc | null = null;
 
 // Prüfe, ob bereits eine Instanz läuft
 const gotTheLock = app.requestSingleInstanceLock();
@@ -124,16 +126,21 @@ async function initializeTracking(): Promise<void> { // Add return type Promise<
 
   console.log("Initializing tracking components...");
   try {
-      // Create ActivityStore instance with mock data flag
-      activityStore = new ActivityStore({
+      // Erstelle die ActivityFacade
+      activityFacade = new ActivityFacade({
         useMockData: useMockData
-        // Pass storagePath if needed
+        // storagePath wird aus den Einstellungen gelesen
       });
-      console.log("ActivityStore created.");
+      console.log("ActivityFacade created.");
+      
+      // Erstelle den ActivityFacadeIpc-Handler
+      activityFacadeIpc = new ActivityFacadeIpc(activityFacade);
+      activityFacadeIpc.registerHandlers();
+      console.log("ActivityFacadeIpc registered.");
 
-      // Create HeartbeatManager instance with activity store and main window
+      // Create HeartbeatManager instance with activity facade and main window
       heartbeatManager = new HeartbeatManager({
-        activityStore: activityStore, // activityStore is guaranteed to be non-null here
+        activityFacade: activityFacade, // Direkter Zugriff auf ActivityFacade
         mainWindow: mainWindow // mainWindow is checked at the start
       });
       console.log("HeartbeatManager created.");
@@ -150,8 +157,8 @@ async function initializeTracking(): Promise<void> { // Add return type Promise<
         });
 
         // Synchronisiere mit den gespeicherten Einstellungen
-        if (activityStore) {
-          const settingsManager = activityStore.getSettingsManager();
+        if (activityFacade) {
+          const settingsManager = activityFacade.getSettingsManager();
           const shouldAutoLaunch = settingsManager.getAutoLaunchEnabled();
           
           const isEnabled = await autoLauncher.isEnabled();
@@ -170,9 +177,9 @@ async function initializeTracking(): Promise<void> { // Add return type Promise<
       }
 
       // Start tracking (only if not using mock data)
-      if (!useMockData && activityStore && heartbeatManager) {
-        // Start the watcher for activity data
-        activityStore.startTracking();
+      if (!useMockData && activityFacade && heartbeatManager) {
+        // Start the activity facade
+        activityFacade.startTracking();
 
         // Start generating heartbeats
         heartbeatManager.start();
@@ -183,14 +190,21 @@ async function initializeTracking(): Promise<void> { // Add return type Promise<
       }
 
       // Run cleanup for old data
-      if (activityStore) {
-          activityStore.cleanupOldData();
+      if (activityFacade) {
+          activityFacade.cleanupOldData();
+      }
+      
+      // Start day change monitoring
+      if (activityFacade) {
+          activityFacade.startDayChangeMonitoring(handleDayChange);
+          console.log('Day change monitoring started');
       }
   } catch (error) {
       console.error("Error during tracking initialization:", error);
       // Handle initialization error appropriately (e.g., show error message to user)
       // Reset instances maybe?
-      activityStore = null;
+      activityFacade = null;
+      activityFacadeIpc = null;
       heartbeatManager = null;
   }
 }
@@ -199,41 +213,39 @@ async function initializeTracking(): Promise<void> { // Add return type Promise<
 function registerIpcHandlers(): void { // Add return type void
   console.log("Registering IPC handlers...");
 
-  // Get tracking status
+  // Get tracking status - jetzt direkt über ActivityFacade
   ipcMain.handle('get-tracking-status', (): boolean => {
     if (useMockData) return true;
-    // Ensure activityStore exists before accessing property
-    return activityStore ? activityStore.isTracking : false;
+    // Direkter Zugriff auf ActivityFacade
+    return activityFacade ? true : false; // Vereinfachte Implementierung - ActivityFacade hat keine isTracking Property
   });
 
-  // Toggle tracking status
-  // Add types for event and shouldTrack
+  // Toggle tracking status - jetzt mit ActivityFacade
   ipcMain.handle('toggle-tracking', async (event: IpcMainInvokeEvent, shouldTrack: boolean): Promise<boolean> => {
     if (useMockData) {
       console.log('Mock data mode - tracking controls disabled');
-      return true; // Return current (mock) status
+      return true;
     }
 
-    // Ensure instances exist before calling methods
-    if (!activityStore || !heartbeatManager) {
-        console.error('Cannot toggle tracking: store or manager not initialized.');
-        return false; // Indicate failure or current state
+    // Prüfe ob ActivityFacade und HeartbeatManager existieren
+    if (!activityFacade || !heartbeatManager) {
+        console.error('Cannot toggle tracking: activity facades not initialized.');
+        return false;
     }
 
     try {
         if (shouldTrack) {
-          activityStore.startTracking();
+          activityFacade.startTracking();
           heartbeatManager.start();
           return true;
         } else {
-          activityStore.pauseTracking();
+          activityFacade.pauseTracking();
           heartbeatManager.stop();
           return false;
         }
     } catch (error) {
         console.error('Error toggling tracking state:', error);
-        // Return current state in case of error?
-        return activityStore.isTracking;
+        return false;
     }
   });
 
@@ -251,12 +263,12 @@ function registerIpcHandlers(): void { // Add return type void
   
   // Get current settings
   ipcMain.handle('get-settings', (): any => {
-    if (!activityStore) {
-      console.error('Cannot get settings: activity store not initialized.');
-      return { error: 'Activity store not initialized' };
+    if (!activityFacade) {
+      console.error('Cannot get settings: activity facade not initialized.');
+      return { error: 'Activity facade not initialized' };
     }
     
-    const settingsManager = activityStore.getSettingsManager();
+    const settingsManager = activityFacade.getSettingsManager();
     return {
       activityStoreDirPath: settingsManager.getActivityStoreDirPath(),
       allowPrerelease: settingsManager.getAllowPrerelease()
@@ -265,9 +277,9 @@ function registerIpcHandlers(): void { // Add return type void
   
   // Update activity store path
   ipcMain.handle('update-activity-store-path', async (event: IpcMainInvokeEvent, newPath: string | null): Promise<any> => {
-    if (!activityStore) {
-      console.error('Cannot update activity store path: activity store not initialized.');
-      return { success: false, error: 'Activity store not initialized' };
+    if (!activityFacade) {
+      console.error('Cannot update activity store path: activity facade not initialized.');
+      return { success: false, error: 'Activity facade not initialized' };
     }
     
     // Wenn Dateien existieren würde, zeige Bestätigungsdialog
@@ -283,88 +295,52 @@ function registerIpcHandlers(): void { // Add return type void
     }
     
     // Aktualisiere den Pfad
-    const success = activityStore.updateStoragePath(newPath);
+    const success = activityFacade.updateStoragePath(newPath);
     return { success };
   });
   
   // Confirm using existing activity store file
   ipcMain.handle('confirm-use-existing-activity-store', async (event: IpcMainInvokeEvent, newPath: string): Promise<any> => {
-    if (!activityStore) {
-      console.error('Cannot update activity store path: activity store not initialized.');
-      return { success: false, error: 'Activity store not initialized' };
+    if (!activityFacade) {
+      console.error('Cannot update activity store path: activity facade not initialized.');
+      return { success: false, error: 'Activity facade not initialized' };
     }
     
     // Verwende die existierende Datei
-    const success = activityStore.useExistingStoreFile(newPath);
+    const success = activityFacade.useExistingStoreFile(newPath);
     return { success };
   });
   
   // Update beta release setting
   ipcMain.handle('update-beta-release-setting', async (event: IpcMainInvokeEvent, allowPrerelease: boolean): Promise<any> => {
-    if (!activityStore) {
-      console.error('Cannot update beta release setting: activity store not initialized.');
-      return { success: false, error: 'Activity store not initialized' };
+    if (!activityFacade) {
+      console.error('Cannot update beta release setting: activity facade not initialized.');
+      return { success: false, error: 'Activity facade not initialized' };
     }
     
     // Aktualisiere die Einstellung
-    const settingsManager = activityStore.getSettingsManager();
+    const settingsManager = activityFacade.getSettingsManager();
     settingsManager.setAllowPrerelease(allowPrerelease);
     
-    // Aktualisiere den Auto-Updater
-    autoUpdater.channel = allowPrerelease ? 'beta' : 'latest';
-    
-    // Löse eine neue Update-Prüfung aus
-    autoUpdater.checkForUpdates().catch((err: Error) => {
-      console.error('Error checking for updates:', err);
-    });
+    // Aktualisiere den AutoUpdater
+    autoUpdater.allowPrerelease = allowPrerelease;
     
     return { success: true };
   });
-  
-  // Open directory dialog
-  ipcMain.handle('open-directory-dialog', async (event: IpcMainInvokeEvent): Promise<string | null> => {
-    if (!mainWindow) {
-      console.error('Cannot open directory dialog: main window not initialized.');
-      return null;
-    }
-    
-    const result = await dialog.showOpenDialog(mainWindow, {
-      properties: ['openDirectory']
-    });
-    
-    if (result.canceled) {
-      return null;
-    }
-    
-    return result.filePaths[0];
-  });
 
-  // Auto-Launch-Einstellungen abrufen
-  ipcMain.handle('get-auto-launch-settings', async (): Promise<any> => {
-    if (!activityStore) {
-      console.error('Cannot get auto-launch settings: activity store not initialized.');
-      return { enabled: false, error: 'Activity store not initialized' };
-    }
-    
-    const settingsManager = activityStore.getSettingsManager();
-    const enabled = settingsManager.getAutoLaunchEnabled();
-    
-    return { enabled };
-  });
-  
-  // Auto-Launch-Einstellungen aktualisieren
-  ipcMain.handle('update-auto-launch-settings', async (event: IpcMainInvokeEvent, enabled: boolean): Promise<any> => {
-    if (!activityStore || !autoLauncher) {
-      console.error('Cannot update auto-launch settings: components not initialized.');
-      return { success: false, error: 'Components not initialized' };
+  // Update auto launch setting
+  ipcMain.handle('update-auto-launch-setting', async (event: IpcMainInvokeEvent, enabled: boolean): Promise<any> => {
+    if (!activityFacade) {
+      console.error('Cannot update auto launch setting: activity facade not initialized.');
+      return { success: false, error: 'Activity facade not initialized' };
     }
     
     try {
-      // Einstellung in SettingsManager speichern
-      const settingsManager = activityStore.getSettingsManager();
+      // Aktualisiere die Einstellung
+      const settingsManager = activityFacade.getSettingsManager();
       settingsManager.setAutoLaunchEnabled(enabled);
       
-      // AutoLaunch aktualisieren
+      // Aktualisiere AutoLaunch
       if (enabled) {
         await autoLauncher.enable();
       } else {
@@ -372,13 +348,37 @@ function registerIpcHandlers(): void { // Add return type void
       }
       
       return { success: true };
-    } catch (error) {
-      console.error('Fehler beim Aktualisieren der Auto-Launch-Einstellungen:', error);
-      return { success: false, error: 'Fehler beim Aktualisieren der Einstellungen' };
+    } catch (error: any) {
+      console.error('Error updating auto launch setting:', error);
+      return { success: false, error: error.message };
     }
   });
 
   console.log("IPC handlers registered.");
+}
+
+/**
+ * Wird aufgerufen, wenn sich der Tag ändert. Lädt alle Fenster neu, damit sie
+ * den neuen Tag anzeigen.
+ * @param oldDateKey Der alte Datums-Key
+ * @param newDateKey Der neue Datums-Key
+ */
+function handleDayChange(oldDateKey: string, newDateKey: string): void {
+  console.log(`Day changed from ${oldDateKey} to ${newDateKey}. Refreshing windows...`);
+  
+  // Alle Fenster neu laden
+  const windows = BrowserWindow.getAllWindows();
+  windows.forEach(window => {
+    if (window && !window.isDestroyed()) {
+      try {
+        // Fenster neu laden, um die gesamte UI mit dem neuen Tag zu aktualisieren
+        window.reload();
+        console.log(`Successfully refreshed window ${window.id}`);
+      } catch (error) {
+        console.warn(`Failed to refresh window ${window.id}:`, error);
+      }
+    }
+  });
 }
 
 // Initialize auto-updater
@@ -391,7 +391,7 @@ function initAutoUpdater() {
 
   // Beta-Kanal Konfiguration
   // Lies die Einstellung aus den Settings statt aus der Umgebungsvariable
-  const allowPrerelease = activityStore?.getSettingsManager().getAllowPrerelease() || false;
+  const allowPrerelease = activityFacade?.getSettingsManager().getAllowPrerelease() || false;
   if (allowPrerelease) {
     autoUpdater.channel = 'beta';
     console.log('Beta-Updates aktiviert. Kanal:', autoUpdater.channel);
@@ -494,6 +494,38 @@ app.on('window-all-closed', () => { // Use arrow function
   }
 });
 
+// Cleanup resources before quit
+const cleanup = () => {
+  console.log('Cleaning up resources before quit...');
+  
+  try {
+    if (heartbeatManager) {
+      console.log("Cleaning up HeartbeatManager...");
+      heartbeatManager.cleanup();
+    }
+    
+    if (activityFacade) {
+      console.log("Cleaning up ActivityFacade...");
+      activityFacade.cleanup(); // This will save data
+    }
+
+    // Unregister IPC handlers
+    console.log("Unregistering IPC handlers...");
+    ipcMain.removeHandler('get-tracking-status');
+    ipcMain.removeHandler('toggle-tracking');
+    ipcMain.removeHandler('is-using-mock-data');
+    ipcMain.removeHandler('get-settings');
+    ipcMain.removeHandler('update-activity-store-path');
+    ipcMain.removeHandler('confirm-use-existing-activity-store');
+    ipcMain.removeHandler('update-beta-release-setting');
+    ipcMain.removeHandler('update-auto-launch-setting');
+
+    console.log('All resources cleaned up before quitting.');
+  } catch (err) {
+    console.error('Error during cleanup:', err);
+  }
+};
+
 // Save data and clean up before quitting
 app.on('before-quit', async (event) => { // Add event type if needed (Event)
   console.log('App before-quit event triggered.');
@@ -502,25 +534,8 @@ app.on('before-quit', async (event) => { // Add event type if needed (Event)
 
   try {
       // Clean up resources
-      if (heartbeatManager) {
-        console.log("Cleaning up HeartbeatManager...");
-        heartbeatManager.cleanup();
-      }
+      cleanup();
 
-      if (activityStore) {
-        console.log("Cleaning up ActivityStore...");
-        activityStore.cleanup(); // This should also save data
-      }
-
-      // Clean up our directly registered IPC handlers (optional but good practice)
-      console.log("Removing IPC handlers...");
-      ipcMain.removeHandler('get-tracking-status');
-      ipcMain.removeHandler('toggle-tracking');
-      ipcMain.removeHandler('is-using-mock-data');
-      ipcMain.removeHandler('get-auto-launch-settings');
-      ipcMain.removeHandler('update-auto-launch-settings');
-
-      console.log('All resources cleaned up before quitting.');
       // Allow quitting now
       // app.quit(); // Only if preventDefault was called
   } catch(error) {

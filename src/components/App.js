@@ -55,7 +55,7 @@ const App = () => {
     setIsLoading(true);
     
     try {
-      await ipcRenderer.invoke('set-aggregation-interval', newInterval);
+      await ipcRenderer.invoke('activity:setAggregationInterval', newInterval);
       setAggregationInterval(newInterval);
       // Reload data to reflect the new aggregation interval
       await loadActivityData();
@@ -71,7 +71,7 @@ const App = () => {
     setIsLoading(true);
     
     try {
-      const data = await ipcRenderer.invoke('get-day-data', selectedDate);
+      const data = await ipcRenderer.invoke('activity:getDayData', selectedDate);
       setActivityData(data);
     } catch (error) {
       console.error('Error loading activity data:', error);
@@ -84,7 +84,7 @@ const App = () => {
   // Monitor user activity for inactivity detection
   useEffect(() => {
     // Listen for activity data updates
-    ipcRenderer.on('activity-data-updated', (event, dateKey) => {
+    ipcRenderer.on('activity:dataUpdated', (event, dateKey) => {
       if (dateKey === selectedDate) {
         loadActivityData();
       }
@@ -92,7 +92,7 @@ const App = () => {
     
     // Cleanup listeners
     return () => {
-      ipcRenderer.removeAllListeners('activity-data-updated');
+      ipcRenderer.removeAllListeners('activity:dataUpdated');
     };
   }, [selectedDate]);
 
@@ -108,20 +108,12 @@ const App = () => {
         const trackingStatus = await ipcRenderer.invoke('get-tracking-status');
         setIsTracking(trackingStatus);
         
-        // Get available dates from backend
-        const datesFromBackend = await ipcRenderer.invoke('get-available-dates');
-        
-        // Ensure today's date is always included
-        const today = new Date().toISOString().split('T')[0];
-        const datesSet = new Set(datesFromBackend);
-        datesSet.add(today);
-        
-        // Convert back to array and sort chronologically
-        const allDates = Array.from(datesSet).sort();
-        setAvailableDates(allDates);
+        // Get available dates from backend (already includes today)
+        const datesFromBackend = await ipcRenderer.invoke('activity:getAvailableDates');
+        setAvailableDates(datesFromBackend);
         
         // Get current aggregation interval
-        const interval = await ipcRenderer.invoke('get-aggregation-interval');
+        const interval = await ipcRenderer.invoke('activity:getAggregationInterval');
         if (interval) {
           setAggregationInterval(interval);
         }

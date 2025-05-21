@@ -1,6 +1,7 @@
 // Import necessary classes and types
 import { BrowserWindow } from 'electron';
-import ActivityStore, { HeartbeatData } from './ActivityStore'; // Assuming HeartbeatData is exported from ActivityStore
+import { ActivityFacade } from './ActivityFacade';
+import { HeartbeatData } from './ActivityStore'; // Import only the type from ActivityStore
 import ActiveWindowWatcher from '../watchers/ActiveWindowWatcher';
 import InactivityWatcher from '../watchers/InactivityWatcher';
 // import TeamsMeetingsWatcher from '../watchers/TeamsMeetingsWatcher'; // If re-enabled later
@@ -14,7 +15,7 @@ interface Watcher {
 
 // Define options for the constructor
 interface HeartbeatManagerOptions {
-  activityStore: ActivityStore;
+  activityFacade: ActivityFacade;
   mainWindow: BrowserWindow;
 }
 
@@ -23,7 +24,7 @@ interface HeartbeatManagerOptions {
  */
 class HeartbeatManager {
   // ---- CLASS PROPERTY DECLARATIONS ----
-  private activityStore: ActivityStore;
+  private activityFacade: ActivityFacade;
   private mainWindow: BrowserWindow;
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private isRunning: boolean = false;
@@ -43,10 +44,10 @@ class HeartbeatManager {
    * @param {HeartbeatManagerOptions} options - Configuration options
    */
   constructor(options: HeartbeatManagerOptions) {
-    if (!options || !options.activityStore || !options.mainWindow) {
-      throw new Error('HeartbeatManager requires activityStore and mainWindow in options');
+    if (!options || !options.activityFacade || !options.mainWindow) {
+      throw new Error('HeartbeatManager requires activityFacade and mainWindow in options');
     }
-    this.activityStore = options.activityStore;
+    this.activityFacade = options.activityFacade;
     this.mainWindow = options.mainWindow;
 
     // Initialize watcher instances
@@ -199,12 +200,12 @@ class HeartbeatManager {
   }
 
   /**
-   * Generate a single heartbeat by collecting data and sending it to the ActivityStore.
+   * Generate a single heartbeat by collecting data and sending it to the ActivityFacade.
    */
   private async generateHeartbeat(): Promise<void> {
-    if (!this.isRunning || !this.activityStore) {
+    if (!this.isRunning || !this.activityFacade) {
         if (!this.isRunning) console.warn("generateHeartbeat called while not running.");
-        if (!this.activityStore) console.warn("generateHeartbeat called without activityStore.");
+        if (!this.activityFacade) console.warn("generateHeartbeat called without activityFacade.");
       return;
     }
 
@@ -220,8 +221,8 @@ class HeartbeatManager {
       // Log the collected data with pretty-printing (indentation)
       console.log('Generated Heartbeat:', JSON.stringify(heartbeatData, null, 2));
 
-      // Add the combined heartbeat data to the activity store
-      this.activityStore.addHeartbeat(heartbeatData);
+      // Add the combined heartbeat data to the activity facade
+      this.activityFacade.addHeartbeat(heartbeatData);
     } catch (error) {
       console.error('Error generating or adding heartbeat:', error);
     }
