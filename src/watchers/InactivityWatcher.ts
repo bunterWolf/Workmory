@@ -43,8 +43,8 @@ export default class InactivityWatcher {
       const idleSeconds = powerMonitor.getSystemIdleTime();
       
       // Define thresholds
-      const MAY_BE_INACTIVE_THRESHOLD = 30; // seconds
-      const INACTIVE_THRESHOLD = 150; // seconds (2.5 minutes)
+      const MAY_BE_INACTIVE_THRESHOLD = 180; // seconds ( 3min)
+      const INACTIVE_THRESHOLD = 300; // seconds (5 minutes)
 
       // Bestimme den Status basierend auf der Inaktivitätszeit
       let newStatus: UserActivityStatus;
