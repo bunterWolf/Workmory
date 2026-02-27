@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-beta.2](https://github.com/bunterWolf/Workmory/compare/v0.0.1-beta.1...v0.0.1-beta.2) (2026-02-27)
+
+
+### Bug Fixes
+
+* Adjust inactivity detection thresholds ([615228c](https://github.com/bunterWolf/Workmory/commit/615228c61a215c059ffff1ea5a2a1ea885bdf77c))
+* Increate Inactivity Threashold ([88ddf35](https://github.com/bunterWolf/Workmory/commit/88ddf3502bd10bc74ba709fb68403c686666c2be))
+
 ### [0.0.1-beta.1](https://github.com/bunterWolf/Chronflow/compare/v0.0.1-beta.0...v0.0.1-beta.1) (2025-05-12)
 
 
