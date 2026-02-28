@@ -30,34 +30,83 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Windows und Unix brauchen unterschiedliche Syntax
       - name: Check if beta release (Unix)
         if: runner.os != 'Windows'
+        id: check-beta-unix
         shell: bash
         run: |
           if [[ "${{ github.ref }}" == *"beta"* ]]; then
+            echo "is_beta=true" >> $GITHUB_OUTPUT
             echo "EP_PRE_RELEASE=true" >> $GITHUB_ENV
           else
+            echo "is_beta=false" >> $GITHUB_OUTPUT
             echo "EP_PRE_RELEASE=false" >> $GITHUB_ENV
           fi
 
       - name: Check if beta release (Windows)
         if: runner.os == 'Windows'
+        id: check-beta-windows
         shell: pwsh
         run: |
           if ("${{ github.ref }}" -like "*beta*") {
+            "is_beta=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "EP_PRE_RELEASE=true" | Out-File -FilePath $env:GITHUB_ENV -Append
           } else {
+            "is_beta=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "EP_PRE_RELEASE=false" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+
+      # Verwende die Ausgabe vom richtigen Check
+      - name: Set EP_PRE_RELEASE (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          EP_PRE_RELEASE=${{ steps.check-beta-unix.outputs.is_beta == 'true' && 'true' || 'false' }}
+          echo "EP_PRE_RELEASE=$EP_PRE_RELEASE" >> $GITHUB_ENV
+
+      - name: Set EP_PRE_RELEASE (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $EP_PRE_RELEASE = if ("${{ steps.check-beta-windows.outputs.is_beta }}" -eq "true") { "true" } else { "false" }
+          "EP_PRE_RELEASE=$EP_PRE_RELEASE" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      # Set channel based on beta status (Unix)
+      - name: Set channel for electron-builder (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          if [[ "${{ steps.check-beta-unix.outputs.is_beta }}" == "true" ]]; then
+            echo "CHANNEL=beta" >> $GITHUB_ENV
+          else
+            echo "CHANNEL=latest" >> $GITHUB_ENV
+          fi
+
+      # Set channel based on beta status (Windows)
+      - name: Set channel for electron-builder (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if ("${{ steps.check-beta-windows.outputs.is_beta }}" -eq "true") {
+            "CHANNEL=beta" | Out-File -FilePath $env:GITHUB_ENV -Append
+          } else {
+            "CHANNEL=latest" | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
       - name: Build application
         run: npm run build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Distribution
-        run: npx electron-builder --publish never
+        run: npm run dist
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EP_PRE_RELEASE: ${{ env.EP_PRE_RELEASE }}
+          ELECTRON_BUILDER_PUBLISH_CHANNEL: ${{ env.CHANNEL }}
 
+      # Speichere die Builds als Artifacts
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -68,10 +117,20 @@ jobs:
             release/**/*.yml
             release/**/*.blockmap
 
-  release:
+  # Diese Job läuft nur, wenn der GitHub Release von electron-builder fehlschlägt
+  fallback-release:
     needs: build
     runs-on: ubuntu-latest
+    if: failure()
     steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Listing downloaded artifacts:"
+          find . -type f | sort
+
       - name: Check if beta release
         id: check-beta
         shell: bash
@@ -82,17 +141,14 @@ jobs:
             echo "is_beta=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Create GitHub Release
+      - name: Create GitHub Release as fallback
+        id: create_release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             **/*.exe
             **/*.zip
-            **/latest*.yml
-            **/beta*.yml
+            **/*.yml
             **/*.blockmap
           draft: false
           prerelease: ${{ steps.check-beta.outputs.is_beta == 'true' }}
