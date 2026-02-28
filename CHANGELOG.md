@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-beta.4](https://github.com/bunterWolf/Workmory/compare/v0.0.1-beta.3...v0.0.1-beta.4) (2026-02-28)
+
+
+### Bug Fixes
+
+* exclude app-update.yml from release assets ([52e09ff](https://github.com/bunterWolf/Workmory/commit/52e09ff1fd693d7655993e3f5b923832439dc6a3))
+
 ### [0.0.1-beta.3](https://github.com/bunterWolf/Workmory/compare/v0.0.1-beta.2...v0.0.1-beta.3) (2026-02-28)
 
 
