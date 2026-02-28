@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-beta.3](https://github.com/bunterWolf/Workmory/compare/v0.0.1-beta.2...v0.0.1-beta.3) (2026-02-28)
+
+
+### Bug Fixes
+
+* resolve race condition in release workflow ([04f7dbb](https://github.com/bunterWolf/Workmory/commit/04f7dbb027db68d49f22305534ded9c275ffc1c5))
+
 ### [0.0.1-beta.2](https://github.com/bunterWolf/Workmory/compare/v0.0.1-beta.1...v0.0.1-beta.2) (2026-02-27)
 
 
