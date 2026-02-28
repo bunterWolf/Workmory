@@ -91,7 +91,8 @@ jobs:
           files: |
             **/*.exe
             **/*.zip
-            **/*.yml
+            **/latest*.yml
+            **/beta*.yml
             **/*.blockmap
           draft: false
           prerelease: ${{ steps.check-beta.outputs.is_beta == 'true' }}
