@@ -18,10 +18,9 @@ export interface AppWindowData {
 }
 
 export interface HeartbeatData {
-  userActivity?: 'active' | 'may_be_inactive' | 'inactive'; // Be more specific
-  appWindow?: AppWindowData | null; // Use the exported type
-  // Add other potential properties from other watchers if known
-  // teamsMeeting?: { title: string; status: string }; // Example if Teams watcher exists
+  userActivity?: 'active' | 'may_be_inactive' | 'inactive';
+  appWindow?: AppWindowData | null;
+  teamsMeeting?: { title: string } | null;
 }
 
 export interface Heartbeat {
@@ -365,6 +364,11 @@ class ActivityStore {
   }
 
   private updateHeartbeats(timestamp: number, heartbeatData: HeartbeatData): void {
+      // During an active Teams meeting, treat the user as active regardless of keyboard/mouse idle time
+      if (heartbeatData.teamsMeeting && heartbeatData.userActivity !== 'active') {
+          heartbeatData.userActivity = 'active';
+      }
+
       let dayHeartbeats = this.activityState.getHeartbeats(this.currentDayKey) || [];
       const potentiallyUpdatedHeartbeats = handleMayBeInactive([...dayHeartbeats], timestamp, heartbeatData);
       const newHeartbeat: Heartbeat = { timestamp, data: heartbeatData };
