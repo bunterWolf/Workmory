@@ -176,6 +176,124 @@ describe('TimelineGenerator', () => {
     });
   });
 
+  describe('Teams Meeting Erkennung', () => {
+    test('sollte teamsMeeting Heartbeats als teamsMeeting Block aggregieren', () => {
+      const baseTime = new Date('2024-03-20T10:00:00Z').getTime();
+      const heartbeats: any[] = Array(6).fill(null).map((_, i) => ({
+        timestamp: baseTime + (i * 30000),
+        data: {
+          userActivity: 'active',
+          teamsMeeting: { title: 'Sprint Review' }
+        }
+      }));
+
+      const result = generator.generateTimelineEvents(heartbeats);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        timestamp: baseTime,
+        duration: 5 * 60 * 1000,
+        type: 'teamsMeeting',
+        data: { title: 'Sprint Review' }
+      });
+    });
+
+    test('sollte teamsMeeting Priorität über appWindow haben', () => {
+      const baseTime = new Date('2024-03-20T10:00:00Z').getTime();
+      const heartbeats: any[] = [
+        ...Array(4).fill(null).map((_, i) => ({
+          timestamp: baseTime + (i * 30000),
+          data: {
+            userActivity: 'active',
+            teamsMeeting: { title: 'Daily Standup' }
+          }
+        })),
+        ...Array(2).fill(null).map((_, i) => ({
+          timestamp: baseTime + ((i + 4) * 30000),
+          data: {
+            userActivity: 'active',
+            appWindow: { app: 'VS Code', title: 'main.ts' }
+          }
+        }))
+      ];
+
+      const result = generator.generateTimelineEvents(heartbeats);
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe('teamsMeeting');
+      expect(result[0].data.title).toBe('Daily Standup');
+    });
+
+    test('sollte aufeinanderfolgende Meetings mit gleichem Titel zusammenführen', () => {
+      const baseTime = new Date('2024-03-20T10:00:00Z').getTime();
+      const intervalDurationMs = 5 * 60 * 1000;
+      const heartbeats: any[] = [
+        ...Array(6).fill(null).map((_, i) => ({
+          timestamp: baseTime + (i * 30000),
+          data: {
+            userActivity: 'active',
+            teamsMeeting: { title: 'Sprint Review' }
+          }
+        })),
+        ...Array(6).fill(null).map((_, i) => ({
+          timestamp: baseTime + intervalDurationMs + (i * 30000),
+          data: {
+            userActivity: 'active',
+            teamsMeeting: { title: 'Sprint Review' }
+          }
+        }))
+      ];
+
+      const result = generator.generateTimelineEvents(heartbeats);
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe('teamsMeeting');
+      expect(result[0].duration).toBe(2 * intervalDurationMs);
+      expect(result[0].data.title).toBe('Sprint Review');
+    });
+
+    test('sollte teamsMeeting Priorität über inactive haben', () => {
+      const baseTime = new Date('2024-03-20T10:00:00Z').getTime();
+      const heartbeats: any[] = Array(6).fill(null).map((_, i) => ({
+        timestamp: baseTime + (i * 30000),
+        data: {
+          userActivity: 'inactive',
+          teamsMeeting: { title: 'Sprint Review' }
+        }
+      }));
+
+      const result = generator.generateTimelineEvents(heartbeats);
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe('teamsMeeting');
+      expect(result[0].data.title).toBe('Sprint Review');
+    });
+
+    test('sollte Meetings mit unterschiedlichen Titeln nicht zusammenführen', () => {
+      const baseTime = new Date('2024-03-20T10:00:00Z').getTime();
+      const intervalDurationMs = 5 * 60 * 1000;
+      const heartbeats: any[] = [
+        ...Array(6).fill(null).map((_, i) => ({
+          timestamp: baseTime + (i * 30000),
+          data: {
+            userActivity: 'active',
+            teamsMeeting: { title: 'Sprint Review' }
+          }
+        })),
+        ...Array(6).fill(null).map((_, i) => ({
+          timestamp: baseTime + intervalDurationMs + (i * 30000),
+          data: {
+            userActivity: 'active',
+            teamsMeeting: { title: 'Daily Standup' }
+          }
+        }))
+      ];
+
+      const result = generator.generateTimelineEvents(heartbeats);
+      expect(result).toHaveLength(2);
+      expect(result[0].type).toBe('teamsMeeting');
+      expect(result[0].data.title).toBe('Sprint Review');
+      expect(result[1].type).toBe('teamsMeeting');
+      expect(result[1].data.title).toBe('Daily Standup');
+    });
+  });
+
   describe('Edge Cases und Fehlerbehandlung', () => {
     test('sollte leere oder ungültige Eingaben für generateTimelineEvents behandeln', () => {
       expect(generator.generateTimelineEvents([])).toEqual([]);
@@ -258,6 +376,30 @@ describe('TimelineGenerator', () => {
       expect(summary.totalInactiveDuration).toBe(0);
       expect(summary.totalMeetingDuration).toBe(0);
       expect(summary.appUsage).toEqual({});
+    });
+
+    test('sollte Meeting-Dauer korrekt in totalMeetingDuration zählen und nicht in appUsage', () => {
+      const events: any[] = [
+        {
+          timestamp: new Date('2024-03-20T10:00:00Z').getTime(),
+          duration: 60 * 60 * 1000,
+          type: 'teamsMeeting',
+          data: { title: 'Sprint Review' }
+        },
+        {
+          timestamp: new Date('2024-03-20T11:00:00Z').getTime(),
+          duration: 30 * 60 * 1000,
+          type: 'appWindow',
+          data: { app: 'VS Code', title: 'main.ts' }
+        }
+      ];
+
+      const summary = generator.calculateSummary(events);
+      expect(summary.totalMeetingDuration).toBe(60 * 60 * 1000);
+      expect(summary.totalActiveDuration).toBe(90 * 60 * 1000);
+      expect(summary.totalInactiveDuration).toBe(0);
+      expect(summary.appUsage['VS Code']).toBe(30 * 60 * 1000);
+      expect(summary.appUsage['Microsoft Teams']).toBeUndefined();
     });
   });
 }); 

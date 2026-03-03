@@ -168,6 +168,38 @@ describe('ActivityStore Integration', () => {
     try { fs.rmdirSync('/tmp/nonexistent'); } catch (e) { /* Ignorieren */ }
   });
 
+  test('sollte Benutzer in Teams Meeting nicht als inaktiv markieren', () => {
+    const addTestHeartbeat = (timestamp: number, data: HeartbeatData) => {
+      const originalNow = Date.now;
+      Date.now = jest.fn(() => timestamp);
+      activityStore.addHeartbeat(data);
+      Date.now = originalNow;
+    };
+
+    // 16 Heartbeats mit userActivity: 'inactive' aber aktiver Teams-Meeting
+    // (simuliert: Maus/Tastatur-Idle, aber Mikrofon aktiv im Meeting)
+    for (let min = 0; min < 8; min++) {
+      for (const sec of [15, 45]) {
+        addTestHeartbeat(getTimestamp(9, min, sec), {
+          userActivity: 'inactive',
+          teamsMeeting: { title: 'Team Standup' }
+        });
+      }
+    }
+
+    Date.now = originalDateNow;
+    const dayData = activityStore.getDayData(testDateKey);
+    const timeline = dayData!.aggregated!.timelineOverview;
+
+    expect(timeline).toHaveLength(1);
+    expect(timeline[0].type).toBe('teamsMeeting');
+    expect(timeline[0].data.title).toBe('Team Standup');
+
+    const summary = dayData!.aggregated!.summary;
+    expect(summary.totalInactiveDuration).toBe(0);
+    expect(summary.totalMeetingDuration).toBe(intervalMillis);
+  });
+
   test('sollte Heartbeats korrekt aggregieren und Timeline-Events generieren', () => {
     // ---- Add test heartbeats ----
     // Helper to add heartbeat with specific timestamp
