@@ -6,9 +6,18 @@ interface MeetingInfo {
   title: string;
 }
 
+// Teams navigation tab titles are not meetings
+const TEAMS_NAV_TITLES = [
+  'microsoft teams', 'aktivitäten', 'activity',
+  'chat', 'teams', 'besprechungen', 'calendar', 'meetings',
+  'anrufe', 'calls', 'dateien', 'files',
+];
+
 /**
- * Detects active Microsoft Teams meetings via the process window title.
- * Teams sets MainWindowTitle to "<Meeting Title> | Microsoft Teams" during a call.
+ * Detects active Microsoft Teams meetings.
+ *
+ * Primary signal: microphone registry (LastUsedTimeStop = 0 → mic active → in call).
+ * Secondary signal: process window title for the meeting name.
  */
 export default class TeamsMeetingsWatcher {
   private platform = os.platform();
@@ -32,16 +41,39 @@ export default class TeamsMeetingsWatcher {
   }
 
   private detectOnWindows(): MeetingInfo | null {
+    if (!this.isMicrophoneActive()) return null;
+    return { title: this.getMeetingTitleWindows() ?? 'Teams Meeting' };
+  }
+
+  private isMicrophoneActive(): boolean {
     try {
       const output = execSync(
-        "powershell -NoProfile -Command \"Get-Process | Where-Object Name -like '*teams*' | Where-Object MainWindowTitle -like '*| Microsoft Teams' | Select-Object -ExpandProperty MainWindowTitle -First 1\"",
+        'reg query "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\microphone\\MSTeams_8wekyb3d8bbwe" /v LastUsedTimeStop',
+        { timeout: 2000, encoding: 'utf8' }
+      );
+      // LastUsedTimeStop = 0x0 means mic is currently in use
+      return output.includes('0x0');
+    } catch {
+      return false;
+    }
+  }
+
+  private getMeetingTitleWindows(): string | null {
+    try {
+      const output = execSync(
+        "powershell -NoProfile -Command \"Get-Process | Where-Object Name -like '*teams*' | Where-Object MainWindowTitle -like '*| Microsoft Teams' | Select-Object -ExpandProperty MainWindowTitle\"",
         { timeout: 3000, encoding: 'utf8' }
       ).trim();
 
       if (!output) return null;
 
-      const title = output.replace(/\s*\|\s*Microsoft Teams\s*$/, '').trim();
-      return title ? { title } : null;
+      for (const line of output.split('\n')) {
+        const title = line.replace(/\s*\|\s*Microsoft Teams\s*$/, '').trim();
+        if (title && !TEAMS_NAV_TITLES.includes(title.toLowerCase())) {
+          return title;
+        }
+      }
+      return null;
     } catch {
       return null;
     }
@@ -56,14 +88,14 @@ export default class TeamsMeetingsWatcher {
 
       if (!output) return null;
 
-      const meetingTitle = output
-        .split(', ')
-        .find(t => t.includes('| Microsoft Teams'));
-
-      if (!meetingTitle) return null;
-
-      const title = meetingTitle.replace(/\s*\|\s*Microsoft Teams\s*$/, '').trim();
-      return title ? { title } : null;
+      for (const t of output.split(', ')) {
+        if (!t.includes('| Microsoft Teams')) continue;
+        const title = t.replace(/\s*\|\s*Microsoft Teams\s*$/, '').trim();
+        if (title && !TEAMS_NAV_TITLES.includes(title.toLowerCase())) {
+          return { title };
+        }
+      }
+      return null;
     } catch {
       return null;
     }
