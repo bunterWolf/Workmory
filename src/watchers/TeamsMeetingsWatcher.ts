@@ -18,6 +18,8 @@ const TEAMS_NAV_TITLES = new Set([
   'dateien', 'files',
   'anrufe', 'calls',
   'teams', 'microsoft teams',
+  // Teams UI mode descriptors (not meeting names)
+  'kompakte besprechungsansicht', 'compact meeting view',
 ]);
 
 /**
@@ -81,10 +83,15 @@ export default class TeamsMeetingsWatcher {
       if (!output) return null;
 
       for (const line of output.split('\n')) {
-        const title = line.replace(/\s*\|\s*Microsoft Teams\s*$/, '').trim();
-        // Navigation paths contain '|' (e.g. "Kalender | Einstellungen"), meeting titles do not
-        if (title && !title.includes('|') && !TEAMS_NAV_TITLES.has(title.toLowerCase())) {
-          return title;
+        const stripped = line.replace(/\s*\|\s*Microsoft Teams\s*$/, '').trim();
+        if (!stripped) continue;
+        // Split into segments and check right-to-left.
+        // Handles "Kompakte Besprechungsansicht | Meeting Name" → returns "Meeting Name".
+        const segments = stripped.split('|').map(s => s.trim()).reverse();
+        for (const segment of segments) {
+          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase())) {
+            return segment;
+          }
         }
       }
       return null;
@@ -104,10 +111,14 @@ export default class TeamsMeetingsWatcher {
 
       for (const t of output.split(', ')) {
         if (!t.includes('| Microsoft Teams')) continue;
-        const title = t.replace(/\s*\|\s*Microsoft Teams\s*$/, '').trim();
-        // Navigation paths contain '|', meeting titles do not
-        if (title && !title.includes('|') && !TEAMS_NAV_TITLES.has(title.toLowerCase())) {
-          return { title };
+        const stripped = t.replace(/\s*\|\s*Microsoft Teams\s*$/, '').trim();
+        if (!stripped) continue;
+        // Split into segments and check right-to-left.
+        const segments = stripped.split('|').map(s => s.trim()).reverse();
+        for (const segment of segments) {
+          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase())) {
+            return { title: segment };
+          }
         }
       }
       return null;
