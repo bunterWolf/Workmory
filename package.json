@@ -135,7 +135,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@azure/msal-node": "^5.0.6",
     "@electron/remote": "^2.1.2",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
     "@types/auto-launch": "^5.0.5",
     "active-win": "^8.1.1",
     "auto-launch": "^5.0.6",

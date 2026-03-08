@@ -7,6 +7,10 @@ export interface AppSettings {
   activityStoreDirPath: string | null; // null = Standard (userData)
   allowPrerelease: boolean;
   autoLaunchEnabled: boolean; // Neue Eigenschaft für Auto-Start
+  // Microsoft Graph API für Teams-Meeting-Erkennung
+  // Aus Azure Portal → Microsoft Entra ID → App-Registrierungen
+  teamsGraphClientId: string | null;  // Application (client) ID
+  teamsGraphTenantId: string | null;  // Directory (tenant) ID, null = 'common' (alle Accounts)
 }
 
 /**
@@ -24,7 +28,9 @@ export class SettingsManager {
     this.settings = {
       activityStoreDirPath: null,
       allowPrerelease: false,
-      autoLaunchEnabled: false // Standard: Auto-Start deaktiviert
+      autoLaunchEnabled: false,
+      teamsGraphClientId: null,
+      teamsGraphTenantId: null,
     };
 
     // Lade Einstellungen aus der Datei, wenn sie existiert
@@ -54,9 +60,21 @@ export class SettingsManager {
           }
           
           // autoLaunchEnabled (boolean)
-          if ('autoLaunchEnabled' in parsedSettings && 
+          if ('autoLaunchEnabled' in parsedSettings &&
               typeof parsedSettings.autoLaunchEnabled === 'boolean') {
             this.settings.autoLaunchEnabled = parsedSettings.autoLaunchEnabled;
+          }
+
+          // teamsGraphClientId (string | null)
+          if ('teamsGraphClientId' in parsedSettings &&
+              (typeof parsedSettings.teamsGraphClientId === 'string' || parsedSettings.teamsGraphClientId === null)) {
+            this.settings.teamsGraphClientId = parsedSettings.teamsGraphClientId;
+          }
+
+          // teamsGraphTenantId (string | null)
+          if ('teamsGraphTenantId' in parsedSettings &&
+              (typeof parsedSettings.teamsGraphTenantId === 'string' || parsedSettings.teamsGraphTenantId === null)) {
+            this.settings.teamsGraphTenantId = parsedSettings.teamsGraphTenantId;
           }
         }
         
@@ -140,6 +158,24 @@ export class SettingsManager {
    */
   setAutoLaunchEnabled(enabled: boolean): void {
     this.settings.autoLaunchEnabled = enabled;
+    this.saveSettings();
+  }
+
+  getTeamsGraphClientId(): string | null {
+    return this.settings.teamsGraphClientId;
+  }
+
+  setTeamsGraphClientId(clientId: string | null): void {
+    this.settings.teamsGraphClientId = clientId;
+    this.saveSettings();
+  }
+
+  getTeamsGraphTenantId(): string | null {
+    return this.settings.teamsGraphTenantId;
+  }
+
+  setTeamsGraphTenantId(tenantId: string | null): void {
+    this.settings.teamsGraphTenantId = tenantId;
     this.saveSettings();
   }
 } 

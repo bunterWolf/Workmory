@@ -20,8 +20,7 @@ export interface AppWindowData {
 export interface HeartbeatData {
   userActivity?: 'active' | 'may_be_inactive' | 'inactive'; // Be more specific
   appWindow?: AppWindowData | null; // Use the exported type
-  // Add other potential properties from other watchers if known
-  // teamsMeeting?: { title: string; status: string }; // Example if Teams watcher exists
+  teamsMeeting?: { title: string } | null;
 }
 
 export interface Heartbeat {
