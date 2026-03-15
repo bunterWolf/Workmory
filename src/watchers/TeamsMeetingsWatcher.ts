@@ -35,6 +35,9 @@ const TEAMS_NAV_TITLES = new Set([
  */
 export default class TeamsMeetingsWatcher {
   private platform = os.platform();
+  private cachedUdpCount: number = 0;
+  private udpCacheTimestamp: number = 0;
+  private readonly UDP_CACHE_TTL_MS = 5000; // Re-query PowerShell at most every 5 seconds
 
   async init(): Promise<void> {
     console.log('TeamsMeetingsWatcher initialized.');
@@ -59,18 +62,32 @@ export default class TeamsMeetingsWatcher {
     return { title: this.getMeetingTitleWindows() ?? 'Teams Meeting' };
   }
 
-  private hasActiveUdpConnections(): boolean {
+  /** Returns the raw UDP endpoint count for all Teams processes (Windows only).
+   *  Result is cached for UDP_CACHE_TTL_MS to avoid spawning PowerShell too frequently. */
+  getUdpCount(): number {
+    if (this.platform !== 'win32') return -1;
+    const now = Date.now();
+    if (now - this.udpCacheTimestamp < this.UDP_CACHE_TTL_MS) {
+      return this.cachedUdpCount;
+    }
     try {
       const output = execSync(
         "powershell -NoProfile -Command \"$pids = (Get-Process -Name '*teams*' -ErrorAction SilentlyContinue).Id; (Get-NetUDPEndpoint -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -in $pids }).Count\"",
         { timeout: 3000, encoding: 'utf8' }
       ).trim();
       const count = parseInt(output, 10);
-      // During a meeting Teams binds many UDP ports (WebRTC). Outside of a meeting only 1 exists.
-      return !isNaN(count) && count > 1;
+      this.cachedUdpCount = isNaN(count) ? 0 : count;
     } catch {
-      return false;
+      this.cachedUdpCount = -1;
     }
+    this.udpCacheTimestamp = now;
+    return this.cachedUdpCount;
+  }
+
+  private hasActiveUdpConnections(): boolean {
+    const count = this.getUdpCount();
+    // During a meeting Teams binds many UDP ports (WebRTC). Threshold set to >10 to avoid false positives.
+    return count > 10;
   }
 
   private getMeetingTitleWindows(): string | null {
