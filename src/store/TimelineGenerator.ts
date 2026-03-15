@@ -231,10 +231,16 @@ export default class TimelineGenerator {
 
       // --- Determine activity type and key based on heartbeat data --- 
 
+      // Check for Teams Meeting (highest priority — overrides app window)
+      if (heartbeat.data.teamsMeeting) {
+        activityType = 'teamsMeeting';
+        specificData = { title: heartbeat.data.teamsMeeting.title };
+        activityKey = `teams:${specificData.title}`;
+      }
       // Check for Inactivity
-      if (heartbeat.data.userActivity === 'inactive') { 
+      else if (heartbeat.data.userActivity === 'inactive') {
         activityType = 'inactive';
-        specificData = { reason: 'User inactive' }; 
+        specificData = { reason: 'User inactive' };
         activityKey = 'inactive';
       }
       // Check for Active Application Window
@@ -243,7 +249,6 @@ export default class TimelineGenerator {
         specificData = { app: heartbeat.data.appWindow.app, title: heartbeat.data.appWindow.title };
         activityKey = `app:${specificData.app}:${specificData.title}`;
       }
-      // Add other activity types here
 
       // If an activity type was identified, count it
       if (typeof activityKey === 'string' && typeof activityType === 'string') {

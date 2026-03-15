@@ -3,7 +3,7 @@ import { BrowserWindow } from 'electron';
 import ActivityStore, { HeartbeatData } from './ActivityStore'; // Assuming HeartbeatData is exported from ActivityStore
 import ActiveWindowWatcher from '../watchers/ActiveWindowWatcher';
 import InactivityWatcher from '../watchers/InactivityWatcher';
-// import TeamsMeetingsWatcher from '../watchers/TeamsMeetingsWatcher'; // If re-enabled later
+import TeamsMeetingsWatcher from '../watchers/TeamsMeetingsWatcher';
 
 // Define a common interface for watchers (adjust methods/properties as needed)
 interface Watcher {
@@ -33,7 +33,7 @@ class HeartbeatManager {
   // Watcher instances (typed)
   private activeWindowWatcher: ActiveWindowWatcher;
   private inactivityWatcher: InactivityWatcher;
-  // private teamsMeetingsWatcher: TeamsMeetingsWatcher; // If re-enabled later
+  private teamsMeetingsWatcher: TeamsMeetingsWatcher;
 
   // Array of all active watchers (typed)
   private watchers: Watcher[];
@@ -52,13 +52,13 @@ class HeartbeatManager {
     // Initialize watcher instances
     this.activeWindowWatcher = new ActiveWindowWatcher();
     this.inactivityWatcher = new InactivityWatcher();
-    // this.teamsMeetingsWatcher = new TeamsMeetingsWatcher(); // If re-enabled later
+    this.teamsMeetingsWatcher = new TeamsMeetingsWatcher();
 
     // Store all watchers in the array (ensure they conform to Watcher interface)
     this.watchers = [
       this.activeWindowWatcher,
       this.inactivityWatcher,
-      // this.teamsMeetingsWatcher, // If re-enabled later
+      this.teamsMeetingsWatcher,
     ];
 
     // Initial state setup
@@ -87,7 +87,7 @@ class HeartbeatManager {
       await Promise.all([
           this.activeWindowWatcher.init(), // Assuming init takes no args
           this.inactivityWatcher.init(this.mainWindow), // Assuming init takes mainWindow
-          // this.teamsMeetingsWatcher.init(), // If re-enabled later
+          this.teamsMeetingsWatcher.init(),
       ]);
 
       this.isInitialized = true;
