@@ -45,6 +45,11 @@ const ipc = {
   // Check if mock data is being used
   isUsingMockData: async () => {
     return ipcRenderer.invoke('is-using-mock-data');
+  },
+
+  // Debug: Get current Teams UDP endpoint count
+  getTeamsUdpCount: async () => {
+    return ipcRenderer.invoke('get-teams-udp-count');
   }
 };
 

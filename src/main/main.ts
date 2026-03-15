@@ -339,6 +339,11 @@ function registerIpcHandlers(): void { // Add return type void
     return result.filePaths[0];
   });
 
+  // Debug: Teams UDP endpoint count
+  ipcMain.handle('get-teams-udp-count', (): number => {
+    return heartbeatManager ? heartbeatManager.getTeamsUdpCount() : -1;
+  });
+
   // Auto-Launch-Einstellungen abrufen
   ipcMain.handle('get-auto-launch-settings', async (): Promise<any> => {
     if (!activityStore) {

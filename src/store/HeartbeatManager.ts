@@ -228,6 +228,13 @@ class HeartbeatManager {
   }
 
   /**
+   * Returns the current Teams UDP endpoint count for debugging.
+   */
+  getTeamsUdpCount(): number {
+    return this.teamsMeetingsWatcher.getUdpCount();
+  }
+
+  /**
    * Clean up resources: stop the interval and clean up each watcher.
    */
   cleanup(): void {
