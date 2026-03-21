@@ -94,7 +94,7 @@ export default class TeamsMeetingsWatcher {
   private hasActiveUdpConnections(): boolean {
     const count = this.getUdpCount();
     // During a meeting Teams binds many UDP ports (WebRTC). Threshold set to >10 to avoid false positives.
-    return count > 10;
+    return count > 5;
   }
 
   private getMeetingTitleWindows(): string | null {
