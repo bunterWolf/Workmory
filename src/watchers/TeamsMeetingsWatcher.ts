@@ -128,6 +128,7 @@ export default class TeamsMeetingsWatcher {
         '    },IntPtr.Zero); return r;}',
         '}',
         '"@',
+        '$ProgressPreference="SilentlyContinue"',
         '$pids=(Get-Process -Name \'*teams*\' -ErrorAction SilentlyContinue).Id',
         'if($pids){$fgOut=@("");$titles=[WE]::Titles($pids,$fgOut);Write-Output "FG:$($fgOut[0])";$titles}',
       ].join('\n');
