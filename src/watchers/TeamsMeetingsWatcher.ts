@@ -112,8 +112,11 @@ export default class TeamsMeetingsWatcher {
         // Split into segments and check right-to-left.
         // Handles "Kompakte Besprechungsansicht | Meeting Name" → returns "Meeting Name".
         const segments = stripped.split('|').map(s => s.trim()).reverse();
+        let skipNext = false;
         for (const segment of segments) {
-          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase()) && !isEmailAddress(segment)) {
+          if (skipNext) { skipNext = false; continue; }
+          if (isEmailAddress(segment)) { skipNext = true; continue; }
+          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase())) {
             return segment;
           }
         }
@@ -139,8 +142,11 @@ export default class TeamsMeetingsWatcher {
         if (!stripped) continue;
         // Split into segments and check right-to-left.
         const segments = stripped.split('|').map(s => s.trim()).reverse();
+        let skipNext = false;
         for (const segment of segments) {
-          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase()) && !isEmailAddress(segment)) {
+          if (skipNext) { skipNext = false; continue; }
+          if (isEmailAddress(segment)) { skipNext = true; continue; }
+          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase())) {
             return { title: segment };
           }
         }
