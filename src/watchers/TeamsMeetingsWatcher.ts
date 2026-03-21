@@ -58,9 +58,7 @@ export default class TeamsMeetingsWatcher {
     if (this.platform === 'win32') {
       return this.detectOnWindows();
     }
-    if (this.platform === 'darwin') {
-      return this.detectOnMac();
-    }
+    // Mac detection not yet tested — disabled.
     return null;
   }
 
@@ -94,7 +92,7 @@ export default class TeamsMeetingsWatcher {
   private hasActiveUdpConnections(): boolean {
     const count = this.getUdpCount();
     // During a meeting Teams binds many UDP ports (WebRTC). Threshold set to >10 to avoid false positives.
-    return count > 5;
+    return count > 3;
   }
 
   private getMeetingTitleWindows(): string | null {
