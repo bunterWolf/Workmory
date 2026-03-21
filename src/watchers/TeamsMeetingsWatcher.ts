@@ -18,9 +18,16 @@ const TEAMS_NAV_TITLES = new Set([
   'dateien', 'files',
   'anrufe', 'calls',
   'teams', 'microsoft teams',
+  // Teams context labels (not meeting names)
+  'persönlich', 'personal',
   // Teams UI mode descriptors (not meeting names)
   'kompakte besprechungsansicht', 'compact meeting view',
 ]);
+
+/** Returns true if a window title segment looks like an email address. */
+function isEmailAddress(segment: string): boolean {
+  return segment.includes('@');
+}
 
 /**
  * Detects active Microsoft Teams meetings.
@@ -106,7 +113,7 @@ export default class TeamsMeetingsWatcher {
         // Handles "Kompakte Besprechungsansicht | Meeting Name" → returns "Meeting Name".
         const segments = stripped.split('|').map(s => s.trim()).reverse();
         for (const segment of segments) {
-          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase())) {
+          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase()) && !isEmailAddress(segment)) {
             return segment;
           }
         }
@@ -133,7 +140,7 @@ export default class TeamsMeetingsWatcher {
         // Split into segments and check right-to-left.
         const segments = stripped.split('|').map(s => s.trim()).reverse();
         for (const segment of segments) {
-          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase())) {
+          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase()) && !isEmailAddress(segment)) {
             return { title: segment };
           }
         }
