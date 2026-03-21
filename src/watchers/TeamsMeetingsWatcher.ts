@@ -99,26 +99,62 @@ export default class TeamsMeetingsWatcher {
 
   private getMeetingTitleWindows(): string | null {
     try {
+      // Use EnumWindows to get ALL Teams window titles (not just the focused main window).
+      // Passed via -EncodedCommand (UTF-16LE base64) to preserve newlines in the here-string.
+      const psScript = [
+        'Add-Type @"',
+        'using System;using System.Collections.Generic;using System.Runtime.InteropServices;using System.Text;',
+        'public class WE {',
+        '  public delegate bool EWP(IntPtr h, IntPtr l);',
+        '  [DllImport("user32.dll")] public static extern bool EnumWindows(EWP e, IntPtr l);',
+        '  [DllImport("user32.dll")] public static extern int GetWindowText(IntPtr h, StringBuilder s, int n);',
+        '  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint p);',
+        '  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);',
+        '  public static List<string> Titles(int[] pids) {',
+        '    var r=new List<string>(); var ps=new HashSet<int>(pids);',
+        '    EnumWindows((h,l)=>{ if(!IsWindowVisible(h))return true; uint p; GetWindowThreadProcessId(h,out p);',
+        '      if(ps.Contains((int)p)){var s=new StringBuilder(512);GetWindowText(h,s,512);if(s.Length>0)r.Add(s.ToString());}',
+        '      return true;},IntPtr.Zero); return r;}',
+        '}',
+        '"@',
+        '$pids=(Get-Process -Name \'*teams*\' -ErrorAction SilentlyContinue).Id',
+        'if($pids){[WE]::Titles($pids)|Where-Object{$_ -like "*| Microsoft Teams"}}',
+      ].join('\n');
+      const encoded = Buffer.from(psScript, 'utf16le').toString('base64');
       const output = execSync(
-        "powershell -NoProfile -Command \"Get-Process | Where-Object Name -like '*teams*' | Where-Object MainWindowTitle -like '*| Microsoft Teams' | Select-Object -ExpandProperty MainWindowTitle\"",
-        { timeout: 3000, encoding: 'utf8' }
+        `powershell -NoProfile -EncodedCommand ${encoded}`,
+        { timeout: 5000, encoding: 'utf8' }
       ).trim();
 
       if (!output) return null;
 
-      for (const line of output.split('\n')) {
+      const lines = output.split('\n').map(l => l.trim()).filter(Boolean);
+
+      // First pass: prefer the compact meeting overlay window — it only exists during active calls.
+      // Title format: "Kompakte Besprechungsansicht | <meeting name> | <org> | <email> | Microsoft Teams"
+      for (const line of lines) {
+        if (!line.toLowerCase().startsWith('kompakte besprechungsansicht') &&
+            !line.toLowerCase().startsWith('compact meeting view')) continue;
         const stripped = line.replace(/\s*\|\s*Microsoft Teams\s*$/, '').trim();
-        if (!stripped) continue;
-        // Split into segments and check right-to-left.
-        // Handles "Kompakte Besprechungsansicht | Meeting Name" → returns "Meeting Name".
         const segments = stripped.split('|').map(s => s.trim()).reverse();
         let skipNext = false;
         for (const segment of segments) {
           if (skipNext) { skipNext = false; continue; }
           if (isEmailAddress(segment)) { skipNext = true; continue; }
-          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase())) {
-            return segment;
-          }
+          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase())) return segment;
+        }
+      }
+
+      // Second pass: fall back to any non-nav Teams window title.
+      for (const line of lines) {
+        const stripped = line.replace(/\s*\|\s*Microsoft Teams\s*$/, '').trim();
+        if (!stripped) continue;
+        const segments = stripped.split('|').map(s => s.trim()).reverse();
+        let skipNext = false;
+        for (const segment of segments) {
+          if (skipNext) { skipNext = false; continue; }
+          if (isEmailAddress(segment)) { skipNext = true; continue; }
+          if (segment && !TEAMS_NAV_TITLES.has(segment.toLowerCase())) return segment;
         }
       }
       return null;
