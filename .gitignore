@@ -72,6 +72,9 @@ Thumbs.db
 !.vscode/extensions.json
 .idea
 
+# Claude Code
+.claude/
+
 # Misc
 *.db
 *.sqlite
