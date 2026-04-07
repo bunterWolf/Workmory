@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import './DayOverview.css';
+const ipc = require('../ipc/ipc');
 
 const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInterval = 15, isTracking = false, displayedDate }) => {
   const { t, i18n } = useTranslation();
   const [currentTrackingBlock, setCurrentTrackingBlock] = useState(null);
+  const [appIconMap, setAppIconMap] = useState({});
   
   // Helper to get today's date key
   const getTodayDateKey = () => new Date().toISOString().split('T')[0];
@@ -81,6 +83,36 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
     return () => clearInterval(interval);
   }, [isTracking, aggregationInterval, displayedDate, t]); // Removed formatTime from dependencies
   
+  // Fetch app icons for all unique exe paths in the current timeline
+  useEffect(() => {
+    const fetchIcons = async () => {
+      const events = activityData?.aggregated?.timelineOverview || [];
+      const pathsToFetch = [
+        ...new Set(
+          events
+            .filter(e => e.type === 'appWindow' && e.data?.exePath)
+            .map(e => e.data.exePath)
+        )
+      ].filter(p => !(p in appIconMap));
+
+      if (pathsToFetch.length === 0) return;
+
+      const newEntries = {};
+      await Promise.all(
+        pathsToFetch.map(async (exePath) => {
+          const dataUrl = await ipc.getAppIcon(exePath).catch(() => null);
+          if (dataUrl) newEntries[exePath] = dataUrl;
+        })
+      );
+
+      if (Object.keys(newEntries).length > 0) {
+        setAppIconMap(prev => ({ ...prev, ...newEntries }));
+      }
+    };
+
+    fetchIcons();
+  }, [activityData]);
+
   // If loading, show loading indicator
   if (isLoading) {
     return <div className="loading">Loading activity data...</div>;
@@ -191,13 +223,14 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
     const startTime = formatTime(event.timestamp);
     const endTime = formatTime(event.timestamp + event.duration);
     
-    let type, title, subTitle;
-    
+    let type, title, subTitle, exePath;
+
     switch (event.type) {
       case 'appWindow':
         type = 'primaryWindow';
         title = event.data.app;
         subTitle = event.data.title;
+        exePath = event.data.exePath || null;
         break;
       case 'teamsMeeting':
         type = 'teams_meeting';
@@ -220,6 +253,7 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
       type,
       title,
       subTitle,
+      exePath,
       formattedStartTime: startTime,
       formattedEndTime: endTime
     };
@@ -245,7 +279,10 @@ const DayOverview = ({ activityData, isLoading, formatDuration, aggregationInter
               style={getEventStyle(event)}
             >
               <div className="event-title">
-                {event.title} {event.subTitle && (<span className="event-subtitle">{event.subTitle}</span>)}
+                {event.type === 'primaryWindow' && event.exePath && appIconMap[event.exePath] && (
+                  <img src={appIconMap[event.exePath]} alt="" className="event-app-icon" aria-hidden="true" />
+                )}
+                {event.type === 'primaryWindow' ? (event.subTitle || event.title) : event.title}
               </div>
               
               <div className="event-time">

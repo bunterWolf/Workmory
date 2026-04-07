@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow, IpcMainInvokeEvent, IpcMainEvent } from 'electron';
+import { ipcMain, BrowserWindow, IpcMainInvokeEvent, IpcMainEvent, app } from 'electron';
 import ActivityStore from './ActivityStore'; // Import ActivityStore to use its methods
 import { DayData } from './ActivityStore'; 
 import { AggregationIntervalMinutes } from './TimelineGenerator'; 
@@ -9,6 +9,7 @@ import { AggregationIntervalMinutes } from './TimelineGenerator';
  */
 export class ActivityIpc {
     private activityStore: ActivityStore;
+    private iconCache: Map<string, string> = new Map();
 
     /**
      * Creates an instance of ActivityIpc.
@@ -49,6 +50,21 @@ export class ActivityIpc {
                  // Optional: throw error back to renderer?
                  // throw new Error(`Invalid aggregation interval: ${interval}`);
              }
+        });
+
+        ipcMain.handle('get-app-icon', async (event: IpcMainInvokeEvent, exePath: string): Promise<string | null> => {
+            if (!exePath) return null;
+            if (this.iconCache.has(exePath)) return this.iconCache.get(exePath) ?? null;
+            try {
+                const icon = await app.getFileIcon(exePath, { size: 'normal' });
+                const dataUrl = icon.toDataURL();
+                this.iconCache.set(exePath, dataUrl);
+                return dataUrl;
+            } catch (error) {
+                console.warn(`[IPC] Failed to get icon for path: ${exePath}`, error);
+                this.iconCache.set(exePath, '');
+                return null;
+            }
         });
 
         // Note: start/pause tracking are still handled via ipcMain.on as they don't return values directly
@@ -113,6 +129,7 @@ export class ActivityIpc {
         ipcMain.removeHandler('get-available-dates');
         ipcMain.removeHandler('get-aggregation-interval'); // Remove new handler
         ipcMain.removeHandler('set-aggregation-interval'); // Remove new handler
+        ipcMain.removeHandler('get-app-icon');
         // Ensure listeners for 'on' events are also removed
         ipcMain.removeAllListeners('start-tracking');
         ipcMain.removeAllListeners('pause-tracking');

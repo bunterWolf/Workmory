@@ -15,6 +15,7 @@ import { SettingsManager } from './SettingsManager';
 export interface AppWindowData {
   app: string;
   title: string;
+  exePath?: string;
 }
 
 export interface HeartbeatData {

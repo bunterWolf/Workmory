@@ -4,6 +4,7 @@ import { HeartbeatData } from '../store/ActivityStore';
 interface AppWindowState {
   app: string;
   title: string;
+  exePath?: string;
 }
 
 /**
@@ -49,6 +50,7 @@ export default class ActiveWindowWatcher {
       this.lastActiveWindow = {
         app: windowInfo.owner.name,
         title: windowInfo.title,
+        exePath: windowInfo.owner.path || undefined,
       };
 
       return this.lastActiveWindow;

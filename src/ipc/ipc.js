@@ -45,6 +45,12 @@ const ipc = {
   // Check if mock data is being used
   isUsingMockData: async () => {
     return ipcRenderer.invoke('is-using-mock-data');
+  },
+
+  // Get the app icon for a given exe path (returns base64 data URL or null)
+  getAppIcon: async (exePath) => {
+    if (!exePath) return null;
+    return ipcRenderer.invoke('get-app-icon', exePath);
   }
 };
 
