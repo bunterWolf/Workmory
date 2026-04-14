@@ -311,7 +311,7 @@ function registerIpcHandlers(): void { // Add return type void
     settingsManager.setAllowPrerelease(allowPrerelease);
     
     // Aktualisiere den Auto-Updater
-    autoUpdater.channel = allowPrerelease ? 'beta' : 'latest';
+    autoUpdater.allowPrerelease = allowPrerelease;
     
     // Löse eine neue Update-Prüfung aus
     autoUpdater.checkForUpdates().catch((err: Error) => {
@@ -392,13 +392,8 @@ function initAutoUpdater() {
   // Beta-Kanal Konfiguration
   // Lies die Einstellung aus den Settings statt aus der Umgebungsvariable
   const allowPrerelease = activityStore?.getSettingsManager().getAllowPrerelease() || false;
-  if (allowPrerelease) {
-    autoUpdater.channel = 'beta';
-    console.log('Beta-Updates aktiviert. Kanal:', autoUpdater.channel);
-  } else {
-    autoUpdater.channel = 'latest';
-    console.log('Standard-Updates aktiviert. Kanal:', autoUpdater.channel);
-  }
+  autoUpdater.allowPrerelease = allowPrerelease;
+  console.log(`Beta-Updates ${allowPrerelease ? 'aktiviert' : 'deaktiviert'}. allowPrerelease: ${allowPrerelease}`);
 
   // Event-Handler für Update-Status
   autoUpdater.on('checking-for-update', () => {
