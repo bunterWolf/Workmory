@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.2-beta.2](https://github.com/bunterWolf/Workmory/compare/v0.0.2-beta.0...v0.0.2-beta.2) (2026-04-14)
+
+
+### Bug Fixes
+
+* move nsis config to top-level build configuration ([6378047](https://github.com/bunterWolf/Workmory/commit/63780477b2dfa184111e2bfc106db6a10f423fa9))
+* use allowPrerelease instead of channel for beta auto-updates ([d9bce37](https://github.com/bunterWolf/Workmory/commit/d9bce37c0f0c58c1ad201d3367dd34c25c693c07))
+
 ### [0.0.2-beta.1](https://github.com/bunterWolf/Workmory/compare/v0.0.2-beta.2...v0.0.2-beta.1) (2026-04-14)
 
 ### 0.0.2-beta.0 (2026-04-07)
