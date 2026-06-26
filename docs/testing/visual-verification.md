@@ -13,11 +13,17 @@ Soll-Vorgabe: `docs/testing/mock-data-expected.md`.
    (lädt `public/mock-data.json`, kein echtes Tracking, kein Speichern. Generiert die Mock-Daten
    vorher neu.)
 
-2. **Richtigen Tag sicherstellen:** Die Mock-Daten liegen auf **2024-01-01**. Falls die App einen
-   anderen Tag anzeigt, im UI auf 2024-01-01 navigieren.
+2. **Richtigen Tag sicherstellen:** Die Mock-Daten liegen auf **2024-01-01**. Die App startet auf
+   „heute" (leer). Ein Klick auf den Zurück-Pfeil **‹** oben links springt direkt zum nächsten Tag
+   mit Daten — also in einem Klick auf „Montag, 1. Januar 2024". (Die Pfeile navigieren zwischen
+   Tagen-mit-Daten, nicht Kalendertag für Kalendertag.)
 
 3. **computer-use-Zugriff anfordern** für die Workmory-App (Desktop-App, Tier „full"), Fenster nach
    vorn bringen, **Screenshot** der Timeline aufnehmen.
+   - Im Dev-Modus (`npm run dev:mock`) gehört das Fenster dem Prozess **`electron.exe`** — der
+     Zugriff muss auf genau diesen Namen angefordert werden, „Workmory"/„Electron" matchen nicht.
+   - Nicht `open_application` benutzen, um es nach vorn zu holen: das startet eine zweite, leere
+     Electron-Instanz (Default-Splash). Stattdessen das bestehende Fenster direkt anklicken/Alt+Tab.
 
 4. **Sichtbare Blöcke ablesen:** App/Titel, Dauer, Reihenfolge, Inaktiv-Phasen und ungefähre
    Startzeiten. Fokus auf Reihenfolge/Dauer/Titel — nicht auf pixelgenaue Geometrie.
