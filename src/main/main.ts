@@ -39,7 +39,7 @@ function deriveIconColor(img: Electron.NativeImage): string {
   try {
     const { width, height } = img.getSize();
     if (!width || !height) return '#737373';
-    const bmp = img.getBitmap(); // BGRA bytes, length = width * height * 4
+    const bmp = img.toBitmap(); // BGRA bytes, length = width * height * 4
     let r = 0, g = 0, b = 0, wsum = 0;
     for (let i = 0; i < bmp.length; i += 4) {
       const B = bmp[i], G = bmp[i + 1], R = bmp[i + 2], A = bmp[i + 3];
