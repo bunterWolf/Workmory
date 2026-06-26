@@ -42,6 +42,9 @@ activity-data.json
 *.js.map
 *.tsbuildinfo
 
+# Test coverage
+coverage/
+
 # Generated Mock Data
 public/mock-data.json
 

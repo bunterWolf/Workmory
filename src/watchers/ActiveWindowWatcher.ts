@@ -1,5 +1,21 @@
-import activeWin, { Result as ActiveWinResult } from 'active-win';
+import type { Result as ActiveWinResult } from 'active-win';
 import { HeartbeatData } from '../store/ActivityStore';
+
+// active-win v9+ is ESM-only. This file is compiled to CommonJS, so we cannot
+// statically `import` it (a compiled `require()` cannot load an ESM-only
+// package). The `new Function` wrapper produces a genuine dynamic `import()`
+// that TypeScript will not down-level to `require()`. The resulting module
+// promise is cached by Node, so repeated calls are cheap.
+const importActiveWin = new Function(
+  'return import("active-win")'
+) as () => Promise<typeof import('active-win')>;
+let activeWinModule: Promise<typeof import('active-win')> | null = null;
+function loadActiveWin(): Promise<typeof import('active-win')> {
+  if (!activeWinModule) {
+    activeWinModule = importActiveWin();
+  }
+  return activeWinModule;
+}
 
 interface AppWindowState {
   app: string;
@@ -34,8 +50,9 @@ export default class ActiveWindowWatcher {
    */
   private async getActiveWindow(): Promise<AppWindowState | null> {
     try {
-      // Type the result from activeWin
-      const windowInfo: ActiveWinResult | undefined = await activeWin();
+      // Type the result from activeWin (v9 renamed the export to activeWindow)
+      const { activeWindow } = await loadActiveWin();
+      const windowInfo: ActiveWinResult | undefined = await activeWindow();
 
       // Check if activeWin returned a result
       if (!windowInfo || !windowInfo.owner || !windowInfo.title) {
