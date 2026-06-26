@@ -15,6 +15,7 @@ import { SettingsManager } from './SettingsManager';
 export interface AppWindowData {
   app: string;
   title: string;
+  path?: string; // Absolute path to the app executable (for real OS icons)
 }
 
 export interface HeartbeatData {

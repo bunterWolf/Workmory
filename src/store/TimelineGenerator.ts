@@ -240,7 +240,7 @@ export default class TimelineGenerator {
       // Check for Active Application Window
       else if (heartbeat.data.appWindow && heartbeat.data.appWindow.app && heartbeat.data.appWindow.title) {
         activityType = 'appWindow';
-        specificData = { app: heartbeat.data.appWindow.app, title: heartbeat.data.appWindow.title };
+        specificData = { app: heartbeat.data.appWindow.app, title: heartbeat.data.appWindow.title, path: heartbeat.data.appWindow.path };
         activityKey = `app:${specificData.app}:${specificData.title}`;
       }
       // Add other activity types here

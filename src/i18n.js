@@ -11,14 +11,25 @@ const resources = {
       totalTime: "Gesamtzeit",
       activeTime: "Aktive Zeit",
       inactiveTime: "Inaktive Zeit",
+      totalShort: "gesamt",
+      activeShort: "aktiv",
+      inactiveShort: "inaktiv",
+      inactive: "Inaktiv",
+      teamsMeeting: "Teams-Meeting",
+      noActivity: "Keine Aktivität aufgezeichnet",
+      noActivitySub: "Workmory war an diesem Tag nicht aktiv.",
       mockData: "Beispieldaten",
       mockDataMode: "Beispieldaten Modus",
       previousDay: "Vorheriger Tag",
       nextDay: "Nächster Tag",
-      aggregationInterval: "Aggregationsintervall",
+      aggregationInterval: "Intervall",
+      minuteUnit: "Min.",
+      "5min": "5 Min.",
+      "10min": "10 Min.",
+      "15min": "15 Min.",
       pauseTracking: "Aufzeichnung pausieren",
       startTracking: "Aufzeichnung starten",
-      trackingActivities: "Aktivitäten werden aufgezeichnet",
+      trackingActivities: "Aufzeichnung läuft",
       
       // Einstellungen
       settings: "Einstellungen",
@@ -35,6 +46,7 @@ const resources = {
       participateInBeta: "An Beta-Tests teilnehmen",
       betaDescription: "Wenn aktiviert, erhältst du frühzeitig Zugang zu neuen Funktionen, solltest aber mit möglichen Bugs rechnen.",
       loading: "Wird geladen...",
+      version: "Version",
       close: "Schließen",
       fileExistsTitle: "Datei existiert bereits",
       fileExistsMessage: "Am Zielort existiert bereits eine Aktivitätsdatei. Möchtest du diese vorhandene Datei verwenden? Deine aktuellen Daten werden dann nicht übernommen.",
@@ -50,6 +62,8 @@ const resources = {
         today: "Heute",
         yesterday: "Gestern",
         fullDate: "{{date, date}}",
+        weekday: "{{date, weekday}}",
+        dateShort: "{{date, dateShort}}",
         time: "{{time, time}}",
         duration: "{{hours}}h {{minutes}}m"
       }
@@ -63,14 +77,25 @@ const resources = {
       totalTime: "Total Time",
       activeTime: "Active Time",
       inactiveTime: "Inactive Time",
+      totalShort: "total",
+      activeShort: "active",
+      inactiveShort: "inactive",
+      inactive: "Inactive",
+      teamsMeeting: "Teams meeting",
+      noActivity: "No activity recorded",
+      noActivitySub: "Workmory wasn't running on this day.",
       mockData: "Sample Data",
       mockDataMode: "Sample Data Mode",
       previousDay: "Previous Day",
       nextDay: "Next Day",
-      aggregationInterval: "Aggregation Interval",
+      aggregationInterval: "Interval",
+      minuteUnit: "min",
+      "5min": "5 min",
+      "10min": "10 min",
+      "15min": "15 min",
       pauseTracking: "Pause Tracking",
       startTracking: "Start Tracking",
-      trackingActivities: "Recording activities",
+      trackingActivities: "Recording activity",
       
       // Settings
       settings: "Settings",
@@ -87,6 +112,7 @@ const resources = {
       participateInBeta: "Participate in Beta Testing",
       betaDescription: "When enabled, you'll get early access to new features, but might experience bugs.",
       loading: "Loading...",
+      version: "Version",
       close: "Close",
       fileExistsTitle: "File Already Exists",
       fileExistsMessage: "An activity file already exists at the selected location. Do you want to use this existing file? Your current data won't be transferred.",
@@ -102,6 +128,8 @@ const resources = {
         today: "Today",
         yesterday: "Yesterday",
         fullDate: "{{date, date}}",
+        weekday: "{{date, weekday}}",
+        dateShort: "{{date, dateShort}}",
         time: "{{time, time}}",
         duration: "{{hours}}h {{minutes}}m"
       }
@@ -143,6 +171,18 @@ i18next
             minute: '2-digit',
             hour12: lng === 'en'
           }).format(value);
+        }
+        if (format === 'weekday') {
+          return new Intl.DateTimeFormat(lng, {
+            weekday: 'long'
+          }).format(value);
+        }
+        if (format === 'dateShort') {
+          const now = new Date();
+          const opts = value.getFullYear() === now.getFullYear()
+            ? { month: 'long', day: 'numeric' }
+            : { month: 'long', day: 'numeric', year: 'numeric' };
+          return new Intl.DateTimeFormat(lng, opts).format(value);
         }
         return value;
       }

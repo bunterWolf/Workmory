@@ -4,6 +4,7 @@ import { HeartbeatData } from '../store/ActivityStore';
 interface AppWindowState {
   app: string;
   title: string;
+  path?: string;
 }
 
 /**
@@ -49,6 +50,7 @@ export default class ActiveWindowWatcher {
       this.lastActiveWindow = {
         app: windowInfo.owner.name,
         title: windowInfo.title,
+        path: windowInfo.owner.path, // executable path → used to resolve the real OS icon
       };
 
       return this.lastActiveWindow;
