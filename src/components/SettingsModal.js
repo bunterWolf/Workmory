@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ipcRenderer } from 'electron';
+import Icon from './Icons';
 import './SettingsModal.css';
+
+// Reusable toggle switch styled per the design system.
+const Toggle = ({ on, onChange, label }) => (
+  <label className="wmk-toggle-row">
+    <button
+      type="button"
+      className={'wmk-toggle ' + (on ? 'is-on' : '')}
+      onClick={() => onChange(!on)}
+      role="switch"
+      aria-checked={on}
+    />
+    <span>{label}</span>
+  </label>
+);
 
 /**
  * Ein Modal für App-Einstellungen
@@ -19,6 +34,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [pendingPath, setPendingPath] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [appVersion, setAppVersion] = useState('');
 
   // Lade aktuelle Einstellungen
   useEffect(() => {
@@ -29,9 +45,12 @@ const SettingsModal = ({ isOpen, onClose }) => {
         setActivityStorePath(settings.activityStoreDirPath);
         setDisplayPath(settings.activityStoreDirPath || t('defaultPath'));
         setAllowPrerelease(settings.allowPrerelease);
-        
+
         const autoLaunchSettings = await ipcRenderer.invoke('get-auto-launch-settings');
         setAutoLaunchEnabled(autoLaunchSettings.enabled);
+
+        const version = await ipcRenderer.invoke('get-app-version');
+        setAppVersion(version);
       } catch (error) {
         console.error('Fehler beim Laden der Einstellungen:', error);
         setErrorMessage(t('errorLoadingSettings'));
@@ -113,8 +132,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
   };
   
   // Beta-Release-Einstellung ändern
-  const handleToggleBetaReleases = async (e) => {
-    const checked = e.target.checked;
+  const handleToggleBetaReleases = async (checked) => {
     try {
       const result = await ipcRenderer.invoke('update-beta-release-setting', checked);
       if (result.success) {
@@ -129,8 +147,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
   };
 
   // Auto-Start-Einstellung ändern
-  const handleToggleAutoLaunch = async (e) => {
-    const checked = e.target.checked;
+  const handleToggleAutoLaunch = async (checked) => {
     try {
       const result = await ipcRenderer.invoke('update-auto-launch-settings', checked);
       if (result.success) {
@@ -150,108 +167,90 @@ const SettingsModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="settings-modal-backdrop">
-      <div className="settings-modal">
-        <div className="settings-modal-header">
-          <h2>{t('settings')}</h2>
-          <button className="close-button" onClick={onClose}>&times;</button>
+    <div className="wmk-modal-scrim" onClick={onClose}>
+      <div className="wmk-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+        <div className="wmk-modal-head">
+          <h2 className="wm-h2">{t('settings')}</h2>
+          <button className="wmk-ibtn" onClick={onClose} aria-label={t('close')} title={t('close')}>
+            <Icon.close />
+          </button>
         </div>
 
-        <div className="settings-modal-content">
+        <div className="wmk-modal-body">
           {loading ? (
             <div className="loading">{t('loading')}</div>
           ) : (
             <>
               {/* Aktivitätsdatei-Pfad-Einstellung */}
-              <div className="settings-section">
-                <h3>{t('activityStoreLocation')}</h3>
-                <div className="settings-control">
-                  <div className="path-display" title={displayPath}>
-                    {displayPath}
-                  </div>
-                  <div className="path-buttons">
-                    <button onClick={handleChangeActivityStorePath}>
-                      {t('changePath')}
-                    </button>
-                    {activityStorePath !== null && (
-                      <button onClick={handleResetPath}>
-                        {t('resetToDefault')}
-                      </button>
-                    )}
-                  </div>
+              <section className="wmk-section">
+                <h3 className="wm-h3">{t('activityStoreLocation')}</h3>
+                <div className="wmk-path" title={displayPath}>
+                  <Icon.folder />
+                  <span>{displayPath}</span>
                 </div>
-                <p className="settings-description">
-                  {t('activityStoreDescription')}
-                </p>
-              </div>
+                <div className="wmk-path-actions">
+                  <button className="wmk-btn wmk-btn-secondary" onClick={handleChangeActivityStorePath}>
+                    {t('changePath')}
+                  </button>
+                  {activityStorePath !== null && (
+                    <button className="wmk-btn wmk-btn-ghost" onClick={handleResetPath}>
+                      {t('resetToDefault')}
+                    </button>
+                  )}
+                </div>
+                <p className="wmk-section-desc">{t('activityStoreDescription')}</p>
+              </section>
 
               {/* Auto-Start-Einstellung */}
-              <div className="settings-section">
-                <h3>{t('autoLaunch')}</h3>
-                <div className="settings-control">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={autoLaunchEnabled}
-                      onChange={handleToggleAutoLaunch}
-                    />
-                    {t('autoLaunchEnabled')}
-                  </label>
-                </div>
-                <p className="settings-description">
-                  {t('autoLaunchDescription')}
-                </p>
-              </div>
+              <section className="wmk-section">
+                <h3 className="wm-h3">{t('autoLaunch')}</h3>
+                <Toggle on={autoLaunchEnabled} onChange={handleToggleAutoLaunch} label={t('autoLaunchEnabled')} />
+                <p className="wmk-section-desc">{t('autoLaunchDescription')}</p>
+              </section>
 
               {/* Beta-Releases-Einstellung */}
-              <div className="settings-section">
-                <h3>{t('betaReleases')}</h3>
-                <div className="settings-control">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={allowPrerelease}
-                      onChange={handleToggleBetaReleases}
-                    />
-                    {t('participateInBeta')}
-                  </label>
-                </div>
-                <p className="settings-description">
-                  {t('betaDescription')}
-                </p>
-              </div>
+              <section className="wmk-section">
+                <h3 className="wm-h3">{t('betaReleases')}</h3>
+                <Toggle on={allowPrerelease} onChange={handleToggleBetaReleases} label={t('participateInBeta')} />
+                <p className="wmk-section-desc">{t('betaDescription')}</p>
+              </section>
 
               {/* Fehlermeldung */}
               {errorMessage && (
-                <div className="error-message">
-                  {errorMessage}
-                  <button className="error-close" onClick={clearError}>
-                    &times;
+                <div className="wmk-error">
+                  <span>{errorMessage}</span>
+                  <button className="wmk-error-close" onClick={clearError} aria-label={t('close')}>
+                    <Icon.close size={14} />
                   </button>
+                </div>
+              )}
+
+              {/* App-Version */}
+              {appVersion && (
+                <div className="wmk-version wm-meta wm-tnum">
+                  {t('version')} {appVersion}
                 </div>
               )}
             </>
           )}
         </div>
-
-        <div className="settings-modal-footer">
-          <button onClick={onClose}>{t('close')}</button>
-        </div>
       </div>
 
       {/* Bestätigungsdialog für existierende Datei */}
       {confirmDialogOpen && (
-        <div className="confirm-dialog-backdrop">
-          <div className="confirm-dialog">
-            <h3>{t('fileExistsTitle')}</h3>
-            <p>{t('fileExistsMessage', { path: pendingPath })}</p>
-            <div className="confirm-dialog-buttons">
-              <button onClick={handleUseExistingFile}>
-                {t('useExistingFile')}
-              </button>
-              <button onClick={handleCancelConfirmDialog}>
-                {t('cancel')}
-              </button>
+        <div className="wmk-modal-scrim" onClick={handleCancelConfirmDialog}>
+          <div className="wmk-modal wmk-modal-confirm" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <div className="wmk-modal-body">
+              <h3 className="wm-h3" style={{ marginBottom: 8 }}>{t('fileExistsTitle')}</h3>
+              <p className="wmk-section-desc" style={{ marginBottom: 16 }}>{t('fileExistsMessage', { path: pendingPath })}</p>
+              <div className="wmk-path-actions">
+                <button className="wmk-btn wmk-btn-secondary" onClick={handleUseExistingFile}>
+                  {t('useExistingFile')}
+                </button>
+                <button className="wmk-btn wmk-btn-ghost" onClick={handleCancelConfirmDialog}>
+                  {t('cancel')}
+                </button>
+              </div>
             </div>
           </div>
         </div>

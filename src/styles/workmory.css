@@ -1,0 +1,554 @@
+/* Workmory Desktop — UI Kit styles */
+
+.wmk-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-1);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----- Header ----- */
+.wmk-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 28px 12px;
+  background: transparent;
+  flex: none;
+}
+.wmk-date-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wmk-arrows { display: flex; align-items: center; gap: 2px; }
+.wmk-date {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+.wmk-date-main { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; color: var(--fg-1); white-space: nowrap; }
+.wmk-date-sub  { font-size: 13px; color: var(--fg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.wmk-controls { display: flex; align-items: center; gap: 10px; }
+
+.wmk-ibtn {
+  width: 36px; height: 36px; border-radius: 999px;
+  background: transparent; border: 0; color: var(--fg-1); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background var(--dur-fast) var(--ease-standard), opacity var(--dur-fast);
+}
+.wmk-ibtn:hover:not(:disabled) { background: var(--bg-2); }
+.wmk-ibtn:active:not(:disabled) { background: var(--bg-3); }
+.wmk-ibtn:disabled { opacity: .35; cursor: not-allowed; }
+
+.wmk-trackbtn {
+  font-family: inherit; font-size: 14px; font-weight: 500;
+  border-radius: 999px; padding: 9px 16px;
+  cursor: pointer;
+  /* Both labels share one grid cell, so the button always sizes to the wider
+     one ("recording" + dot). The paused label inherits that width — in any
+     language, no hardcoded width needed. */
+  display: inline-grid;
+  align-items: center; justify-items: center;
+  transition: background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard);
+  line-height: 1;
+}
+.wmk-trackbtn-face {
+  grid-area: 1 / 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  white-space: nowrap;
+}
+.wmk-trackbtn-face.is-hidden { visibility: hidden; } /* keeps its footprint */
+
+.wmk-trackbtn.is-on  { background: #0a0a0a; color: #fff; border: 1px solid #0a0a0a; }
+.wmk-trackbtn.is-on:hover  { background: #1f1f1f; }
+.wmk-trackbtn.is-on:active { transform: scale(.98); }
+.wmk-trackbtn.is-off { background: #fff; color: var(--fg-1); border: 1px solid var(--border-2); }
+.wmk-trackbtn.is-off:hover  { background: var(--bg-2); }
+.wmk-trackbtn.is-off:active { background: var(--bg-3); }
+
+.wmk-rec {
+  width: 8px; height: 8px; border-radius: 999px; background: var(--wm-rec);
+  flex: none;
+  animation: wmk-pulse 2s infinite;
+}
+@keyframes wmk-pulse { 0%,100% { opacity: .65; } 50% { opacity: 1; } }
+
+/* ----- Dropdown ----- */
+.wmk-dd { position: relative; }
+.wmk-dd-btn {
+  font-family: inherit; font-size: 14px; font-weight: 500; line-height: 1;
+  background: transparent; border: 0; color: var(--fg-2);
+  border-radius: 999px; padding: 8px 8px 8px 10px;
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast);
+}
+.wmk-dd-btn:hover { background: var(--bg-2); color: var(--fg-1); }
+.wmk-dd-btn > svg { color: var(--fg-4); }
+
+.wmk-dd-scrim { position: fixed; inset: 0; z-index: 30; }
+.wmk-dd-menu {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  min-width: 140px; background: #fff;
+  border: 1px solid var(--border-1); border-radius: 10px;
+  box-shadow: var(--shadow-2);
+  padding: 4px; margin: 0; list-style: none;
+  z-index: 40;
+}
+.wmk-dd-item {
+  width: 100%; text-align: left;
+  background: transparent; border: 0; color: var(--fg-1);
+  font: inherit; font-size: 14px;
+  padding: 8px 12px; border-radius: 6px; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.wmk-dd-item:hover { background: var(--bg-2); }
+.wmk-dd-item.is-active { font-weight: 600; }
+.wmk-dd-item.is-active::after { content: ""; width: 6px; height: 6px; border-radius: 999px; background: #0a0a0a; }
+
+/* ----- Slider Flyout ----- */
+.wmk-slider-flyout {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  width: 216px;
+  background: #fff;
+  border: 1px solid var(--border-1); border-radius: 10px;
+  box-shadow: var(--shadow-2);
+  padding: 14px 16px 12px;
+  z-index: 40;
+}
+.wmk-slider-flyout-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.wmk-slider-flyout-lbl {
+  font-size: 12px; font-weight: 500; color: var(--fg-3);
+}
+.wmk-slider-flyout-val {
+  font-size: 14px; font-weight: 600; color: var(--fg-1);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Range input — custom track + thumb */
+.wmk-slider-input {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px;
+  border-radius: 999px; outline: none; border: 0;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    #0a0a0a var(--wmk-pct, 0%),
+    #e8e8e8 var(--wmk-pct, 0%)
+  );
+}
+.wmk-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px; border-radius: 999px;
+  background: #fff;
+  border: 2px solid #0a0a0a;
+  box-shadow: 0 1px 4px rgba(10,10,10,.18);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard);
+}
+.wmk-slider-input::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(10,10,10,.22);
+}
+.wmk-slider-input::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+}
+.wmk-slider-input::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 999px;
+  background: #fff; border: 2px solid #0a0a0a;
+  box-shadow: 0 1px 4px rgba(10,10,10,.18);
+  cursor: pointer;
+}
+.wmk-slider-input::-moz-range-track {
+  height: 4px; border-radius: 999px; background: #e8e8e8;
+}
+.wmk-slider-input:focus-visible {
+  outline: 2px solid #0a0a0a; outline-offset: 3px; border-radius: 4px;
+}
+
+.wmk-slider-marks {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 10px;
+}
+.wmk-slider-mark {
+  font-size: 11px; color: var(--fg-4);
+  cursor: pointer;
+  transition: color var(--dur-fast);
+}
+.wmk-slider-mark:hover { color: var(--fg-2); }
+.wmk-slider-mark.is-active { color: var(--fg-1); font-weight: 600; }
+
+/* ----- Main area ----- */
+.wmk-main { flex: 1; min-height: 0; overflow: auto; padding: 12px 28px 28px; }
+
+/* ----- Timeline ----- */
+.wmk-tl { display: grid; grid-template-columns: 72px 1fr; max-width: 820px; margin: 0 auto; }
+.wmk-tl-gutter { position: relative; padding-right: 12px; }
+.wmk-tl-hr {
+  display: flex; justify-content: flex-end; align-items: flex-start; gap: 10px;
+  padding-top: 2px;
+  font-size: 12px; font-weight: 500; color: var(--fg-3);
+  letter-spacing: 0.02em;
+  box-sizing: border-box;
+}
+/* Dot marker at the junction between gutter and lane */
+.wmk-tl-hr::after {
+  content: "";
+  width: 5px; height: 5px; border-radius: 999px;
+  background: var(--border-2);
+  flex: none;
+  margin-top: 5px;
+  margin-right: -3px;
+}
+.wmk-tl-lane { position: relative; }
+/* Hour ticks — very faint, just enough to carry the eye */
+.wmk-tl-tick { position: absolute; left: 0; right: 0; border-top: 1px solid var(--border-1); opacity: 0.5; }
+.wmk-tl-tick:first-child { border-top: 0; }
+.wmk-tl-events { position: absolute; inset: 0; padding: 0 16px; }
+
+/* Every event block uses one consistent single-row layout and type scale,
+   regardless of its height — only the block's height varies. */
+.wmk-ev {
+  position: absolute; left: 16px; right: 16px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  padding: 4px 12px;
+  display: grid; grid-template-columns: 1fr auto; gap: 12px;
+  align-items: center;
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+  cursor: default;
+  line-height: 1.2;
+}
+.wmk-ev-l { min-width: 0; display: flex; align-items: center; gap: 8px; }
+.wmk-ev-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+  min-width: 0;
+}
+.wmk-ev-ttl-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.wmk-ev-icon { width: 14px; height: 14px; border-radius: 3px; flex: none; }
+.wmk-ev-dur { font-size: 13px; font-weight: 500; opacity: .9; white-space: nowrap; }
+
+.wmk-ev-inactive {
+  background: var(--bg-2); color: var(--fg-2);
+  box-shadow: var(--shadow-1);
+}
+
+/* Tracking block — conic-gradient ring orbiting at 3.8s */
+@property --wmk-ring-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.wmk-ev-tracking {
+  background: #fff; color: var(--fg-1);
+  box-shadow: var(--shadow-1);
+  overflow: visible;
+  isolation: isolate;
+}
+.wmk-ev-tracking::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 11.5px;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--wmk-ring-angle),
+    transparent 0deg,
+    rgba(239,68,68,.9) 60deg,
+    transparent 150deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: wmk-ring-spin 3.8s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+@keyframes wmk-ring-spin {
+  to { --wmk-ring-angle: 360deg; }
+}
+
+/* ----- Footer ----- */
+.wmk-footer {
+  flex: none;
+  border-top: 1px solid var(--border-1);
+  padding: 10px 28px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.wmk-footer-summary {
+  font-size: 12px;
+  color: var(--fg-3);
+  letter-spacing: 0.01em;
+}
+.wmk-footer-settings {
+  background: transparent; border: 0; padding: 4px; cursor: pointer;
+  color: var(--fg-4);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  transition: color var(--dur-fast), background var(--dur-fast);
+  flex: none;
+}
+.wmk-footer-settings:hover { color: var(--fg-2); background: var(--bg-2); }
+
+/* ----- Modal ----- */
+.wmk-modal-scrim {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(10,10,10,.48);
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px;
+}
+.wmk-modal {
+  width: 100%; max-width: 560px;
+  background: #fff; border-radius: 16px;
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+  max-height: 85vh; display: flex; flex-direction: column;
+}
+.wmk-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-1);
+  flex: none;
+}
+.wmk-modal-body { padding: 8px 24px 24px; overflow-y: auto; }
+
+.wmk-section { padding: 20px 0; border-bottom: 1px solid var(--border-1); display: flex; flex-direction: column; gap: 12px; }
+.wmk-section:last-child { border-bottom: 0; }
+.wmk-section-desc { margin: 0; font-size: 13px; color: var(--fg-3); line-height: 1.5; max-width: 480px; }
+
+.wmk-path {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg-2);
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.wmk-path > svg { color: var(--fg-3); flex: none; }
+.wmk-path-actions { display: flex; gap: 8px; }
+
+.wmk-btn {
+  font-family: inherit; font-size: 14px; font-weight: 500; line-height: 1;
+  border-radius: 999px; padding: 9px 16px; cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-standard);
+}
+.wmk-btn-secondary { background: #fff; border: 1px solid var(--border-2); color: var(--fg-1); }
+.wmk-btn-secondary:hover { background: var(--bg-2); }
+.wmk-btn-ghost { background: transparent; border: 1px solid transparent; color: var(--fg-2); }
+.wmk-btn-ghost:hover { background: var(--bg-2); color: var(--fg-1); }
+
+.wmk-toggle-row { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--fg-1); cursor: pointer; user-select: none; }
+.wmk-toggle {
+  width: 40px; height: 22px; border-radius: 999px;
+  background: var(--border-2); border: 0; padding: 0; cursor: pointer;
+  position: relative; transition: background var(--dur-base) var(--ease-standard);
+}
+.wmk-toggle::after {
+  content: ""; position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px; border-radius: 999px; background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,.2);
+  transition: left var(--dur-base) var(--ease-standard);
+}
+.wmk-toggle.is-on { background: #0a0a0a; }
+.wmk-toggle.is-on::after { left: 20px; }
+
+/* focus */
+.wmk-ibtn:focus-visible, .wmk-trackbtn:focus-visible, .wmk-dd-btn:focus-visible, .wmk-btn:focus-visible, .wmk-toggle:focus-visible {
+  outline: 2px solid #0a0a0a; outline-offset: 2px;
+}
+
+/* ============================================================
+   Window chrome — macOS traffic lights + Windows caption btns
+   ============================================================ */
+
+/* Shared titlebar strip */
+.wc-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+.wc-bar button { -webkit-app-region: no-drag; }
+
+/* ---- macOS ---- */
+.wc-bar-mac {
+  height: 28px;
+  padding: 0 14px;
+}
+.wc-mac-lights {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wc-mac-btn {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 0; padding: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: filter var(--dur-fast);
+  flex: none;
+}
+.wc-mac-btn:active { filter: brightness(.85); }
+.wc-mac-close { background: #FF5F57; box-shadow: 0 0 0 .5px rgba(0,0,0,.15); }
+.wc-mac-min   { background: #FFBD2E; box-shadow: 0 0 0 .5px rgba(0,0,0,.12); }
+.wc-mac-max   { background: #28C840; box-shadow: 0 0 0 .5px rgba(0,0,0,.12); }
+/* Icons hidden until hover on the group */
+.wc-mac-icon { opacity: 0; width: 8px; height: 8px; transition: opacity var(--dur-fast); }
+.wc-mac-lights:hover .wc-mac-icon { opacity: 1; }
+
+/* ---- Windows ---- */
+.wc-bar-win {
+  height: 32px;
+  display: flex;
+  align-items: stretch;
+}
+.wc-win-drag { flex: 1; }
+.wc-win-btns { display: flex; align-items: stretch; }
+.wc-win-btn {
+  width: 46px;
+  background: transparent; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--fg-2);
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+.wc-win-btn:hover { background: var(--bg-2); color: var(--fg-1); }
+.wc-win-close:hover { background: #c42b1c; color: #fff; }
+.wc-win-close:active { background: #c42b1c; opacity: .9; }
+
+/* App-closed overlay */
+.wmk-app-closed {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #f4f4f4;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 12px;
+  animation: wc-fade-in var(--dur-slow) var(--ease-out) both;
+}
+@keyframes wc-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.wmk-app-closed img { width: 40px; height: 40px; opacity: .35; }
+.wmk-app-closed span { font-size: 13px; color: var(--fg-4); }
+
+/* ============================================================
+   App-colored event block — all variants driven off --ev-color
+   ============================================================ */
+.wmk-ev-app {
+  background: color-mix(in srgb, var(--ev-color) 11%, white);
+  color: var(--ev-color);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ev-color) 22%, transparent), var(--shadow-1);
+}
+.wmk-ev-app .wmk-ev-title { color: color-mix(in srgb, var(--ev-color) 90%, #0a0a0a); }
+.wmk-ev-app .wmk-ev-time  { color: color-mix(in srgb, var(--ev-color) 70%, #0a0a0a); opacity: .85; }
+.wmk-ev-app .wmk-ev-dur   { color: color-mix(in srgb, var(--ev-color) 80%, #0a0a0a); }
+
+/* --- Solid variant: fill = brand color, text = white --- */
+.wmk-accent-solid .wmk-ev-app {
+  background: var(--ev-color);
+  color: #fff;
+  box-shadow: var(--shadow-1);
+}
+.wmk-accent-solid .wmk-ev-app .wmk-ev-title,
+.wmk-accent-solid .wmk-ev-app .wmk-ev-time,
+.wmk-accent-solid .wmk-ev-app .wmk-ev-dur { color: #fff; opacity: 1; }
+.wmk-accent-solid .wmk-ev-app .wmk-ev-time { opacity: .78; }
+.wmk-accent-solid .wmk-ev-app .wmk-ev-icon { filter: brightness(0) invert(1); opacity: .92; }
+
+/* --- Mono variant: white card, thin brand-color left rail --- */
+.wmk-accent-mono .wmk-ev-app {
+  background: #fff;
+  color: var(--fg-1);
+  box-shadow: inset 3px 0 0 var(--ev-color), inset 0 0 0 1px var(--border-1), var(--shadow-1);
+  padding-left: 18px;
+}
+.wmk-accent-mono .wmk-ev-app .wmk-ev-title { color: var(--fg-1); }
+.wmk-accent-mono .wmk-ev-app .wmk-ev-time  { color: var(--fg-3); opacity: 1; }
+.wmk-accent-mono .wmk-ev-app .wmk-ev-dur   { color: var(--fg-2); }
+
+/* ============================================================
+   Empty state
+   ============================================================ */
+.wmk-empty {
+  max-width: 420px;
+  margin: 80px auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.wmk-empty-icon {
+  width: 48px; height: 48px;
+  object-fit: contain;
+  opacity: .18;
+  margin-bottom: 16px;
+}
+
+/* ============================================================
+   Tweaks floating panel
+   ============================================================ */
+.wmk-tweaks {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 264px;
+  background: #fff;
+  border: 1px solid var(--border-1);
+  border-radius: 14px;
+  box-shadow: var(--shadow-3);
+  padding: 14px 16px 16px;
+  z-index: 200;
+  font-family: var(--font-sans);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.wmk-tweaks-head {
+  font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: var(--fg-1);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-1);
+  margin: -2px -2px 2px;
+  padding-left: 2px;
+}
+.wmk-tweaks-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.wmk-tweaks-label {
+  font-size: 12px; color: var(--fg-3); font-weight: 500;
+  text-transform: none;
+}
+.wmk-seg {
+  display: inline-flex; align-items: center;
+  background: var(--bg-2);
+  border-radius: 999px;
+  padding: 2px;
+  gap: 0;
+}
+.wmk-seg-btn {
+  font: inherit; font-size: 11px; font-weight: 500;
+  color: var(--fg-3);
+  background: transparent; border: 0; cursor: pointer;
+  padding: 5px 9px; border-radius: 999px;
+  transition: color var(--dur-fast), background var(--dur-fast);
+  text-transform: capitalize;
+}
+.wmk-seg-btn:hover { color: var(--fg-1); }
+.wmk-seg-btn.is-on {
+  background: #fff; color: var(--fg-1);
+  box-shadow: 0 1px 2px rgba(10,10,10,0.08);
+}

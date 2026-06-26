@@ -4,8 +4,11 @@ import Header from './Header';
 import DayOverview from './DayOverview';
 import Footer from './Footer';
 import SettingsModal from './SettingsModal';
+import WindowChrome from './WindowChrome';
 import { ipcRenderer } from 'electron';
 import i18n from '../i18n';
+import '../styles/colors_and_type.css';
+import '../styles/workmory.css';
 import './App.css';
 
 const App = () => {
@@ -196,8 +199,10 @@ const App = () => {
 
   return (
     <I18nextProvider i18n={i18n}>
-      <div className="app">
-        <Header 
+      <div className="wmk-app wmk-accent-tinted">
+        <WindowChrome />
+
+        <Header
           selectedDate={selectedDate}
           availableDates={availableDates}
           onDateChange={handleDateChange}
@@ -206,9 +211,8 @@ const App = () => {
           isMockData={isMockData}
           aggregationInterval={aggregationInterval}
           onIntervalChange={handleIntervalChange}
-          onOpenSettings={() => setSettingsModalOpen(true)}
         />
-        
+
         {/* Update-Benachrichtigung */}
         {updateStatus && updateStatus.status === 'downloaded' && (
           <div className="update-notification">
@@ -216,8 +220,8 @@ const App = () => {
           </div>
         )}
 
-        <main className="main-content">
-          <DayOverview 
+        <main className="wmk-main">
+          <DayOverview
             activityData={activityData}
             isLoading={isLoading}
             formatDuration={formatDuration}
@@ -226,16 +230,17 @@ const App = () => {
             displayedDate={selectedDate}
           />
         </main>
-        
-        <Footer 
+
+        <Footer
           activeTime={summary.activeTime}
           inactiveTime={summary.inactiveTime}
           totalTime={summary.totalTime}
           isMockData={isMockData}
+          onOpenSettings={() => setSettingsModalOpen(true)}
         />
-        
+
         {/* Einstellungen Modal */}
-        <SettingsModal 
+        <SettingsModal
           isOpen={settingsModalOpen}
           onClose={() => setSettingsModalOpen(false)}
         />

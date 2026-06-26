@@ -28,6 +28,35 @@ let mainWindow: BrowserWindow | null = null;
 let activityStore: ActivityStore | null = null;
 let heartbeatManager: HeartbeatManager | null = null;
 
+// ---- App icon resolution (real OS icons for timeline events) ----
+interface AppIconResult { dataUrl: string; color: string; }
+const appIconCache = new Map<string, AppIconResult | null>();
+
+// Derive a representative tint from an icon by averaging its opaque pixels,
+// weighted by saturation so vivid brand colors dominate over neutral pixels.
+// Returns a neutral gray for grayscale/monochrome icons.
+function deriveIconColor(img: Electron.NativeImage): string {
+  try {
+    const { width, height } = img.getSize();
+    if (!width || !height) return '#737373';
+    const bmp = img.getBitmap(); // BGRA bytes, length = width * height * 4
+    let r = 0, g = 0, b = 0, wsum = 0;
+    for (let i = 0; i < bmp.length; i += 4) {
+      const B = bmp[i], G = bmp[i + 1], R = bmp[i + 2], A = bmp[i + 3];
+      if (A < 128) continue;
+      const max = Math.max(R, G, B), min = Math.min(R, G, B);
+      const sat = max === 0 ? 0 : (max - min) / max;
+      const w = sat * sat * (A / 255); // emphasize saturated, opaque pixels
+      r += R * w; g += G * w; b += B * w; wsum += w;
+    }
+    if (wsum < 0.001) return '#737373'; // monochrome icon → neutral gray
+    const toHex = (v: number) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+    return `#${toHex(r / wsum)}${toHex(g / wsum)}${toHex(b / wsum)}`;
+  } catch {
+    return '#737373';
+  }
+}
+
 // Prüfe, ob bereits eine Instanz läuft
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -73,6 +102,8 @@ function createWindow(): void { // Add return type void
     height: 768,
     title: 'Workmory - Automatic time tracking made easy and free' + (useMockData ? ' (Mock Data)' : ''),
     icon: path.join(app.getAppPath(), 'build', 'icon.ico'),
+    frame: false, // Custom window chrome (see WindowChrome component)
+    backgroundColor: '#ffffff',
     webPreferences: {
       nodeIntegration: true, // Consider disabling if possible for security
       contextIsolation: false, // Consider enabling if possible for security
@@ -198,6 +229,45 @@ async function initializeTracking(): Promise<void> { // Add return type Promise<
 // Register IPC handlers
 function registerIpcHandlers(): void { // Add return type void
   console.log("Registering IPC handlers...");
+
+  // Window controls (custom frameless chrome)
+  ipcMain.handle('window-minimize', (): void => {
+    mainWindow?.minimize();
+  });
+  ipcMain.handle('window-maximize', (): boolean => {
+    if (!mainWindow) return false;
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+      return false;
+    }
+    mainWindow.maximize();
+    return true;
+  });
+  ipcMain.handle('window-close', (): void => {
+    mainWindow?.close();
+  });
+
+  // Real OS app icons for timeline events.
+  // Resolves an executable path to { dataUrl, color } where color is the icon's
+  // dominant (most saturated) hue, used to tint the event block. Cached per path.
+  ipcMain.handle('get-app-icon', async (event: IpcMainInvokeEvent, exePath: string): Promise<AppIconResult | null> => {
+    if (!exePath || typeof exePath !== 'string') return null;
+    if (appIconCache.has(exePath)) return appIconCache.get(exePath) ?? null;
+    try {
+      const img = await app.getFileIcon(exePath, { size: 'normal' });
+      if (!img || img.isEmpty()) {
+        appIconCache.set(exePath, null);
+        return null;
+      }
+      const result: AppIconResult = { dataUrl: img.toDataURL(), color: deriveIconColor(img) };
+      appIconCache.set(exePath, result);
+      return result;
+    } catch (err) {
+      console.error('get-app-icon failed for', exePath, err);
+      appIconCache.set(exePath, null);
+      return null;
+    }
+  });
 
   // Get tracking status
   ipcMain.handle('get-tracking-status', (): boolean => {
