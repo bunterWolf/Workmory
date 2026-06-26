@@ -164,6 +164,10 @@ class ActivityStore {
   public isTracking: boolean;
   private currentDayKey: string = '';
   private settingsManager: SettingsManager;
+  private autoSaveTimer: NodeJS.Timeout | null = null;
+
+  /** Fixed autosave interval (5 minutes), independent of the aggregation interval. */
+  private static readonly AUTOSAVE_INTERVAL_MS = 5 * 60 * 1000;
 
   /**
    * Creates an instance of ActivityStore.
@@ -295,12 +299,39 @@ class ActivityStore {
     this.currentDayKey = this.getDateKey(Date.now());
     this.aggregationManager.clearCache(); // Clear cache on start
 
-    // Start scheduler only if not using mock data
+    // Start scheduler and the fixed 5-minute autosave only if not using mock data
     if (!this.options.useMockData) {
         this.scheduler.start();
+        this.startAutoSave();
     }
 
     this.notifyTrackingStatusChange();
+  }
+
+  /**
+   * Starts the fixed 5-minute autosave timer. Saves the current state to disk
+   * at a constant interval, independent of the configured aggregation interval.
+   * Does nothing in mock-data mode or if a timer is already running.
+   */
+  private startAutoSave(): void {
+    if (this.options.useMockData || this.autoSaveTimer) {
+      return;
+    }
+    this.autoSaveTimer = setInterval(() => {
+      this.saveToDisk();
+    }, ActivityStore.AUTOSAVE_INTERVAL_MS);
+    // Don't keep the process alive just for autosaving.
+    this.autoSaveTimer.unref?.();
+  }
+
+  /**
+   * Stops the fixed 5-minute autosave timer if it is running.
+   */
+  private stopAutoSave(): void {
+    if (this.autoSaveTimer) {
+      clearInterval(this.autoSaveTimer);
+      this.autoSaveTimer = null;
+    }
   }
 
   /**
@@ -318,6 +349,7 @@ class ActivityStore {
     console.log('[Store] Pausing tracking...');
     this.isTracking = false;
     this.scheduler.pause(); // Pause the scheduler
+    this.stopAutoSave(); // Stop the fixed 5-minute autosave
 
     // Save state only if not using mock data
     if (!this.options.useMockData) {
@@ -536,6 +568,7 @@ class ActivityStore {
   cleanup(): void {
     console.log("[Store] Cleaning up ActivityStore...");
     this.scheduler.cleanup();
+    this.stopAutoSave();
 
     // Save only if not using mock data
     if (!this.options.useMockData) {

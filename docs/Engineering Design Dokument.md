@@ -80,39 +80,39 @@ Workmory is an Electron-based desktop application designed to track and analyze 
   days: {
     ["YYYY-MM-DD"]: {
       heartbeats: [
-            {
-              timestamp: number,
-			  data: {	
-				teamsMeeting: false | {
-					title: string,
-					status: string
-				}
-				userActivity: "active" | "may_be_inactive" | "inactive",
-				appWindow: {
-					app: string,
-					title: string
-				}
-			  }
+        {
+          timestamp: number,
+          data: {
+            teamsMeeting: false | {
+              title: string,
+              status: string
+            },
+            userActivity: "active" | "may_be_inactive" | "inactive",
+            appWindow: {
+              app: string,
+              title: string
             }
-          ]
-    	,
+          }
+        }
+      ],
       aggregated: {
-		summary: {
-			activeTrackingDuration: number,
-			totalActiveDuration: number,
-			totalInactiveDuration: number,
-			totalMeetingDuration: number
-		},
-		timelineOverview: [ 
-			{
-			timestamp: number,
-			duration: number,
-			type: "appWindow" | "teamsMeeting" | "inactive",
-			data: {
-					...
-				}
-			}
-		]
+        summary: {
+          activeTrackingDuration: number,
+          totalActiveDuration: number,
+          totalInactiveDuration: number,
+          totalMeetingDuration: number,
+          appUsage: { [appName: string]: number } // active duration per app, in ms
+        },
+        timelineOverview: [
+          {
+            timestamp: number,
+            duration: number,
+            type: "appWindow" | "teamsMeeting" | "inactive",
+            data: {
+              ...
+            }
+          }
+        ]
       }
     }
   }
@@ -286,7 +286,7 @@ OS Events -> Watcher -> Heartbeat -> ActivityStore-heartbeats -> ActivityStore-a
 
 ### 4.1 Persistence
 
-- Stored in `app.getPath('userData')/activity-data.json`
+- Stored as a JSON file inside `app.getPath('userData')` (storage location is configurable)
 - JSON with 2-space indentation
 - Autosave every 5 minutes
 - Cleanup after 30 days

@@ -22,8 +22,8 @@ Workmory is an Electron-based desktop application designed to track and analyze 
   - Automatic updates
   - Windows 10 and newer
 
-- **macOS**: DMG installer
-  - Easy drag & drop installation
+- **macOS**: ZIP archive
+  - Unzip and move to Applications
   - Automatic updates
   - macOS 10.15 (Catalina) and newer
 
@@ -31,7 +31,7 @@ Workmory is an Electron-based desktop application designed to track and analyze 
 
 ### Prerequisites
 
-- Node.js (v14+)
+- Node.js (v20+)
 - npm or yarn
 
 ### Setup
@@ -105,8 +105,8 @@ The build process will:
      - Desktop and Start Menu shortcuts
      - Auto-update support
    - macOS:
-     - Universal Binary (x64 + arm64)
-     - DMG installer and ZIP archive
+     - x64 and arm64 builds
+     - ZIP archive
      - Auto-update support
 
 #### Creating a Release
@@ -188,7 +188,3 @@ Data is automatically cleaned up after 30 days to avoid excessive storage usage.
 
 Workmory is designed with privacy in mind:
 - **Local Storage:** All tracked data is stored locally on your computer. No data is sent to external servers.
-
-## License
-
-MIT 
