@@ -142,3 +142,8 @@ These are recommendations, not hard gates — scale them to the size of the chan
   confirm behavior, and `code-review` on the diff.
 - **Touching the aggregation pipeline:** write/adjust tests first, then change code, then confirm the
   full `npm test` suite is green before considering it done.
+- **Touching the aggregation pipeline _or_ the timeline rendering:** after the unit tests pass,
+  also run the visual check in `docs/testing/visual-verification.md` — launch the app with
+  `npm run dev:mock` and verify (via computer-use) that the mock data renders as the timeline
+  described in `docs/testing/mock-data-expected.md`. Report pass/deviation before considering the
+  work done.
