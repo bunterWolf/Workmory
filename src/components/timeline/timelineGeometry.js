@@ -1,12 +1,22 @@
 // Pure geometry helpers for the day timeline (hour height, visible hour range,
-// event position). Extracted unchanged from DayOverview.js and pinned by
-// timelineGeometry.test.js — the timeline feeds billing, so keep behavior stable.
+// event position, half-hour marker). Pinned by timelineGeometry.test.js — the
+// timeline feeds billing, so keep behavior stable. getHourHeight and getHourRange
+// are unchanged from the original DayOverview.js; getEventGeometry follows the
+// Figma rules (1px offset below the hour line, full-duration height).
 
 // Hour height scales inversely with the aggregation interval so that a single
 // interval block always gets at least MIN_BLOCK_HEIGHT px — finer zoom (5 min)
 // makes the hours taller, leaving enough room to display short blocks.
 export const MIN_BLOCK_HEIGHT = 24;
 export const getHourHeight = (intervalMin) => MIN_BLOCK_HEIGHT * (60 / intervalMin);
+
+// Offset of the half-hour marker line from the top of an hour row.
+export const getHalfHourOffset = (hourHeight) => Math.round(hourHeight / 2);
+
+// Events sit 1px below the hour line; the visual gap between adjacent events
+// comes from a 1px border on each event, not from reducing the height.
+export const EVENT_OFFSET_Y = 1;
+export const MIN_EVENT_HEIGHT = 14;
 
 // Determine the hour range to display.
 // events: [{ timestamp, duration }], trackingBlock: { timestamp, duration } | null
@@ -56,7 +66,7 @@ export function getHourRange({ events, trackingBlock, isToday }) {
 export function getEventGeometry(event, minHour, pxPerMin) {
   const start = new Date(event.timestamp);
   const startMinFromMidnight = start.getHours() * 60 + start.getMinutes();
-  const top = (startMinFromMidnight - minHour * 60) * pxPerMin;
-  const height = Math.max(14, (event.duration / 60000) * pxPerMin - 2);
+  const top = (startMinFromMidnight - minHour * 60) * pxPerMin + EVENT_OFFSET_Y;
+  const height = Math.max(MIN_EVENT_HEIGHT, (event.duration / 60000) * pxPerMin);
   return { top, height };
 }

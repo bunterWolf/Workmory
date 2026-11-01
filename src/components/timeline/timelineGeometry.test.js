@@ -1,4 +1,12 @@
-import { MIN_BLOCK_HEIGHT, getHourHeight, getHourRange, getEventGeometry } from './timelineGeometry';
+import {
+  MIN_BLOCK_HEIGHT,
+  EVENT_OFFSET_Y,
+  MIN_EVENT_HEIGHT,
+  getHourHeight,
+  getHalfHourOffset,
+  getHourRange,
+  getEventGeometry,
+} from './timelineGeometry';
 
 // Local-time timestamps: the geometry code uses getHours()/getMinutes(),
 // so the tests must not depend on the machine's timezone.
@@ -80,13 +88,32 @@ describe('getHourRange', () => {
   });
 });
 
-describe('getEventGeometry (current behavior)', () => {
-  it('positions relative to minHour and subtracts 2px from the height', () => {
-    // 09:30 is 90 min after 08:00 -> 90 * 1.6 = 144; 15 min * 1.6 - 2 = 22
-    expect(getEventGeometry(ev(9, 30, 15), 8, 1.6)).toEqual({ top: 144, height: 22 });
+describe('getEventGeometry (Figma rules)', () => {
+  it('exposes the event offset and minimum height', () => {
+    expect(EVENT_OFFSET_Y).toBe(1);
+    expect(MIN_EVENT_HEIGHT).toBe(14);
+  });
+
+  it('sits 1px below the hour line and uses the full duration as height', () => {
+    // 09:30 is 90 min after 08:00 -> 90 * 1.6 = 144, + 1px offset = 145; 15 min * 1.6 = 24
+    expect(getEventGeometry(ev(9, 30, 15), 8, 1.6)).toEqual({ top: 145, height: 24 });
+  });
+
+  it('gives a 5 min block at the 5 min interval the full 24px', () => {
+    // getHourHeight(5) = 288 -> 4.8 px/min; 5 min * 4.8 = 24
+    expect(getEventGeometry(ev(9, 0, 5), 8, 4.8).height).toBe(24);
   });
 
   it('floors the height at 14px for very short events', () => {
     expect(getEventGeometry(ev(9, 30, 1), 8, 1.6).height).toBe(14);
+  });
+});
+
+describe('getHalfHourOffset', () => {
+  it('returns half the hour height, rounded', () => {
+    expect(getHalfHourOffset(144)).toBe(72);
+    expect(getHalfHourOffset(143)).toBe(72);
+    expect(getHalfHourOffset(288)).toBe(144);
+    expect(getHalfHourOffset(96)).toBe(48);
   });
 });
