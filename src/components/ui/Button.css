@@ -1,0 +1,58 @@
+/* Figma: Button 84658:1616 */
+.wm-button {
+  /* Overlay opacities of the Hover/Pressed layers, both filled with --ink-4 */
+  --wm-button-hover-opacity: 0.15;   /* Figma 84734:3056 */
+  --wm-button-pressed-opacity: 0.3;  /* Figma 84734:3051 */
+  --wm-button-radius: 100px;         /* Figma 84658:1616 */
+  --wm-button-label-min-height: 20px; /* Figma 84664:1561 */
+
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--size-s);
+  border: 0;
+  border-radius: var(--wm-button-radius);
+  background: transparent;
+  color: var(--ink);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* State layer sits behind icon and label */
+.wm-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--ink-4);
+  opacity: 0;
+}
+
+.wm-button:hover:not(:disabled)::before {
+  opacity: var(--wm-button-hover-opacity);
+}
+
+.wm-button:active:not(:disabled)::before {
+  opacity: var(--wm-button-pressed-opacity);
+}
+
+.wm-button:disabled {
+  color: var(--ink-4);
+  cursor: default;
+}
+
+.wm-button:focus-visible {
+  outline: 1px solid var(--ink-3);
+  outline-offset: -1px;
+}
+
+.wm-button-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--wm-button-label-min-height);
+  padding: 0 var(--size-xs);
+  white-space: nowrap;
+}

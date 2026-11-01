@@ -1,0 +1,42 @@
+/* Figma: Toggle 84699:3534 */
+.wm-toggle {
+  --wm-toggle-width: 35px;      /* Figma 84699:3534 */
+  --wm-toggle-height: 20px;     /* Figma 84699:3534 */
+  --wm-toggle-padding: 3px;     /* Figma 84699:3534 */
+  --wm-toggle-knob-size: 14px;  /* Figma 84699:3534 */
+  --wm-toggle-offset: 18px;     /* Figma 84699:3534: free space on the side opposite the knob */
+
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: var(--wm-toggle-width);
+  height: var(--wm-toggle-height);
+  padding: var(--wm-toggle-padding);
+  border: 0;
+  border-radius: var(--size-xxl);
+  cursor: pointer;
+}
+
+.wm-toggle-on {
+  background: var(--ink);
+  padding-left: var(--wm-toggle-offset);
+}
+
+.wm-toggle-off {
+  background: var(--ink-4);
+  padding-right: var(--wm-toggle-offset);
+}
+
+.wm-toggle-knob {
+  flex-shrink: 0;
+  width: var(--wm-toggle-knob-size);
+  height: var(--wm-toggle-knob-size);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.wm-toggle:focus-visible {
+  outline: 1px solid var(--ink-3);
+  outline-offset: 2px;
+}

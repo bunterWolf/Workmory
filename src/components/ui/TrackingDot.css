@@ -1,0 +1,50 @@
+/* Figma: Tracking dot 84678:838 */
+.wm-tracking-dot {
+  --wm-dot-box-width: 16px;        /* Figma 84678:838 */
+  --wm-dot-box-height: 20px;       /* Figma 84678:838 */
+  --wm-dot-size: 5px;              /* Figma 84678:838 */
+  --wm-dot-pulse-size: 16px;       /* Figma 84678:838 */
+  --wm-dot-pulse-start-opacity: 0.5; /* Figma 84678:838 */
+  --wm-dot-pulse-duration: 2s;     /* Figma 84678:838 */
+
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--wm-dot-box-width);
+  height: var(--wm-dot-box-height);
+}
+
+.wm-tracking-dot-base,
+.wm-tracking-dot-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--wm-dot-size);
+  height: var(--wm-dot-size);
+  border-radius: 50%;
+  background: var(--tracking);
+  transform: translate(-50%, -50%);
+}
+
+.wm-tracking-dot-pulse {
+  opacity: var(--wm-dot-pulse-start-opacity);
+  animation: tracking-pulse var(--wm-dot-pulse-duration) linear infinite;
+}
+
+@keyframes tracking-pulse {
+  0% {
+    width: var(--wm-dot-size);
+    height: var(--wm-dot-size);
+    opacity: var(--wm-dot-pulse-start-opacity);
+  }
+  50.5% {
+    width: var(--wm-dot-pulse-size);
+    height: var(--wm-dot-pulse-size);
+    opacity: 0;
+  }
+  100% {
+    width: var(--wm-dot-pulse-size);
+    height: var(--wm-dot-pulse-size);
+    opacity: 0;
+  }
+}

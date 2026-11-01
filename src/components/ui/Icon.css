@@ -1,0 +1,10 @@
+/* Figma: icon components (see Icon.js). The SVG acts as an alpha mask over currentColor. */
+.wm-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  background-color: currentColor;
+  mask-image: var(--wm-icon-url);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: 100% 100%;
+}
