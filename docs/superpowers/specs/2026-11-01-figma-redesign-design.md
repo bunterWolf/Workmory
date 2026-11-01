@@ -41,7 +41,7 @@ src/styles/
   tokens.css         Figma-Variablen 1:1 (Light in :root, Dark per prefers-color-scheme)
   typography.css     Figma-Textstile als Klassen
   base.css           Reset, body, @font-face Inter
-  fonts/             Inter Medium (500) + Semi Bold (600), woff2, lokal eingebunden
+                     (Inter 500/600 über das npm-Paket @fontsource/inter, gebündelt von webpack)
 src/components/
   App.js             Shell: Ansichtswechsel Day View ↔ Settings, Datenladen (wie heute)
   window/            WindowTitleBar.js/.css
@@ -49,7 +49,7 @@ src/components/
   timeline/          Timeline, TimelineHourGrid, TimelineEvent, timelineGeometry.js (+ .test.js),
                      useAppIcon.js
   footer/            Footer, DaySummary
-  settings/          SettingsView, SettingsToolbar
+  settings/          SettingsView, SettingRow, StoreLocationSetting
   ui/                Button, Toggle, Icon
 src/assets/icons/    SVGs aus Figma (arrow_back, arrow_forward, arrow_drop_down, more_horiz_20,
                      pause_circle, tracking)
@@ -57,8 +57,8 @@ docs/design/figma-map.md   Figma-Node → Datei/Klasse/Token, plus Update-Checkl
 ```
 
 **Inter wird lokal mitgeliefert.** Bisher steht Inter nur im Font-Stack, ist aber nicht installiert;
-Windows rendert deshalb Segoe UI. Eingebunden wird die Schrift über eine Datei im Repo, ohne CDN,
-damit die App local-only bleibt. Die Segoe Fluent Icons der Titelleiste kommen vom System (Windows).
+Windows rendert deshalb Segoe UI. Eingebunden wird die Schrift über `@fontsource/inter`; webpack
+bündelt die woff2-Dateien in die App. Es gibt kein CDN, die App bleibt local-only. Die Segoe Fluent Icons der Titelleiste kommen vom System (Windows).
 
 ## 4. Tokens (`tokens.css`)
 
@@ -138,7 +138,7 @@ inneren Abstände stehen in `Timeline.css`.
 |---|---|---|
 | `--tl-pad-y` | 30 px | Scroll-Container `2066:772`, Padding oben/unten |
 | `--tl-lane-left` | 76 px | Event-Spalte `2067:795`, links |
-| `--tl-lane-right` | 24 px | Event-Spalte `2067:795`, rechts |
+| `--tl-lane-right` | 24 px | Event-Spalte `2067:795`, rechts, gemessen ab Fensterrand. Im CSS wird die Scrollbar-Breite abgezogen (`scrollbar-gutter: stable`), weil die native Spur Platz belegt. |
 | `--tl-event-offset-y` | 1 px | Event-Spalte `2067:795`, top |
 | `--tl-label-inset` | 23 px | Label-Box `84783:3210`, Padding links |
 | `--tl-label-gap` | 6 px | Label-Box `84783:3210`, Padding oben (Linie → Text) |
@@ -204,15 +204,10 @@ inneren Abstände stehen in `Timeline.css`.
 ### 6.3 Textfarbe
 
 Die Textfarbe entsteht wie in Figma: App-Farbe, darüber `--event-ink-mix` normal überblendet.
-Umsetzung in CSS mit Relative Color Syntax. Die App-Farbe wird pro Event als RGB-Kanäle gesetzt
-(`--app-r/g/b`), die Mischfarbe kommt direkt aus dem Token:
-
-```css
-color: rgb(from var(--event-ink-mix)
-  calc(r * alpha + var(--app-r) * (1 - alpha))
-  calc(g * alpha + var(--app-g) * (1 - alpha))
-  calc(b * alpha + var(--app-b) * (1 - alpha)));
-```
+Umsetzung als getestete JS-Funktion `blendOver(appColor, inkMix)` in `timeline/eventColors.js`. Der
+Token-Wert wird zur Laufzeit per `getComputedStyle` aus `tokens.css` gelesen und bei einem
+Theme-Wechsel neu berechnet. Eine reine CSS-Formel kann die Fallback-Farbe `--ink-3` nicht mit dem
+Token mischen, deshalb JS.
 
 **Prüfwerte aus Figma:** Teams #4750cb ergibt #2b307a (Light) und #9196e0 (Dark). Chrome #1a73e8
 ergibt #10458b (Light) und #76abf1 (Dark).
@@ -269,13 +264,13 @@ Im Dark Mode werden die Streifen dadurch automatisch hell. Für die Schraffur en
 
 ### 7.3 Tracking-Titel: Datenfluss (neu, nur lesend)
 
-- **Main-Prozess:** Ein neuer IPC-Handler liefert App-Name und Fenstertitel des **letzten
-  gespeicherten Heartbeats** für heute, oder `null`. Es wird **nichts** geschrieben, aggregiert oder
-  geändert.
-- **Renderer:** fragt den Wert minütlich zusammen mit dem Block-Update ab bzw. bei jedem Daten-Update.
-  Bei `null` erscheint der Standardtext.
-- Der genaue Kanal (Pull per `invoke` oder Push-Event) wird im Plan anhand von `ActivityIpc.ts`
-  festgelegt.
+- **Main-Prozess:** `ActivityStore.getLatestAppWindow()` liefert App-Name und Fenstertitel des
+  **letzten heutigen Heartbeats mit `appWindow`**, sonst `null`. Es wird **nichts** geschrieben,
+  aggregiert oder geändert. Der IPC-Handler `get-current-activity` gibt diesen Wert zurück.
+  `addHeartbeat` sendet danach das Ereignis `heartbeat-added` ohne Daten. Nötig ist das, weil
+  `activity-data-updated` nur am Intervallende kommt.
+- **Renderer:** holt den Wert beim Öffnen und bei jedem `heartbeat-added` und formatiert ihn als
+  „App · Titel“ (bei leerem Titel nur „App“). Bei `null` erscheint der Standardtext.
 
 ### 7.4 Footer (`2005:845`)
 
@@ -295,7 +290,11 @@ Im Dark Mode werden die Streifen dadurch automatisch hell. Für die Schraffur en
   - Autostart: Toggle, Titel und Beschreibung (`--ink` / `--ink-2`)
   - Beta-Releases: Toggle, Titel und Beschreibung
   - **Auto-Delete: entfällt in diesem Redesign** (eigenes Feature, siehe §10)
-  - Unten der Link „www.appname.io“ als Platzhalter (`--ink-2`), damit er nicht vergessen wird
+  - **Speicherort der Aktivitätsdatei** (ändern, zurücksetzen, vorhandene Datei übernehmen) bleibt
+    erhalten, im Zeilenmuster der Figma-Settings; die Bestätigung erscheint inline statt als zweites
+    Modal. Figma wird später nachgezogen.
+  - Unten der Link „www.appname.io“ als Platzhalter (`--ink-2`), damit er nicht vergessen wird, plus
+    die App-Version
 - **Toggle** (`84699:3534`): 35 × 20, Radius `--size-xxl`, Padding 3 px, Knopf 14 px in `--surface`.
   An: Hintergrund `--ink`, Knopf rechts. Aus: Hintergrund `--ink-4`, Knopf links.
 - Die bestehenden IPC-Aufrufe (`get-auto-launch-settings`, `update-beta-release-setting` usw.) und
