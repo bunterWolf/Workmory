@@ -23,7 +23,12 @@ module.exports = {
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
 
   // Verzeichnisse für Modultransformationen
-  transform: {},
+  transform: {
+    '^.+\\.tsx?$': 'ts-jest',
+    '^.+\\.jsx?$': ['babel-jest', {
+      presets: [['@babel/preset-env', { targets: { node: 'current' } }], '@babel/preset-react'],
+    }],
+  },
 
   // Zeige Details zu jedem Test
   verbose: true
