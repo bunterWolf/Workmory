@@ -9,6 +9,9 @@ import { ipcRenderer } from 'electron';
 import i18n from '../i18n';
 import '../styles/colors_and_type.css';
 import '../styles/workmory.css';
+import '../styles/tokens.css';
+import '../styles/typography.css';
+import '../styles/base.css';
 import './App.css';
 
 const App = () => {

@@ -1,24 +1,5 @@
 /* App.css — global glue. Design tokens live in src/styles/colors_and_type.css,
-   component/layout styles in src/styles/workmory.css. */
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html, body, #app {
-  height: 100%;
-}
-
-body {
-  font-family: var(--font-sans);
-  color: var(--fg-1);
-  background: var(--bg-1);
-  line-height: var(--lh-normal);
-  -webkit-font-smoothing: antialiased;
-  overflow: hidden;
-}
+   component/layout styles in src/styles/workmory.css; reset and body in src/styles/base.css. */
 
 /* The React root fills the frameless window. */
 #app {

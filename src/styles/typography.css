@@ -1,0 +1,39 @@
+/* Figma text styles (see docs/design/figma-map.md).
+   text-box trims the half-leading above cap height / below baseline, as in Figma. */
+
+.text-m-primary,
+.text-m-default,
+.text-xl-default {
+  font-family: "Inter", system-ui, sans-serif;
+  letter-spacing: 0;
+  text-box: trim-both cap alphabetic;
+}
+
+/* Figma style "M/Primary" */
+.text-m-primary {
+  font-size: var(--size-m);
+  font-weight: 500;
+  line-height: 18px;
+}
+
+/* Figma style "M/Default" */
+.text-m-default {
+  font-size: var(--size-m);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Figma style "XL/Default" */
+.text-xl-default {
+  font-size: var(--size-xl);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.08px;
+}
+
+/* Tabular figures, e.g. for durations and times */
+.text-m-primary.tnum,
+.text-m-default.tnum,
+.text-xl-default.tnum {
+  font-variant-numeric: tabular-nums;
+}

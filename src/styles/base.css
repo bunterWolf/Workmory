@@ -1,0 +1,22 @@
+/* Base layer: bundled Inter, reset, page background. Loaded after tokens.css. */
+
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #app {
+  height: 100%;
+}
+
+body {
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
