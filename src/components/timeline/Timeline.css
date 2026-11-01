@@ -1,0 +1,129 @@
+/* Figma: Container 2066:772 (scroll container), Content 2067:795 (event lane) */
+.wm-timeline {
+  /* Layout constants from spec §5.3 */
+  --tl-pad-y: 30px;                /* Figma 2066:772, padding top/bottom */
+  --tl-lane-left: 76px;            /* Figma 2067:795, left */
+  --tl-lane-right: 24px;           /* Figma 2067:795, right, measured from the window edge */
+  /* --tl-event-offset-y (1px, Figma 2067:795 top) lives in JS: EVENT_OFFSET_Y in timelineGeometry.js */
+  --tl-label-inset: 23px;          /* Figma 84783:3210, padding left */
+  --tl-label-gap: 6px;             /* Figma 84783:3210, padding top (line → text) */
+  --tl-label-pad-right: 12px;      /* Figma 84783:3209, padding right */
+  --tl-half-marker-left: 49px;     /* Figma 84783:3212, padding left */
+  --tl-half-marker-width: 11px;    /* Figma 84783:3213 */
+  --tl-scrollbar-width: 14px;      /* Figma 84766:1347 */
+  --tl-scrollbar-inset: 5px;       /* Figma 84766:1347, padding */
+  --tl-scrollbar-thumb: 4px;       /* Figma 84769:1359 (= width − 2 × inset) */
+  --tl-scrollbar-opacity: 0.36;    /* Figma 84769:1359 */
+
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  background: var(--surface);
+  padding: var(--tl-pad-y) 0;
+}
+
+.wm-timeline-content {
+  position: relative;
+}
+
+/* ----- Scrollbar (spec §5.6) ----- */
+.wm-timeline::-webkit-scrollbar {
+  width: var(--tl-scrollbar-width);
+}
+.wm-timeline::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: var(--tl-scrollbar-inset);
+}
+/* The transparent border leaves a --tl-scrollbar-thumb wide visible thumb */
+.wm-timeline::-webkit-scrollbar-thumb {
+  border: var(--tl-scrollbar-inset) solid transparent;
+  background-clip: padding-box;
+  background-color: color-mix(in srgb, var(--ink-4) calc(var(--tl-scrollbar-opacity) * 100%), transparent);
+  border-radius: var(--size-xxl);
+}
+
+/* ----- Hour grid (spec §5.4) ----- */
+.wm-timeline-hour {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--hour-height);
+  display: flex;
+  align-items: flex-start;
+  padding-right: var(--tl-label-pad-right);
+  pointer-events: none;
+}
+
+/* The hour line is the label box's top border, so it only spans inset + text. */
+.wm-timeline-hour-label {
+  border-top: 1px solid var(--line-3);
+  padding: var(--tl-label-gap) 0 var(--tl-label-gap) var(--tl-label-inset);
+  color: var(--ink-3);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.wm-timeline-half-marker {
+  position: absolute;
+  left: var(--tl-half-marker-left);
+  width: var(--tl-half-marker-width);
+  border-top: 1px solid var(--line-3);
+  pointer-events: none;
+}
+
+/* ----- Event lane ----- */
+/* The native scrollbar gutter sits outside the content box, so subtract it
+   to keep the lane --tl-lane-right away from the window edge. */
+.wm-timeline-lane {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--tl-lane-left);
+  right: calc(var(--tl-lane-right) - var(--tl-scrollbar-width));
+}
+
+/* ----- Loading and empty state ----- */
+.wm-timeline-loading {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  color: var(--ink-3);
+}
+
+.wm-timeline-empty {
+  /* Carried over from the previous empty state; no Figma node */
+  --tl-empty-offset-top: 80px;
+  --tl-empty-icon-size: 48px;
+  --tl-empty-icon-opacity: 0.18;
+
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--size-s);
+  padding: var(--tl-empty-offset-top) var(--size-xxl) 0;
+  background: var(--surface);
+  text-align: center;
+}
+
+.wm-timeline-empty-icon {
+  width: var(--tl-empty-icon-size);
+  height: var(--tl-empty-icon-size);
+  object-fit: contain;
+  opacity: var(--tl-empty-icon-opacity);
+  margin-bottom: var(--size-l);
+}
+
+.wm-timeline-empty-title {
+  color: var(--ink);
+}
+
+.wm-timeline-empty-sub {
+  color: var(--ink-3);
+}

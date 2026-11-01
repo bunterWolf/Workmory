@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import Header from './Header';
-import DayOverview from './DayOverview';
+import Timeline from './timeline/Timeline';
 import Footer from './Footer';
 import SettingsModal from './SettingsModal';
 import WindowChrome from './WindowChrome';
@@ -202,7 +202,7 @@ const App = () => {
 
   return (
     <I18nextProvider i18n={i18n}>
-      <div className="wmk-app wmk-accent-tinted">
+      <div className="wmk-app">
         <WindowChrome />
 
         <Header
@@ -223,16 +223,15 @@ const App = () => {
           </div>
         )}
 
-        <main className="wmk-main">
-          <DayOverview
-            activityData={activityData}
-            isLoading={isLoading}
-            formatDuration={formatDuration}
-            aggregationInterval={aggregationInterval}
-            isTracking={isTracking}
-            displayedDate={selectedDate}
-          />
-        </main>
+        <Timeline
+          activityData={activityData}
+          isLoading={isLoading}
+          formatDuration={formatDuration}
+          aggregationInterval={aggregationInterval}
+          isTracking={isTracking}
+          displayedDate={selectedDate}
+          currentActivityTitle={null}
+        />
 
         <Footer
           activeTime={summary.activeTime}

@@ -1,0 +1,100 @@
+/* Figma: .Event-Master 2007:199 (variants: Inactive 84653:1247, Tracking 84722:2213) */
+.wm-timeline-event {
+  --tl-event-header-max-height: 32px;  /* Figma 2007:151 */
+  --tl-event-title-gap: 6px;           /* Figma 2007:152 */
+  --tl-event-tracking-border: 2px;     /* Figma 84722:2213, inner stroke */
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  /* 1px --surface border: the visible gap between adjacent events (spec §5.5) */
+  border: 1px solid var(--surface);
+  border-radius: var(--size-m);
+  background: var(--event-background);
+  overflow: clip;
+  /* The overlay layer may only blend with this event's own background */
+  isolation: isolate;
+  cursor: default;
+}
+
+.wm-timeline-event-inner {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--event-background);
+  border-radius: var(--size-m);
+}
+
+.wm-timeline-event-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--size-m);
+  background: var(--app-color);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* Header row. The --size-m vertical padding of Figma's 32px row is expressed as
+   centered content inside max-height 32px: identical at 32px, and it keeps the
+   content vertically centered when short blocks shrink the row (spec §6.1),
+   which a real padding (min. 24px) would not. */
+.wm-timeline-event-header {
+  position: relative;
+  flex: 1 0 0;
+  min-height: 0;
+  max-height: var(--tl-event-header-max-height);
+  display: flex;
+  align-items: center;
+  gap: var(--size-m);
+  padding: 0 var(--size-l);
+}
+
+.wm-timeline-event-title-group {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--tl-event-title-gap);
+}
+
+.wm-timeline-event-icon {
+  flex-shrink: 0;
+  width: var(--app-icon-size);
+  height: var(--app-icon-size);
+  object-fit: contain;
+}
+
+.wm-timeline-event-title {
+  flex: 1;
+  min-width: 0;
+  /* Clip horizontally only: the text box is trimmed to cap height, so a
+     vertical clip would cut descenders and accents. */
+  overflow-x: clip;
+  overflow-y: visible;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wm-timeline-event-duration {
+  flex-shrink: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ----- Variants (spec §6.2) ----- */
+/* Inactive: hatch follows in Task 13 */
+.wm-timeline-event--inactive {
+  background: var(--surface);
+  color: var(--ink-2);
+}
+
+.wm-timeline-event--tracking {
+  background: var(--surface);
+  color: var(--ink-3);
+}
+.wm-timeline-event--tracking .wm-timeline-event-inner {
+  border: var(--tl-event-tracking-border) solid var(--line-tracking);
+}
