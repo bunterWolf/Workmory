@@ -16,9 +16,6 @@ module.exports = {
   testMatch: [
     '**/*.test.(ts|js)',
   ],
-  // transform: {
-  //   '^.+\\.(ts|tsx)?$': 'ts-jest',
-  // },
   // Dateien, die Jest ignorieren soll
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
 

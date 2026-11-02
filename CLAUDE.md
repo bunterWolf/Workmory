@@ -40,6 +40,7 @@ one before making related changes, and **keep it in sync** when behavior changes
 | Stable release process | `docs/RELEASE-PROZESS.md` |
 | Beta release process | `docs/BETA-RELEASE-PROZESS.md` |
 | Coding pattern preferences (original) | `.cursor/rules/coding-pattern-preferences.mdc` |
+| UI: Figma node/variable → file/class/token mapping, Figma update checklist | `docs/design/figma-map.md` |
 
 ## Architecture at a glance
 
@@ -58,8 +59,8 @@ Main process / renderer process architecture connected via Electron IPC.
 | `src/watchers/ActiveWindowWatcher.ts` | Current active window/app (via `active-win`) |
 | `src/watchers/InactivityWatcher.ts` | `active` / `may_be_inactive` / `inactive` based on input since last heartbeats |
 | `src/store/ActivityPersistence.ts` | JSON persistence in `app.getPath('userData')` |
-| `src/store/ActivityIpc.ts` | IPC bridge between store and renderer |
-| `src/components/*.js`, `src/renderer/` | React UI (timeline, header, footer, settings) |
+| `src/store/ActivityIpc.ts` | IPC bridge between store and renderer. Besides `activity-data-updated` it exposes two **read-only** additions for the running timeline block: handler `get-current-activity` (latest heartbeat's app + window title of today, via `ActivityStore.getLatestAppWindow()`) and event `heartbeat-added` (no payload, sent after `addHeartbeat`) |
+| `src/components/{ui,window,toolbar,timeline,footer,settings}/`, `src/renderer/` | React UI (title bar, toolbar, timeline, footer, settings view), one folder per area; Figma node id in each file header |
 
 **Aggregation rules are subtle** (fixed time boundaries, "at least half the interval must have
 heartbeats", type priority `inactive > appWindow`, merging of consecutive identical blocks). The
@@ -71,9 +72,11 @@ meeting tracking, which is no longer a pursued feature. Do not reinvent the rule
 - **Electron** + **TypeScript** for the backend/main side.
 - **React** in the renderer, written as **plain JavaScript** (`src/components/*.js`, `src/renderer/*.js`)
   — no TypeScript, no router, no third-party UI library.
-- **Plain CSS**, organized as a small design system in `src/styles/`: `colors_and_type.css`
-  (design tokens) and `workmory.css` (component/layout styles) hold the bulk of the styling. The
-  per-component `src/components/*.css` files are now thin glue. All designer-editable, no CSS framework.
+- **Plain CSS**, organized after the Figma file (see `docs/design/figma-map.md`): `src/styles/tokens.css`
+  holds the Figma variables 1:1 (light in `:root`, dark via `prefers-color-scheme`), `typography.css` the
+  Figma text styles, `base.css` the reset and the bundled Inter font (`@fontsource/inter`, no CDN).
+  Component CSS lives next to each component, uses only `var(--…)` tokens plus named constants with
+  Figma node id, and uses the class prefix `wm-<component>`. All designer-editable, no CSS framework.
 - **Webpack** bundles the renderer; **tsc** compiles the main/store/watchers TypeScript to `dist/`.
 - **Jest** (ts-jest) for tests.
 
@@ -85,11 +88,11 @@ src/
   main/        # Electron main process (TypeScript)
   store/       # ActivityStore, aggregation, persistence, IPC, settings (TypeScript, tested)
   watchers/    # Active-window / inactivity watchers (TypeScript)
-  components/  # React components (plain JS) + per-component CSS
+  components/  # React components (plain JS) + per-component CSS, by area: ui/ window/ toolbar/ timeline/ footer/ settings/ (+ App.js shell)
   renderer/    # Renderer entry (index.html / index.js)
-  styles/      # Design system: design tokens (colors_and_type.css) + component/layout styles (workmory.css)
-  assets/      # Logos / icons
-docs/          # Authoritative design, requirements, and release docs
+  styles/      # tokens.css (Figma variables), typography.css (text styles), base.css (reset, Inter)
+  assets/      # Logos; icons/ holds the SVGs from Figma
+docs/          # Authoritative design, requirements, and release docs (design/figma-map.md maps Figma to code)
 scripts/       # Mock-data generation, release/beta automation
 ```
 

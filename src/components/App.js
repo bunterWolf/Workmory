@@ -8,8 +8,6 @@ import SettingsView from './settings/SettingsView';
 import WindowTitleBar from './window/WindowTitleBar';
 import { ipcRenderer } from 'electron';
 import i18n from '../i18n';
-import '../styles/colors_and_type.css';
-import '../styles/workmory.css';
 import '../styles/tokens.css';
 import '../styles/typography.css';
 import '../styles/base.css';
@@ -216,7 +214,7 @@ const App = () => {
 
   return (
     <I18nextProvider i18n={i18n}>
-      <div className="wmk-app">
+      <div className="wm-app">
         <WindowTitleBar />
 
         {view === 'settings' ? (

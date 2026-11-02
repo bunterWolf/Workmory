@@ -1,27 +1,32 @@
-/* App.css — global glue. Design tokens live in src/styles/colors_and_type.css,
-   component/layout styles in src/styles/workmory.css; reset and body in src/styles/base.css. */
+/* App.css — global glue. Design tokens live in src/styles/tokens.css,
+   text styles in typography.css; reset and body in base.css. */
 
-/* The React root fills the frameless window. */
+/* The React root fills the frameless window; .wm-app is the column shell. */
 #app {
   display: flex;
   flex-direction: column;
 }
-#app > .wmk-app {
+.wm-app {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0;
+  height: 100%;
+  background: var(--surface);
+  color: var(--ink);
 }
 
 /* Update notification banner */
 .update-notification {
-  background-color: var(--wm-ink);
-  color: #fff;
+  background-color: var(--ink);
+  color: var(--surface);
   text-align: center;
-  padding: 8px 16px;
-  font-size: 13px;
+  padding: var(--size-s) var(--size-l);
+  font-size: var(--size-m);
   flex: none;
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling for scroll areas without their own (e.g. settings view) */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -30,9 +35,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-2);
+  background: var(--line-3);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--fg-4);
+  background: var(--ink-4);
 }

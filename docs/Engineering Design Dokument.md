@@ -183,36 +183,47 @@ After an activity change, the summary times are updated. These are not based on 
 - Is very minimal    
 
 #### 2.5.2 UI Structure
-- Uses minimal **React**
+- Uses minimal **React**, written as plain JavaScript (`src/components/**/*.js`)
 - No third-party UI libraries or routing (no React Router)
-- Styling is done using **simple CSS files**, editable directly by designers
-- Components are kept flat and small
+- Styling is done using **plain CSS files**, editable directly by designers. Design tokens (colors, sizes) live only in `src/styles/tokens.css` and mirror the Figma variables 1:1; text styles are in `typography.css`, reset and bundled Inter font in `base.css`. Component CSS uses only `var(--…)` tokens plus named constants (with Figma node id) at the top of the file. See `docs/design/figma-map.md` for the mapping Figma -> code and the update checklist.
+- Theme: the CSS follows `prefers-color-scheme` (Electron `nativeTheme.themeSource = 'system'`); there is no manual switch
+- One component in code corresponds to one Figma component (same name, Figma node id in the file header)
+- The window is frameless with a custom title bar and starts at 387 x 499 (content size), minimum 387 x 360
 
-##### 2.5.2.1 Header
-- **Date Picker** with friendly labels ("Today", "Yesterday") - placed in Header
-	- Arrow Navigation Buttons
-- **Interval Selector** dropdown for choosing the aggregation block size (5, 10, or 15 minutes)
-- Button to pause or start tracking
+```
+src/components/
+  App.js             Shell: loads data, switches between Day View and Settings view
+  window/            WindowTitleBar
+  toolbar/           Toolbar, DateNav, IntervalPicker, TrackingButton
+  timeline/          Timeline, TimelineHourGrid, TimelineEvent, timelineGeometry.js (pure functions),
+                     eventColors.js, useAppIcon, useCurrentActivity, useColorScheme
+  footer/            Footer, DaySummary
+  settings/          SettingsView, SettingRow, StoreLocationSetting
+  ui/                Button, Toggle, Icon, TrackingDot
+```
 
-#### 2.5.2.2 Content: DayOverview
+##### 2.5.2.1 Toolbar
+- **Date navigation** with friendly labels ("Today", "Yesterday"): arrow buttons (previous/next day) and the date text; "next" is disabled on the current day
+- **Interval selector**: a trigger button showing the current interval (5m, 10m, 15m); it opens a slider flyout to choose the aggregation block size (5, 10, or 15 minutes). The new Figma design for this menu is still open.
+- **Tracking button** to pause or start tracking (states *Tracking* with a pulsing dot, and *Paused*)
+
+#### 2.5.2.2 Content: Timeline
 
 ##### A. Grundlegende Anforderungen
 1. **Zeitliche Darstellung**
-   - Vertikale Timeline im Kalender-Stil
-   - Standard-Zeitfenster: 8:00 bis 17:00 Uhr
-   - Dynamische Erweiterung bei Events außerhalb des Standard-Zeitfensters
-   - TimelineOverview event block Positionierung entsprechend der Zeitskala für Start- und Endzeit
+   - Vertikale Timeline mit Stundenlinien, Stunden-Labels und Halbstunden-Markern
+   - Stundenhöhe = 24 px × 60 / Intervall, also 288 px (5m), 144 px (10m), 96 px (15m)
+   - Angezeigt werden nur die aktiven Zeiten mit Puffer (erste Aktivität minus 1 Stunde, Verlängerung bei langen Events, Mindestspanne 3 Stunden, Grenzen 0–23 Uhr, laufender Block einbezogen). Die Berechnung steckt in den reinen Funktionen von `timelineGeometry.js` (getestet in `timelineGeometry.test.js`).
+   - Event-Position: `top = (Startminute − Startstunde × 60) × px/min + 1 px`, `height = max(14, Dauer × px/min)`. Die Lücke zwischen benachbarten Events entsteht durch den 1-px-Rand in `--surface` an jedem Event.
 
 ##### B. Event-Darstellung
 
 1. **Event-Block Informationen**
-   - Farbkodierung nach Event-Typ
-   - Proportionale Höhendarstellung entsprechend der Eventdauer
-   - Einheitliche Blockbreite unabhängig vom Inhalt
-   - Dauer in benutzerfreundlichem Format
-   - Meetings: Vollständiger Meeting-Titel und Status
-   - Inaktive Zeiten: Standardisierte Beschreibung
-   - Aktive Fenster: Anwendungsname und Fenstertitel
+   - App-Fenster: App-Icon, Anwendungsname und Fenstertitel, Dauer. Hintergrund `--event-background` mit einer Ebene in der aus dem App-Icon extrahierten Farbe (`mix-blend-mode: overlay`); die Textfarbe wird in `eventColors.js` (`blendOver`) aus App-Farbe und `--event-ink-mix` berechnet und bei Theme-Wechsel neu bestimmt.
+   - Inaktive Zeiten: Standardisierte Beschreibung auf `--surface` mit CSS-Schraffur
+   - Laufender Block (nur „Heute“, nur bei aktivem Tracking): Intervall-Block ab der aktuellen Intervallgrenze, pulsierender Punkt, Titel „App · Fenstertitel“ des letzten Heartbeats (siehe §3.3), wird jede Minute neu berechnet
+   - Einheitliche Blockbreite unabhängig vom Inhalt, Dauer in benutzerfreundlichem Format
+   - Teams-Meeting-Events werden nicht mehr verfolgt (Abschnitt 2.4.3 beschreibt noch das alte Konzept)
 
 ##### C. Interaktives Verhalten
 
@@ -221,43 +232,44 @@ After an activity change, the summary times are updated. These are not based on 
    - Keine Neuladung bei Datenaktualisierung
 
 2. **Scroll-Verhalten**
-   - Vertikales Scrollen durch die Zeitskala für einen Tag
-   - Automatischer Scroll zur aktuellen Zeit bei Initialisierung
+   - Der Timeline-Container scrollt nativ (eigene 14-px-Scrollbar)
+   - Beim Öffnen und beim Wechsel auf „Heute“ scrollt die Timeline **einmal** zum laufenden Block, danach nur noch der Nutzer
    - Beibehaltung der Scroll-Position bei Updates
 
 ##### D. Responsive Design
 
 1. **Bildschirmanpassung**
-   - Flexible Breitenanpassung
-   - Beibehaltung der ausgewählten Aggregationsintervall-Proportionen (5, 10 oder 15 Minuten)   
+   - Flexible Höhenanpassung (Fenster frei skalierbar, Mindestgröße 387 x 360)
+   - Beibehaltung der ausgewählten Aggregationsintervall-Proportionen (5, 10 oder 15 Minuten)
 
 2. **Wiederherstellung**
    - Automatische Wiederherstellung nach Verbindungsabbrüchen
    - Erhaltung des Anzeigestatus bei Fehlern
    - Nahtlose Fortsetzung der Aktualisierungen
 
-#### 2.5.2.3 Fußzeile
-- Displays the total active time and the total inactive time calculated in the aggregated summary data.
+#### 2.5.2.3 Footer and Settings view
+- **Footer**: menu button (opens the Settings view) and the day summary *Active · Inactive · Tracked*, calculated from the aggregated summary data.
+- **Settings view** (replaces the former settings modal, same window; the back arrow returns to the Day View): auto-launch toggle, beta-release toggle, activity-file location (change, reset, adopt an existing file; the confirmation appears inline), placeholder link and app version. The auto-delete setting is not part of the UI; the store deletes data after a fixed 30 days.
 
 #### 2.5.4 Development & Debugging
 
-- All components written in plain, typed React functional components
+- All components written as plain JavaScript React functional components (the backend is TypeScript)
 - Use of `console.log` and browser dev tools for debugging
-- IPC communication isolated in a simple `ipc.ts` module
+- IPC from the renderer uses `ipcRenderer` directly (`invoke` for queries, `on` for events) in `App.js` and small hooks
 - Minimal Webpack/Build config to reduce overhead
 - Directory structure is flat and easy to follow:
     
     ```
     src/
       ├── main/              # Electron main process
-      ├── renderer/          # React UI (no routing)
-      ├── components/        # Small reusable components
+      ├── renderer/          # React entry (index.html / index.js)
+      ├── components/        # React components by area (ui, window, toolbar, timeline, footer, settings)
+      ├── styles/            # tokens.css, typography.css, base.css
+      ├── assets/            # logos and SVG icons (assets/icons)
       ├── watchers/          # Watcher implementations
-      ├── store/             # ActivityStore logic
-      ├── ipc/               # IPC bridge
+      ├── store/             # ActivityStore logic, ActivityIpc (IPC bridge)
     ```
     
-
 ## 3. Data Flow
 
 ### 3.1 Activity Collection
@@ -281,6 +293,13 @@ OS Events -> Watcher -> Heartbeat -> ActivityStore-heartbeats -> ActivityStore-a
 │ ActivityStore│───>│   IPC Channel │───>│ Renderer   │
 └──────────────┘    └───────────────┘    └────────────┘
 ```
+
+**Read-only IPC for the running block title:** `activity-data-updated` is only sent at the end of an aggregation interval, so the running timeline block would show stale data. Two additions, which read but never write or aggregate:
+
+- `get-current-activity` (`ipcMain.handle`): returns `ActivityStore.getLatestAppWindow()`, the app name and window title of the **latest heartbeat of today that has an `appWindow`**, or `null`. The store state is not changed.
+- `heartbeat-added` (event, no payload): sent to the renderer by the `ActivityIpc` bridge after `ActivityStore.addHeartbeat` has stored a heartbeat.
+
+The renderer (`useCurrentActivity`) fetches the value on startup and on every `heartbeat-added`, and shows it as "App · Window title" in the running block (default text when `null`).
 
 ## 4. Technical Details
 
@@ -381,7 +400,7 @@ Die Anwendung unterstützt konfigurierbare Zeitintervalle für die Aggregation v
 
 #### 12.2.1 Benutzereinstellung
 
-- Die Intervallauswahl wird als Dropdown-Menü im Header der Anwendung implementiert
+- Die Intervallauswahl wird als Intervall-Button mit Slider-Flyout in der Toolbar der Anwendung implementiert
 - Die Einstellung wird in der ActivityStore-Datenstruktur als `aggregationInterval`-Feld gespeichert
 - Bei Änderung der Einstellung werden alle betroffenen Tage neu aggregiert
 
@@ -395,7 +414,7 @@ Unabhängig vom gewählten Intervall werden Aktivitätsblöcke immer an festen U
 #### 12.2.3 Berechnung und Darstellung
 
 - Bei Änderung des Aggregationsintervalls wird die `TimelineGenerator`-Komponente die neuen Zeitgrenzen berücksichtigen
-- Die visuelle Darstellung in der DayOverview-Komponente passt sich automatisch an das gewählte Intervall an
+- Die visuelle Darstellung in der Timeline-Komponente passt sich automatisch an das gewählte Intervall an
 - Die Bedingung, dass mindestens die Hälfte eines Intervalls mit Heartbeats gefüllt sein muss, bleibt unabhängig von der Intervallgröße bestehen
 
 #### 12.2.4 Leistungsauswirkungen

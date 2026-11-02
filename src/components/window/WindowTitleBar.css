@@ -12,6 +12,7 @@
   --wm-titlebar-light-close: #ff5f57;
   --wm-titlebar-light-min: #ffbd2e;
   --wm-titlebar-light-max: #28c840;
+  --wm-titlebar-transition: 120ms;
 
   flex: none;
   display: flex;
@@ -74,12 +75,12 @@
   border-radius: 50%;
   padding: 0;
   cursor: pointer;
-  transition: filter var(--dur-fast);
+  transition: filter var(--wm-titlebar-transition);
 }
 .wm-titlebar-light:active { filter: brightness(.85); }
 .wm-titlebar-light-close { background: var(--wm-titlebar-light-close); box-shadow: 0 0 0 .5px rgba(0,0,0,.15); }
 .wm-titlebar-light-min   { background: var(--wm-titlebar-light-min);   box-shadow: 0 0 0 .5px rgba(0,0,0,.12); }
 .wm-titlebar-light-max   { background: var(--wm-titlebar-light-max);   box-shadow: 0 0 0 .5px rgba(0,0,0,.12); }
 /* Icons are hidden until the group is hovered */
-.wm-titlebar-light-icon { width: 8px; height: 8px; opacity: 0; transition: opacity var(--dur-fast); }
+.wm-titlebar-light-icon { width: 8px; height: 8px; opacity: 0; transition: opacity var(--wm-titlebar-transition); }
 .wm-titlebar-lights:hover .wm-titlebar-light-icon { opacity: 1; }
