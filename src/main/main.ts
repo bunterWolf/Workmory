@@ -107,13 +107,19 @@ nativeTheme.on('updated', () => {
   mainWindow?.setBackgroundColor(getWindowBackground());
 });
 
+// Window content area = the Figma frame (387 x 499); smallest content area is 387 x 360.
+const WINDOW_WIDTH = 387;
+const WINDOW_HEIGHT = 499;
+const WINDOW_MIN_HEIGHT = 360; // min width equals WINDOW_WIDTH (narrowest width without wrapping)
+
 // Create the main browser window
 function createWindow(): void { // Add return type void
   mainWindow = new BrowserWindow({
-    width: 387,
-    height: 499,
-    minWidth: 387,
-    minHeight: 360,
+    width: WINDOW_WIDTH,
+    height: WINDOW_HEIGHT,
+    useContentSize: true, // sizes below describe the content area, not the window bounds
+    minWidth: WINDOW_WIDTH,
+    minHeight: WINDOW_MIN_HEIGHT,
     title: 'Workmory - Automatic time tracking made easy and free' + (useMockData ? ' (Mock Data)' : ''),
     icon: path.join(app.getAppPath(), 'build', 'icon.ico'),
     frame: false, // Custom title bar (see WindowTitleBar component)
@@ -126,6 +132,10 @@ function createWindow(): void { // Add return type void
       // preload: path.join(__dirname, 'preload.js')
     },
   });
+
+  // On Windows a frameless window can end up 1px narrower than requested even with
+  // useContentSize, so set the content size explicitly (measured: 386 -> 387).
+  mainWindow.setContentSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
   // Enable @electron/remote for the created window
   if (mainWindow) {
