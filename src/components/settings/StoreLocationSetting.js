@@ -17,9 +17,11 @@ export default function StoreLocationSetting({ path, onPathChange, onError }) {
   // Selected directory that already contains an activity file; waits for the user's decision.
   const [pendingPath, setPendingPath] = useState(null);
   const displayPath = path || t('defaultPath');
+  const isConfirming = pendingPath !== null;
 
   // Aktivitätsdatei-Pfad ändern
   const handleChange = async () => {
+    setPendingPath(null); // a stale confirmation must never outlive a new choice
     try {
       const selectedPath = await ipcRenderer.invoke('open-directory-dialog');
       if (!selectedPath) return; // Dialog abgebrochen
@@ -44,6 +46,7 @@ export default function StoreLocationSetting({ path, onPathChange, onError }) {
 
   // Pfad auf Standard zurücksetzen
   const handleReset = async () => {
+    setPendingPath(null); // a stale confirmation must never outlive a reset
     try {
       const result = await ipcRenderer.invoke('update-activity-store-path', null);
       if (result.success) {
@@ -81,10 +84,11 @@ export default function StoreLocationSetting({ path, onPathChange, onError }) {
     <SettingRow title={t('activityStoreLocation')} description={t('activityStoreDescription')}>
       <div className="wm-store-path text-m-default" title={displayPath}>{displayPath}</div>
       <div className="wm-store-actions">
-        <Button label={t('changePath')} onClick={handleChange} />
-        {path !== null && <Button label={t('resetToDefault')} onClick={handleReset} />}
+        {/* Locked while a confirmation is open: the user must decide on it first */}
+        <Button label={t('changePath')} onClick={handleChange} disabled={isConfirming} />
+        {path !== null && <Button label={t('resetToDefault')} onClick={handleReset} disabled={isConfirming} />}
       </div>
-      {pendingPath !== null && (
+      {isConfirming && (
         <div className="wm-store-confirm" role="alertdialog" aria-label={t('fileExistsTitle')}>
           <div className="wm-store-confirm-title text-m-primary">{t('fileExistsTitle')}</div>
           <div className="wm-store-confirm-message text-m-default">{t('fileExistsMessage', { path: pendingPath })}</div>
