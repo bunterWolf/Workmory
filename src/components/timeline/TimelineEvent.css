@@ -3,6 +3,14 @@
   --tl-event-header-max-height: 32px;  /* Figma 2007:151 */
   --tl-event-title-gap: 6px;           /* Figma 2007:152 */
   --tl-event-tracking-border: 2px;     /* Figma 84722:2213, inner stroke */
+  /* Inactive hatch (spec §6.4), Figma 84653:1248. Measured on the hatch image
+     442f5.png (546x327, 9 px horizontal period, 45 degrees) at its placement of
+     103.21% width: 1 px stripes, 3 px perpendicular period, rising to the right.
+     Black at 9% in Figma; drawn in --ink so it turns light in dark mode. */
+  --tl-hatch-angle: 135deg;
+  --tl-hatch-stripe: 1px;
+  --tl-hatch-period: 3px;
+  --tl-hatch-opacity: 9%;
 
   position: absolute;
   left: 0;
@@ -85,9 +93,14 @@
 }
 
 /* ----- Variants (spec §6.2) ----- */
-/* Inactive: hatch follows in Task 13 */
+/* Inactive: --surface plus the theme-aware hatch (Figma 84653:1248) */
 .wm-timeline-event--inactive {
-  background: var(--surface);
+  background-color: var(--surface);
+  background-image: repeating-linear-gradient(
+    var(--tl-hatch-angle),
+    color-mix(in srgb, var(--ink) var(--tl-hatch-opacity), transparent) 0 var(--tl-hatch-stripe),
+    transparent var(--tl-hatch-stripe) var(--tl-hatch-period)
+  );
   color: var(--ink-2);
 }
 
