@@ -5,7 +5,7 @@ import Timeline from './timeline/Timeline';
 import useCurrentActivity from './timeline/useCurrentActivity';
 import Footer from './Footer';
 import SettingsModal from './SettingsModal';
-import WindowChrome from './WindowChrome';
+import WindowTitleBar from './window/WindowTitleBar';
 import { ipcRenderer } from 'electron';
 import i18n from '../i18n';
 import '../styles/colors_and_type.css';
@@ -220,7 +220,7 @@ const App = () => {
   return (
     <I18nextProvider i18n={i18n}>
       <div className="wmk-app">
-        <WindowChrome />
+        <WindowTitleBar />
 
         <Header
           selectedDate={selectedDate}

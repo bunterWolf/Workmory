@@ -1,7 +1,7 @@
 // Remove ts-node/register as this file will be compiled
 // require('ts-node/register');
 
-import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, dialog, nativeTheme } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import * as remoteMain from '@electron/remote/main'; // Use import for @electron/remote/main
@@ -95,15 +95,29 @@ if (useMockData) {
   console.log('🧪 Mock data mode enabled for development');
 }
 
+// Window background = Surface 2 of the active theme. Mirrors --surface-2 in
+// src/styles/tokens.css (light #ffffff / dark #0a0a0a); keep both in sync.
+const SURFACE_2 = { light: '#ffffff', dark: '#0a0a0a' };
+const getWindowBackground = (): string =>
+  nativeTheme.shouldUseDarkColors ? SURFACE_2.dark : SURFACE_2.light;
+
+// Keep the native window background in step with the theme (no white flash while resizing).
+// Registered once; createWindow() may run again (macOS activate).
+nativeTheme.on('updated', () => {
+  mainWindow?.setBackgroundColor(getWindowBackground());
+});
+
 // Create the main browser window
 function createWindow(): void { // Add return type void
   mainWindow = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    width: 387,
+    height: 499,
+    minWidth: 387,
+    minHeight: 360,
     title: 'Workmory - Automatic time tracking made easy and free' + (useMockData ? ' (Mock Data)' : ''),
     icon: path.join(app.getAppPath(), 'build', 'icon.ico'),
-    frame: false, // Custom window chrome (see WindowChrome component)
-    backgroundColor: '#ffffff',
+    frame: false, // Custom title bar (see WindowTitleBar component)
+    backgroundColor: getWindowBackground(),
     webPreferences: {
       nodeIntegration: true, // Consider disabling if possible for security
       contextIsolation: false, // Consider enabling if possible for security

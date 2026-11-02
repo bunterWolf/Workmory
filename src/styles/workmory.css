@@ -282,65 +282,6 @@
   outline: 2px solid #0a0a0a; outline-offset: 2px;
 }
 
-/* ============================================================
-   Window chrome — macOS traffic lights + Windows caption btns
-   ============================================================ */
-
-/* Shared titlebar strip */
-.wc-bar {
-  flex: none;
-  display: flex;
-  align-items: center;
-  user-select: none;
-  -webkit-app-region: drag;
-}
-.wc-bar button { -webkit-app-region: no-drag; }
-
-/* ---- macOS ---- */
-.wc-bar-mac {
-  height: 28px;
-  padding: 0 14px;
-}
-.wc-mac-lights {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.wc-mac-btn {
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  border: 0; padding: 0; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: filter var(--dur-fast);
-  flex: none;
-}
-.wc-mac-btn:active { filter: brightness(.85); }
-.wc-mac-close { background: #FF5F57; box-shadow: 0 0 0 .5px rgba(0,0,0,.15); }
-.wc-mac-min   { background: #FFBD2E; box-shadow: 0 0 0 .5px rgba(0,0,0,.12); }
-.wc-mac-max   { background: #28C840; box-shadow: 0 0 0 .5px rgba(0,0,0,.12); }
-/* Icons hidden until hover on the group */
-.wc-mac-icon { opacity: 0; width: 8px; height: 8px; transition: opacity var(--dur-fast); }
-.wc-mac-lights:hover .wc-mac-icon { opacity: 1; }
-
-/* ---- Windows ---- */
-.wc-bar-win {
-  height: 32px;
-  display: flex;
-  align-items: stretch;
-}
-.wc-win-drag { flex: 1; }
-.wc-win-btns { display: flex; align-items: stretch; }
-.wc-win-btn {
-  width: 46px;
-  background: transparent; border: 0; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--fg-2);
-  transition: background var(--dur-fast), color var(--dur-fast);
-}
-.wc-win-btn:hover { background: var(--bg-2); color: var(--fg-1); }
-.wc-win-close:hover { background: #c42b1c; color: #fff; }
-.wc-win-close:active { background: #c42b1c; opacity: .9; }
-
 /* App-closed overlay */
 .wmk-app-closed {
   position: fixed; inset: 0; z-index: 9999;
