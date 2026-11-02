@@ -250,6 +250,38 @@ describe('ActivityStore Integration', () => {
     expect(summary.appUsage['VS Code']).toBe(1 * intervalMillis); // Dominant in Interval 1
     expect(summary.appUsage['Browser']).toBeUndefined(); // Browser was not dominant
   });
+
+  describe('getLatestAppWindow', () => {
+    const addAt = (timestamp: number, data: HeartbeatData) => {
+      Date.now = jest.fn(() => timestamp);
+      activityStore.addHeartbeat(data);
+    };
+
+    test('liefert das letzte vorhandene appWindow von heute (Heartbeat ohne appWindow wird uebersprungen)', () => {
+      addAt(getTimestamp(9, 1, 15), { appWindow: { app: 'VS Code', title: 'a.ts' } });
+      addAt(getTimestamp(9, 1, 45), { appWindow: { app: 'Chrome', title: 'x' } });
+      addAt(getTimestamp(9, 2, 15), { userActivity: 'inactive' });
+
+      expect(activityStore.getLatestAppWindow()).toEqual({ app: 'Chrome', title: 'x' });
+    });
+
+    test('liefert null ohne Heartbeats', () => {
+      expect(activityStore.getLatestAppWindow()).toBeNull();
+    });
+
+    test('veraendert die gespeicherten Heartbeats nicht', () => {
+      addAt(getTimestamp(9, 1, 15), { appWindow: { app: 'VS Code', title: 'a.ts' } });
+      addAt(getTimestamp(9, 1, 45), { userActivity: 'inactive' });
+
+      const before = JSON.parse(JSON.stringify(activityStore.getDayData(testDateKey)?.heartbeats));
+      activityStore.getLatestAppWindow();
+      const after = activityStore.getDayData(testDateKey)?.heartbeats;
+
+      expect(before).toHaveLength(2);
+      expect(after).toHaveLength(2);
+      expect(after).toEqual(before);
+    });
+  });
 });
 
 // Neuer Describe-Block für Mock-Daten-Tests

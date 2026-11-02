@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import Header from './Header';
 import Timeline from './timeline/Timeline';
+import useCurrentActivity from './timeline/useCurrentActivity';
 import Footer from './Footer';
 import SettingsModal from './SettingsModal';
 import WindowChrome from './WindowChrome';
@@ -180,6 +181,10 @@ const App = () => {
 
   const summary = getSummary();
 
+  // Live "App · Window title" for the running block (only while tracking today).
+  const isToday = selectedDate === new Date().toISOString().split('T')[0];
+  const currentActivityTitle = useCurrentActivity(isTracking && isToday);
+
   // Update notification handler
   useEffect(() => {
     const handleUpdateStatus = (event, status) => {
@@ -243,7 +248,7 @@ const App = () => {
           isTracking={isTracking}
           isInitialized={isInitialized}
           displayedDate={selectedDate}
-          currentActivityTitle={null}
+          currentActivityTitle={currentActivityTitle}
         />
 
         <Footer

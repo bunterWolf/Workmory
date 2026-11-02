@@ -383,6 +383,23 @@ class ActivityStore {
 
     // Update Heartbeats in State
     this.updateHeartbeats(timestamp, heartbeatData);
+
+    // Let the renderer refresh the live "current activity" (read-only side channel).
+    this.ipcHandler?.notifyHeartbeatAdded();
+  }
+
+  /**
+   * Returns the most recent app/window of today's heartbeats, or null if none has one.
+   * Read-only: does not modify any state.
+   */
+  getLatestAppWindow(): AppWindowData | null {
+    const heartbeats = this.activityState.getHeartbeats(this.getDateKey(Date.now()));
+    if (!heartbeats) return null;
+    for (let i = heartbeats.length - 1; i >= 0; i--) {
+      const appWindow = heartbeats[i].data.appWindow;
+      if (appWindow) return appWindow;
+    }
+    return null;
   }
 
   // --- Private helper methods for addHeartbeat ---
