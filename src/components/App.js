@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import Header from './Header';
 import Timeline from './timeline/Timeline';
@@ -19,6 +19,9 @@ const App = () => {
     const today = new Date();
     return today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
   });
+  // Always the currently shown date; lets async loads detect that they are stale.
+  const selectedDateRef = useRef(selectedDate);
+  selectedDateRef.current = selectedDate;
   
   const [activityData, setActivityData] = useState(null);
   const [availableDates, setAvailableDates] = useState([]);
@@ -50,6 +53,7 @@ const App = () => {
   // Handle date changes
   const handleDateChange = (newDate) => {
     if (newDate === selectedDate) return;
+    selectedDateRef.current = newDate;
     // Drop the previous day's data so it is never shown under the new date.
     setActivityData(null);
     setIsLoading(true);
@@ -79,14 +83,17 @@ const App = () => {
   // initial load and date changes show it. Background refreshes and interval
   // changes update the data in place.
   const loadActivityData = async () => {
+    const requestedDate = selectedDate;
+    // A response for a date that is no longer shown must not touch state (data or loading).
+    const isStale = () => requestedDate !== selectedDateRef.current;
     try {
-      const data = await ipcRenderer.invoke('get-day-data', selectedDate);
-      setActivityData(data);
+      const data = await ipcRenderer.invoke('get-day-data', requestedDate);
+      if (!isStale()) setActivityData(data);
     } catch (error) {
       console.error('Error loading activity data:', error);
-      setActivityData(null);
+      if (!isStale()) setActivityData(null);
     } finally {
-      setIsLoading(false);
+      if (!isStale()) setIsLoading(false);
     }
   };
 
