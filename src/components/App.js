@@ -3,7 +3,7 @@ import { I18nextProvider } from 'react-i18next';
 import Toolbar from './toolbar/Toolbar';
 import Timeline from './timeline/Timeline';
 import useCurrentActivity from './timeline/useCurrentActivity';
-import Footer from './Footer';
+import Footer from './footer/Footer';
 import SettingsModal from './SettingsModal';
 import WindowTitleBar from './window/WindowTitleBar';
 import { ipcRenderer } from 'electron';
@@ -163,19 +163,15 @@ const App = () => {
   // Compute summary information
   const getSummary = () => {
     if (!activityData || !activityData.aggregated || !activityData.aggregated.summary) {
-      return {
-        totalTime: '0m',
-        activeTime: '0m',
-        inactiveTime: '0m'
-      };
+      return { active: '0m', inactive: '0m', tracked: '0m' };
     }
     
     const { summary } = activityData.aggregated;
     
     return {
-      totalTime: formatDuration(summary.activeTrackingDuration),
-      activeTime: formatDuration(summary.totalActiveDuration),
-      inactiveTime: formatDuration(summary.totalInactiveDuration)
+      active: formatDuration(summary.totalActiveDuration),
+      inactive: formatDuration(summary.totalInactiveDuration),
+      tracked: formatDuration(summary.activeTrackingDuration)
     };
   };
 
@@ -252,9 +248,7 @@ const App = () => {
         />
 
         <Footer
-          activeTime={summary.activeTime}
-          inactiveTime={summary.inactiveTime}
-          totalTime={summary.totalTime}
+          summary={summary}
           isMockData={isMockData}
           onOpenSettings={() => setSettingsModalOpen(true)}
         />

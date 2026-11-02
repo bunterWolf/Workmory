@@ -1,0 +1,66 @@
+/* Figma: Footer 2005:845 */
+.wm-footer {
+  --wm-footer-height: 41px;    /* Figma 2005:845 */
+  --wm-footer-menu-left: 20px; /* Figma 84686:550 */
+  --wm-footer-menu-top: 7px;   /* Figma 84686:550 */
+  --wm-footer-menu-size: 28px; /* Figma 84686:550 */
+
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--size-l);
+  height: var(--wm-footer-height);
+  padding: var(--size-l) var(--size-xxl);
+  background: var(--surface-2);
+}
+
+/* Absolute and 28 x 28 (icon 20 + padding --size-xs); overrides the Button's own padding */
+.wm-footer .wm-footer-menu {
+  position: absolute;
+  left: var(--wm-footer-menu-left);
+  top: var(--wm-footer-menu-top);
+  width: var(--wm-footer-menu-size);
+  height: var(--wm-footer-menu-size);
+  padding: var(--size-xs);
+}
+
+/* Sits left of the summary, to the right of the menu button; shortens if space runs out */
+.wm-footer-mock {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-right: auto;
+  /* keeps clear of the absolutely positioned menu button */
+  margin-left: calc(var(--wm-footer-menu-left) + var(--wm-footer-menu-size) - var(--size-xxl) + var(--size-s));
+  /* padding + negative margin keep descenders inside the clip box (text-box trim shrinks the line box) */
+  padding-block: var(--size-xs);
+  margin-block: calc(-1 * var(--size-xs));
+  overflow: hidden;
+  color: var(--ink-4);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Figma: Status Bar 2052:157 */
+.wm-day-summary {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--size-l);
+  white-space: nowrap;
+}
+
+.wm-day-summary-item {
+  display: flex;
+  align-items: center;
+  gap: var(--size-xs);
+}
+
+.wm-day-summary-value {
+  color: var(--ink);
+}
+
+.wm-day-summary-label {
+  color: var(--ink-3);
+}

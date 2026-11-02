@@ -22,31 +22,6 @@
 .wmk-ibtn:active:not(:disabled) { background: var(--bg-3); }
 .wmk-ibtn:disabled { opacity: .35; cursor: not-allowed; }
 
-/* ----- Footer ----- */
-.wmk-footer {
-  flex: none;
-  border-top: 1px solid var(--border-1);
-  padding: 10px 28px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-.wmk-footer-summary {
-  font-size: 12px;
-  color: var(--fg-3);
-  letter-spacing: 0.01em;
-}
-.wmk-footer-settings {
-  background: transparent; border: 0; padding: 4px; cursor: pointer;
-  color: var(--fg-4);
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 6px;
-  transition: color var(--dur-fast), background var(--dur-fast);
-  flex: none;
-}
-.wmk-footer-settings:hover { color: var(--fg-2); background: var(--bg-2); }
-
 /* ----- Modal ----- */
 .wmk-modal-scrim {
   position: fixed; inset: 0; z-index: 100;
