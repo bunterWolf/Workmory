@@ -1,0 +1,82 @@
+/* Figma: Settings 84705:4120 / 84705:4351 */
+.wm-settings {
+  --wm-settings-toolbar-height: 60px; /* Figma 84699:2887 */
+
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+
+/* Same box as the day toolbar (Toolbar.css): 60px, padding 12 / 24 / 12 / 12 */
+.wm-settings-toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--size-s);
+  height: var(--wm-settings-toolbar-height);
+  padding: var(--size-m) var(--size-xxl) var(--size-m) var(--size-m);
+}
+
+.wm-settings-title {
+  color: var(--ink);
+}
+
+.wm-settings-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--size-m) var(--size-m);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Rows keep their height; the spacer absorbs the free space and pushes the footer down */
+.wm-settings-content > * {
+  flex: none;
+}
+
+.wm-settings-content > .wm-settings-spacer {
+  flex: 1 0 0;
+}
+
+.wm-settings-loading {
+  padding: var(--size-l);
+  color: var(--ink-2);
+}
+
+/* Error row in the tracking color */
+.wm-settings-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--size-l);
+  padding: var(--size-s) var(--size-s) var(--size-s) var(--size-l);
+  border-radius: var(--size-s);
+  background: var(--line-tracking);
+  color: var(--tracking);
+}
+
+.wm-settings-error-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.wm-settings-error .wm-button {
+  color: var(--tracking);
+}
+
+.wm-settings-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--size-l);
+  padding: var(--size-l);
+  color: var(--ink-2);
+}
+
+.wm-settings-version {
+  font-variant-numeric: tabular-nums;
+}

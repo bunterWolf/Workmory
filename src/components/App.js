@@ -4,7 +4,7 @@ import Toolbar from './toolbar/Toolbar';
 import Timeline from './timeline/Timeline';
 import useCurrentActivity from './timeline/useCurrentActivity';
 import Footer from './footer/Footer';
-import SettingsModal from './SettingsModal';
+import SettingsView from './settings/SettingsView';
 import WindowTitleBar from './window/WindowTitleBar';
 import { ipcRenderer } from 'electron';
 import i18n from '../i18n';
@@ -33,7 +33,8 @@ const App = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [aggregationInterval, setAggregationInterval] = useState(15);
   const [updateStatus, setUpdateStatus] = useState(null);
-  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  // Which view fills the window below the title bar: the day timeline or the settings.
+  const [view, setView] = useState('day'); // 'day' | 'settings'
 
   // Format duration in milliseconds to human-readable string
   const formatDuration = (ms) => {
@@ -218,46 +219,46 @@ const App = () => {
       <div className="wmk-app">
         <WindowTitleBar />
 
-        <Toolbar
-          selectedDate={selectedDate}
-          availableDates={availableDates}
-          onDateChange={handleDateChange}
-          isTracking={isTracking}
-          onToggleTracking={toggleTracking}
-          isMockData={isMockData}
-          aggregationInterval={aggregationInterval}
-          onIntervalChange={handleIntervalChange}
-        />
+        {view === 'settings' ? (
+          <SettingsView onBack={() => setView('day')} />
+        ) : (
+          <>
+            <Toolbar
+              selectedDate={selectedDate}
+              availableDates={availableDates}
+              onDateChange={handleDateChange}
+              isTracking={isTracking}
+              onToggleTracking={toggleTracking}
+              isMockData={isMockData}
+              aggregationInterval={aggregationInterval}
+              onIntervalChange={handleIntervalChange}
+            />
 
-        {/* Update-Benachrichtigung */}
-        {updateStatus && updateStatus.status === 'downloaded' && (
-          <div className="update-notification">
-            Eine neue Version ist verfügbar und wird beim nächsten Start installiert.
-          </div>
+            {/* Update-Benachrichtigung */}
+            {updateStatus && updateStatus.status === 'downloaded' && (
+              <div className="update-notification">
+                Eine neue Version ist verfügbar und wird beim nächsten Start installiert.
+              </div>
+            )}
+
+            <Timeline
+              activityData={activityData}
+              isLoading={isLoading}
+              formatDuration={formatDuration}
+              aggregationInterval={aggregationInterval}
+              isTracking={isTracking}
+              isInitialized={isInitialized}
+              displayedDate={selectedDate}
+              currentActivityTitle={currentActivityTitle}
+            />
+
+            <Footer
+              summary={summary}
+              isMockData={isMockData}
+              onOpenSettings={() => setView('settings')}
+            />
+          </>
         )}
-
-        <Timeline
-          activityData={activityData}
-          isLoading={isLoading}
-          formatDuration={formatDuration}
-          aggregationInterval={aggregationInterval}
-          isTracking={isTracking}
-          isInitialized={isInitialized}
-          displayedDate={selectedDate}
-          currentActivityTitle={currentActivityTitle}
-        />
-
-        <Footer
-          summary={summary}
-          isMockData={isMockData}
-          onOpenSettings={() => setSettingsModalOpen(true)}
-        />
-
-        {/* Einstellungen Modal */}
-        <SettingsModal
-          isOpen={settingsModalOpen}
-          onClose={() => setSettingsModalOpen(false)}
-        />
       </div>
     </I18nextProvider>
   );

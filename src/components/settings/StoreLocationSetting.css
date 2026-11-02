@@ -1,0 +1,39 @@
+/* Store location extras inside a SettingRow (no Figma design yet; built from the row pattern) */
+.wm-store-path {
+  align-self: stretch;
+  min-width: 0;
+  /* padding + negative margin keep descenders inside the clip box (text-box trim shrinks the line box) */
+  padding-block: var(--size-xs);
+  margin-block: calc(-1 * var(--size-xs));
+  overflow: hidden;
+  color: var(--ink-3);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.wm-store-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-s);
+}
+
+/* Inline confirmation when the chosen folder already holds an activity file */
+.wm-store-confirm {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--size-m);
+  padding: var(--size-l);
+  border-radius: var(--size-l);
+  background: var(--surface-2);
+}
+
+.wm-store-confirm-title {
+  color: var(--ink);
+}
+
+.wm-store-confirm-message {
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}

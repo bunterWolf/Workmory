@@ -1,0 +1,32 @@
+/* Figma: SettingRow 84699:2276 */
+.wm-setting-row {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--size-l);
+  padding: var(--size-l);
+}
+
+/* Text column: title, description and any extra content */
+.wm-setting-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--size-m);
+}
+
+.wm-setting-row-title,
+.wm-setting-row-description {
+  width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.wm-setting-row-title {
+  color: var(--ink);
+}
+
+.wm-setting-row-description {
+  color: var(--ink-2);
+}
