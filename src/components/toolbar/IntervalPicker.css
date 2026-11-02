@@ -1,0 +1,83 @@
+/* Figma: Button 84671:1463 (trigger), SliderDropDownText 84672:1736 (marks) */
+.wm-interval-picker {
+  /* Slider flyout: no Figma design yet (spec 7.2 TODO); dimensions carried over from the old header. */
+  --wm-interval-track-height: 4px;
+  --wm-interval-thumb-size: 18px;
+  --wm-interval-thumb-border: 2px;
+  --wm-interval-flyout-width: 216px;
+
+  position: relative;
+}
+
+.wm-interval-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+
+.wm-interval-flyout {
+  position: absolute;
+  top: calc(100% + var(--size-xs));
+  right: 0;
+  z-index: 40;
+  width: var(--wm-interval-flyout-width);
+  padding: var(--size-m) var(--size-l);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--size-m);
+}
+
+.wm-interval-flyout-label {
+  display: block;
+  margin-bottom: var(--size-m);
+  color: var(--ink-3);
+}
+
+/* Range input: custom track and thumb */
+.wm-interval-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: var(--wm-interval-track-height);
+  border: 0;
+  border-radius: 100px;
+  outline: none;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    var(--ink) var(--wm-interval-pct, 0%),
+    var(--line-3) var(--wm-interval-pct, 0%)
+  );
+}
+
+.wm-interval-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--wm-interval-thumb-size);
+  height: var(--wm-interval-thumb-size);
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: var(--wm-interval-thumb-border) solid var(--ink);
+  cursor: pointer;
+}
+
+.wm-interval-slider:focus-visible {
+  outline: 1px solid var(--ink-3);
+  outline-offset: var(--size-xs);
+}
+
+.wm-interval-marks {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--size-s);
+}
+
+.wm-interval-mark {
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.wm-interval-mark.is-active {
+  color: var(--ink);
+}

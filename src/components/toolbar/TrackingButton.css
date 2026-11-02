@@ -1,0 +1,16 @@
+/* Figma: ButtonTracking 84678:1437 */
+.wm-tracking-button {
+  --wm-tracking-button-width: 110px; /* Figma 84678:1437 */
+
+  width: var(--wm-tracking-button-width);
+}
+
+/* Tracking face: filled with ink, no hover layer */
+.wm-tracking-button.is-tracking {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.wm-tracking-button.is-tracking::before {
+  display: none;
+}

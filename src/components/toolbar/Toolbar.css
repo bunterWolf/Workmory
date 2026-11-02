@@ -1,0 +1,43 @@
+/* Figma: Toolbar 2005:832 */
+.wm-toolbar {
+  --wm-toolbar-height: 60px; /* Figma 2005:832 */
+
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--size-s);
+  height: var(--wm-toolbar-height);
+  padding: var(--size-m) var(--size-xxl) var(--size-m) var(--size-m);
+  background: var(--surface-2);
+}
+
+/* Left group: arrows, then the date label */
+.wm-date-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--size-s);
+  min-width: 0;
+}
+
+.wm-date-nav-arrows {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+.wm-date-nav-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Right group: interval trigger and tracking button */
+.wm-toolbar-controls {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: var(--size-s);
+}

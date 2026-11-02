@@ -11,31 +11,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ----- Header ----- */
-.wmk-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 28px 12px;
-  background: transparent;
-  flex: none;
-}
-.wmk-date-nav {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.wmk-arrows { display: flex; align-items: center; gap: 2px; }
-.wmk-date {
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  gap: 7px;
-  min-width: 0;
-}
-.wmk-date-main { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; color: var(--fg-1); white-space: nowrap; }
-.wmk-date-sub  { font-size: 13px; color: var(--fg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.wmk-controls { display: flex; align-items: center; gap: 10px; }
-
+/* ----- Icon button (still used by the settings modal) ----- */
 .wmk-ibtn {
   width: 36px; height: 36px; border-radius: 999px;
   background: transparent; border: 0; color: var(--fg-1); cursor: pointer;
@@ -45,147 +21,6 @@
 .wmk-ibtn:hover:not(:disabled) { background: var(--bg-2); }
 .wmk-ibtn:active:not(:disabled) { background: var(--bg-3); }
 .wmk-ibtn:disabled { opacity: .35; cursor: not-allowed; }
-
-.wmk-trackbtn {
-  font-family: inherit; font-size: 14px; font-weight: 500;
-  border-radius: 999px; padding: 9px 16px;
-  cursor: pointer;
-  /* Both labels share one grid cell, so the button always sizes to the wider
-     one ("recording" + dot). The paused label inherits that width — in any
-     language, no hardcoded width needed. */
-  display: inline-grid;
-  align-items: center; justify-items: center;
-  transition: background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard);
-  line-height: 1;
-}
-.wmk-trackbtn-face {
-  grid-area: 1 / 1;
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  white-space: nowrap;
-}
-.wmk-trackbtn-face.is-hidden { visibility: hidden; } /* keeps its footprint */
-
-.wmk-trackbtn.is-on  { background: #0a0a0a; color: #fff; border: 1px solid #0a0a0a; }
-.wmk-trackbtn.is-on:hover  { background: #1f1f1f; }
-.wmk-trackbtn.is-on:active { transform: scale(.98); }
-.wmk-trackbtn.is-off { background: #fff; color: var(--fg-1); border: 1px solid var(--border-2); }
-.wmk-trackbtn.is-off:hover  { background: var(--bg-2); }
-.wmk-trackbtn.is-off:active { background: var(--bg-3); }
-
-.wmk-rec {
-  width: 8px; height: 8px; border-radius: 999px; background: var(--wm-rec);
-  flex: none;
-  animation: wmk-pulse 2s infinite;
-}
-@keyframes wmk-pulse { 0%,100% { opacity: .65; } 50% { opacity: 1; } }
-
-/* ----- Dropdown ----- */
-.wmk-dd { position: relative; }
-.wmk-dd-btn {
-  font-family: inherit; font-size: 14px; font-weight: 500; line-height: 1;
-  background: transparent; border: 0; color: var(--fg-2);
-  border-radius: 999px; padding: 8px 8px 8px 10px;
-  display: inline-flex; align-items: center; gap: 6px;
-  cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast);
-}
-.wmk-dd-btn:hover { background: var(--bg-2); color: var(--fg-1); }
-.wmk-dd-btn > svg { color: var(--fg-4); }
-
-.wmk-dd-scrim { position: fixed; inset: 0; z-index: 30; }
-.wmk-dd-menu {
-  position: absolute; top: calc(100% + 6px); right: 0;
-  min-width: 140px; background: #fff;
-  border: 1px solid var(--border-1); border-radius: 10px;
-  box-shadow: var(--shadow-2);
-  padding: 4px; margin: 0; list-style: none;
-  z-index: 40;
-}
-.wmk-dd-item {
-  width: 100%; text-align: left;
-  background: transparent; border: 0; color: var(--fg-1);
-  font: inherit; font-size: 14px;
-  padding: 8px 12px; border-radius: 6px; cursor: pointer;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.wmk-dd-item:hover { background: var(--bg-2); }
-.wmk-dd-item.is-active { font-weight: 600; }
-.wmk-dd-item.is-active::after { content: ""; width: 6px; height: 6px; border-radius: 999px; background: #0a0a0a; }
-
-/* ----- Slider Flyout ----- */
-.wmk-slider-flyout {
-  position: absolute; top: calc(100% + 6px); right: 0;
-  width: 216px;
-  background: #fff;
-  border: 1px solid var(--border-1); border-radius: 10px;
-  box-shadow: var(--shadow-2);
-  padding: 14px 16px 12px;
-  z-index: 40;
-}
-.wmk-slider-flyout-head {
-  display: flex; align-items: baseline; justify-content: space-between;
-  margin-bottom: 14px;
-}
-.wmk-slider-flyout-lbl {
-  font-size: 12px; font-weight: 500; color: var(--fg-3);
-}
-.wmk-slider-flyout-val {
-  font-size: 14px; font-weight: 600; color: var(--fg-1);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Range input — custom track + thumb */
-.wmk-slider-input {
-  -webkit-appearance: none; appearance: none;
-  width: 100%; height: 4px;
-  border-radius: 999px; outline: none; border: 0;
-  cursor: pointer;
-  background: linear-gradient(
-    to right,
-    #0a0a0a var(--wmk-pct, 0%),
-    #e8e8e8 var(--wmk-pct, 0%)
-  );
-}
-.wmk-slider-input::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 18px; height: 18px; border-radius: 999px;
-  background: #fff;
-  border: 2px solid #0a0a0a;
-  box-shadow: 0 1px 4px rgba(10,10,10,.18);
-  cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease-standard),
-              box-shadow var(--dur-fast) var(--ease-standard);
-}
-.wmk-slider-input::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 2px 8px rgba(10,10,10,.22);
-}
-.wmk-slider-input::-webkit-slider-thumb:active {
-  transform: scale(1.05);
-}
-.wmk-slider-input::-moz-range-thumb {
-  width: 18px; height: 18px; border-radius: 999px;
-  background: #fff; border: 2px solid #0a0a0a;
-  box-shadow: 0 1px 4px rgba(10,10,10,.18);
-  cursor: pointer;
-}
-.wmk-slider-input::-moz-range-track {
-  height: 4px; border-radius: 999px; background: #e8e8e8;
-}
-.wmk-slider-input:focus-visible {
-  outline: 2px solid #0a0a0a; outline-offset: 3px; border-radius: 4px;
-}
-
-.wmk-slider-marks {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-top: 10px;
-}
-.wmk-slider-mark {
-  font-size: 11px; color: var(--fg-4);
-  cursor: pointer;
-  transition: color var(--dur-fast);
-}
-.wmk-slider-mark:hover { color: var(--fg-2); }
-.wmk-slider-mark.is-active { color: var(--fg-1); font-weight: 600; }
 
 /* ----- Footer ----- */
 .wmk-footer {
@@ -278,7 +113,7 @@
 .wmk-toggle.is-on::after { left: 20px; }
 
 /* focus */
-.wmk-ibtn:focus-visible, .wmk-trackbtn:focus-visible, .wmk-dd-btn:focus-visible, .wmk-btn:focus-visible, .wmk-toggle:focus-visible {
+.wmk-ibtn:focus-visible, .wmk-btn:focus-visible, .wmk-toggle:focus-visible {
   outline: 2px solid #0a0a0a; outline-offset: 2px;
 }
 

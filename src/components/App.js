@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { I18nextProvider } from 'react-i18next';
-import Header from './Header';
+import Toolbar from './toolbar/Toolbar';
 import Timeline from './timeline/Timeline';
 import useCurrentActivity from './timeline/useCurrentActivity';
 import Footer from './Footer';
@@ -222,7 +222,7 @@ const App = () => {
       <div className="wmk-app">
         <WindowTitleBar />
 
-        <Header
+        <Toolbar
           selectedDate={selectedDate}
           availableDates={availableDates}
           onDateChange={handleDateChange}
