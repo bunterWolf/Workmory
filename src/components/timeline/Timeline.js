@@ -18,15 +18,15 @@ const Timeline = ({
   isTracking = false,
   displayedDate,
   currentActivityTitle = null,
+  // False until App has loaded tracking state and interval (hour height depends on them).
+  isInitialized = true,
 }) => {
   const { t } = useTranslation();
   const [currentTrackingBlock, setCurrentTrackingBlock] = useState(null);
   // Native scroll container; used by the auto-scroll to the running block.
   const scrollRef = useRef(null);
-  // { date, container } the auto-scroll already ran for; reset when leaving today.
-  // The container is part of the key because the loading state unmounts it, and a
-  // freshly mounted container starts at scrollTop 0 again.
-  const scrolledRef = useRef(null);
+  // Date key the auto-scroll already ran for; reset when leaving today.
+  const scrolledDateRef = useRef(null);
 
   const getTodayDateKey = () => new Date().toISOString().split('T')[0];
 
@@ -84,26 +84,26 @@ const Timeline = ({
   const trackingGeometry = currentTrackingBlock ? getEventGeometry(currentTrackingBlock, minHour, pxPerMin) : null;
 
   // Scroll to the running block once per "today" view (first appearance of the block,
-  // coming back to today, or a freshly mounted container). Minute ticks must not
+  // or coming back to today). Minute ticks, reloads and interval changes must not
   // re-scroll, so the effect only depends on whether a block is shown, not on its position.
+  // It waits for fresh data and for App's init, so the geometry is final.
   const hasTrackingBlock = trackingGeometry !== null;
   useLayoutEffect(() => {
     if (!isToday) {
-      scrolledRef.current = null;
+      scrolledDateRef.current = null;
       return;
     }
     const container = scrollRef.current;
-    if (isLoading || !hasTrackingBlock || !container) return;
-    const done = scrolledRef.current;
-    if (done && done.date === displayedDate && done.container === container) return;
+    if (isLoading || !isInitialized || !hasTrackingBlock || !container) return;
+    if (scrolledDateRef.current === displayedDate) return;
     container.scrollTop = getScrollTarget({
       blockTop: trackingGeometry.top,
       blockHeight: trackingGeometry.height,
       viewportHeight: container.clientHeight,
       padY: TL_PAD_Y,
     });
-    scrolledRef.current = { date: displayedDate, container };
-  }, [isToday, displayedDate, hasTrackingBlock, isLoading]);
+    scrolledDateRef.current = displayedDate;
+  }, [isToday, displayedDate, hasTrackingBlock, isLoading, isInitialized]);
 
   if (isLoading) {
     return <div className="wm-timeline-loading text-m-default">{t('loading')}</div>;

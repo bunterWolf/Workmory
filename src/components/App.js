@@ -25,6 +25,8 @@ const App = () => {
   const [isTracking, setIsTracking] = useState(false);
   const [isMockData, setIsMockData] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  // True once init has loaded tracking state and interval (the timeline's first scroll waits for it).
+  const [isInitialized, setIsInitialized] = useState(false);
   const [aggregationInterval, setAggregationInterval] = useState(15);
   const [updateStatus, setUpdateStatus] = useState(null);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
@@ -47,6 +49,10 @@ const App = () => {
 
   // Handle date changes
   const handleDateChange = (newDate) => {
+    if (newDate === selectedDate) return;
+    // Drop the previous day's data so it is never shown under the new date.
+    setActivityData(null);
+    setIsLoading(true);
     setSelectedDate(newDate);
   };
 
@@ -58,8 +64,6 @@ const App = () => {
 
   // Handle aggregation interval changes
   const handleIntervalChange = async (newInterval) => {
-    setIsLoading(true);
-    
     try {
       await ipcRenderer.invoke('set-aggregation-interval', newInterval);
       setAggregationInterval(newInterval);
@@ -67,15 +71,14 @@ const App = () => {
       await loadActivityData();
     } catch (error) {
       console.error('Error changing aggregation interval:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Load activity data for the selected date
+  // Load activity data for the selected date. Does not set isLoading itself: the
+  // loading view replaces the timeline (and its scroll position), so only the
+  // initial load and date changes show it. Background refreshes and interval
+  // changes update the data in place.
   const loadActivityData = async () => {
-    setIsLoading(true);
-    
     try {
       const data = await ipcRenderer.invoke('get-day-data', selectedDate);
       setActivityData(data);
@@ -136,6 +139,8 @@ const App = () => {
         await loadActivityData();
       } catch (error) {
         console.error('Error during initialization:', error);
+      } finally {
+        setIsInitialized(true);
       }
     };
     
@@ -229,6 +234,7 @@ const App = () => {
           formatDuration={formatDuration}
           aggregationInterval={aggregationInterval}
           isTracking={isTracking}
+          isInitialized={isInitialized}
           displayedDate={selectedDate}
           currentActivityTitle={null}
         />
