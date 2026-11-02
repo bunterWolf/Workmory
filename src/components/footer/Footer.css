@@ -4,13 +4,13 @@
   --wm-footer-menu-left: 20px; /* Figma 84686:550 */
   --wm-footer-menu-top: 7px;   /* Figma 84686:550 */
   --wm-footer-menu-size: 28px; /* Figma 84686:550 */
+  /* Content must start right of the menu button (+ gap), measured from the footer's padding edge */
+  --wm-footer-content-inset: calc(var(--wm-footer-menu-left) + var(--wm-footer-menu-size) + var(--size-s) - var(--size-xxl));
 
   position: relative;
   flex: none;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: var(--size-l);
   height: var(--wm-footer-height);
   padding: var(--size-l) var(--size-xxl);
   background: var(--surface-2);
@@ -26,13 +26,22 @@
   padding: var(--size-xs);
 }
 
-/* Sits left of the summary, to the right of the menu button; shortens if space runs out */
+/* Right part: stays right-aligned (Figma) but can never reach under the menu button */
+.wm-footer-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--size-l);
+  margin-left: var(--wm-footer-content-inset);
+}
+
+/* Left of the summary; gives way first when space runs out (shrink factor far above the summary's) */
 .wm-footer-mock {
-  flex: 0 1 auto;
+  flex: 0 1000 auto;
   min-width: 0;
   margin-right: auto;
-  /* keeps clear of the absolutely positioned menu button */
-  margin-left: calc(var(--wm-footer-menu-left) + var(--wm-footer-menu-size) - var(--size-xxl) + var(--size-s));
   /* padding + negative margin keep descenders inside the clip box (text-box trim shrinks the line box) */
   padding-block: var(--size-xs);
   margin-block: calc(-1 * var(--size-xs));
@@ -44,7 +53,9 @@
 
 /* Figma: Status Bar 2052:157 */
 .wm-day-summary {
-  flex: none;
+  /* Shrinks only after the mock hint is gone; then the labels are cut, never the values */
+  flex: 0 1 auto;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: var(--size-l);
@@ -52,15 +63,23 @@
 }
 
 .wm-day-summary-item {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: var(--size-xs);
 }
 
 .wm-day-summary-value {
+  flex: none;
   color: var(--ink);
 }
 
 .wm-day-summary-label {
+  min-width: 0;
+  /* padding + negative margin keep descenders inside the clip box (text-box trim shrinks the line box) */
+  padding-block: var(--size-xs);
+  margin-block: calc(-1 * var(--size-xs));
+  overflow: hidden;
   color: var(--ink-3);
+  text-overflow: ellipsis;
 }
