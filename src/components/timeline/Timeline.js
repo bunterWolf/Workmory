@@ -1,11 +1,14 @@
 // Figma: Container 2066:772 (scroll container), Content 2067:795 (event lane)
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ravenLogo from '../../assets/logo/rabe-raven.png';
-import { getHourHeight, getHourRange, getEventGeometry } from './timelineGeometry';
+import { getHourHeight, getHourRange, getEventGeometry, getScrollTarget } from './timelineGeometry';
 import TimelineHourGrid from './TimelineHourGrid';
 import TimelineEvent from './TimelineEvent';
 import './Timeline.css';
+
+// Mirrors --tl-pad-y in Timeline.css (Figma 2066:772, container padding top/bottom).
+const TL_PAD_Y = 30;
 
 const Timeline = ({
   activityData,
@@ -20,6 +23,10 @@ const Timeline = ({
   const [currentTrackingBlock, setCurrentTrackingBlock] = useState(null);
   // Native scroll container; used by the auto-scroll to the running block.
   const scrollRef = useRef(null);
+  // { date, container } the auto-scroll already ran for; reset when leaving today.
+  // The container is part of the key because the loading state unmounts it, and a
+  // freshly mounted container starts at scrollTop 0 again.
+  const scrolledRef = useRef(null);
 
   const getTodayDateKey = () => new Date().toISOString().split('T')[0];
 
@@ -75,6 +82,28 @@ const Timeline = ({
   const pxPerMin = hourHeight / 60;
   const totalHeight = timelineHours.length * hourHeight;
   const trackingGeometry = currentTrackingBlock ? getEventGeometry(currentTrackingBlock, minHour, pxPerMin) : null;
+
+  // Scroll to the running block once per "today" view (first appearance of the block,
+  // coming back to today, or a freshly mounted container). Minute ticks must not
+  // re-scroll, so the effect only depends on whether a block is shown, not on its position.
+  const hasTrackingBlock = trackingGeometry !== null;
+  useLayoutEffect(() => {
+    if (!isToday) {
+      scrolledRef.current = null;
+      return;
+    }
+    const container = scrollRef.current;
+    if (isLoading || !hasTrackingBlock || !container) return;
+    const done = scrolledRef.current;
+    if (done && done.date === displayedDate && done.container === container) return;
+    container.scrollTop = getScrollTarget({
+      blockTop: trackingGeometry.top,
+      blockHeight: trackingGeometry.height,
+      viewportHeight: container.clientHeight,
+      padY: TL_PAD_Y,
+    });
+    scrolledRef.current = { date: displayedDate, container };
+  }, [isToday, displayedDate, hasTrackingBlock, isLoading]);
 
   if (isLoading) {
     return <div className="wm-timeline-loading text-m-default">{t('loading')}</div>;

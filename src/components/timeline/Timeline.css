@@ -34,7 +34,9 @@
 }
 .wm-timeline::-webkit-scrollbar-track {
   background: transparent;
-  margin-block: var(--tl-scrollbar-inset);
+  /* Track spans the padded area (Figma 84766:1347 sits inside the 30px container
+     padding), so the thumb starts --tl-pad-y + --tl-scrollbar-inset below the top. */
+  margin-block: var(--tl-pad-y);
 }
 /* The transparent border leaves a --tl-scrollbar-thumb wide visible thumb */
 .wm-timeline::-webkit-scrollbar-thumb {

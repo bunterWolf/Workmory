@@ -176,7 +176,7 @@ inneren Abstände stehen in `Timeline.css`.
   `--surface`, Padding `--tl-pad-y` oben und unten.
 - **Scrollbar** über `::-webkit-scrollbar`: Breite 14 px; Daumen 4 px sichtbar (5 px transparenter
   Rand, `background-clip: padding-box`), Farbe `color-mix(in srgb, var(--ink-4) 36%, transparent)`,
-  Radius `--size-xxl`; Spur transparent mit 5 px Abstand oben und unten.
+  Radius `--size-xxl`; Spur transparent, beginnt/endet bei `--tl-pad-y` (30 px), sodass der Daumen wie in Figma 35 px unter dem oberen Rand beginnt.
 - **Kein Scroll-Fade** (in Figma entfernt).
 - **Auto-Scroll (neu):** Beim Öffnen und beim Wechsel auf „Heute“ scrollt die Timeline **einmal** so,
   dass der laufende Block sichtbar ist. Danach scrollt nur noch der Nutzer. Ein minütliches

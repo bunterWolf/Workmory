@@ -6,6 +6,7 @@ import {
   getHalfHourOffset,
   getHourRange,
   getEventGeometry,
+  getScrollTarget,
 } from './timelineGeometry';
 
 // Local-time timestamps: the geometry code uses getHours()/getMinutes(),
@@ -115,5 +116,20 @@ describe('getHalfHourOffset', () => {
     expect(getHalfHourOffset(143)).toBe(72);
     expect(getHalfHourOffset(288)).toBe(144);
     expect(getHalfHourOffset(96)).toBe(48);
+  });
+});
+
+describe('getScrollTarget', () => {
+  it('scrolls so the block bottom sits padY above the viewport bottom', () => {
+    // 30 + 500 + 24 + 30 - 300 = 284
+    expect(getScrollTarget({ blockTop: 500, blockHeight: 24, viewportHeight: 300, padY: 30 })).toBe(284);
+  });
+
+  it('does not scroll when the block is already near the top', () => {
+    expect(getScrollTarget({ blockTop: 10, blockHeight: 24, viewportHeight: 300, padY: 30 })).toBe(0);
+  });
+
+  it('never returns a negative offset when the content is smaller than the viewport', () => {
+    expect(getScrollTarget({ blockTop: 50, blockHeight: 24, viewportHeight: 800, padY: 30 })).toBe(0);
   });
 });

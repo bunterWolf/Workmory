@@ -70,3 +70,11 @@ export function getEventGeometry(event, minHour, pxPerMin) {
   const height = Math.max(MIN_EVENT_HEIGHT, (event.duration / 60000) * pxPerMin);
   return { top, height };
 }
+
+// scrollTop that brings the running block into view: its bottom edge ends up
+// padY above the bottom of the scroll viewport. blockTop is relative to the
+// content box (as returned by getEventGeometry), so the container's own
+// top/bottom padding (padY) is added on both sides. Never negative.
+export function getScrollTarget({ blockTop, blockHeight, viewportHeight, padY }) {
+  return Math.max(0, padY + blockTop + blockHeight + padY - viewportHeight);
+}
