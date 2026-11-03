@@ -2,19 +2,15 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Button from '../ui/Button';
+import { toLocalDateKey, getYesterdayDateKey } from '../dateKey';
 
 export default function DateNav({ selectedDate, availableDates, onDateChange }) {
   const { t } = useTranslation();
 
   // "Today" / "Yesterday", otherwise "Weekday, short date"
   const formatDateLabel = (dateKey) => {
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayKey = yesterday.toISOString().split('T')[0];
-
-    if (dateKey === today) return t('timeFormats.today');
-    if (dateKey === yesterdayKey) return t('timeFormats.yesterday');
+    if (dateKey === toLocalDateKey()) return t('timeFormats.today');
+    if (dateKey === getYesterdayDateKey()) return t('timeFormats.yesterday');
     const date = new Date(dateKey + 'T00:00:00');
     return `${t('timeFormats.weekday', { date })}, ${t('timeFormats.dateShort', { date })}`;
   };

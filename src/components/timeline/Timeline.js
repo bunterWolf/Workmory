@@ -5,6 +5,7 @@ import ravenLogo from '../../assets/logo/rabe-raven.png';
 import { getHourHeight, getHourRange, getEventGeometry, getScrollTarget } from './timelineGeometry';
 import TimelineHourGrid from './TimelineHourGrid';
 import TimelineEvent from './TimelineEvent';
+import { toLocalDateKey } from '../dateKey';
 import './Timeline.css';
 
 // Mirrors --tl-pad-y in Timeline.css (Figma 2066:772, container padding top/bottom).
@@ -28,9 +29,7 @@ const Timeline = ({
   // Date key the auto-scroll already ran for; reset when leaving today.
   const scrolledDateRef = useRef(null);
 
-  const getTodayDateKey = () => new Date().toISOString().split('T')[0];
-
-  // Format hour for the gutter labels (locale-aware)
+    // Format hour for the gutter labels (locale-aware)
   const formatHour = (hour) => {
     const date = new Date();
     date.setHours(hour, 0, 0, 0);
@@ -39,14 +38,14 @@ const Timeline = ({
 
   // Update tracking block every minute, only when tracking today
   useEffect(() => {
-    const todayDateKey = getTodayDateKey();
+    const todayDateKey = toLocalDateKey();
     if (!isTracking || displayedDate !== todayDateKey) {
       if (currentTrackingBlock) setCurrentTrackingBlock(null);
       return;
     }
 
     const updateTrackingBlock = () => {
-      if (displayedDate === getTodayDateKey()) {
+      if (displayedDate === toLocalDateKey()) {
         const now = new Date();
         const minutes = now.getMinutes();
         const intervalStart = Math.floor(minutes / aggregationInterval) * aggregationInterval;
@@ -72,7 +71,7 @@ const Timeline = ({
   }, [isTracking, aggregationInterval, displayedDate, t]);
 
   const timelineEvents = activityData?.aggregated?.timelineOverview || [];
-  const isToday = displayedDate === getTodayDateKey();
+  const isToday = displayedDate === toLocalDateKey();
 
   // ---- Time → pixel geometry (layout offsets live in Timeline.css) ----
   const { minHour, maxHour } = getHourRange({ events: timelineEvents, trackingBlock: currentTrackingBlock, isToday });

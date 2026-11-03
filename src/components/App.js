@@ -8,16 +8,14 @@ import SettingsView from './settings/SettingsView';
 import WindowTitleBar from './window/WindowTitleBar';
 import { ipcRenderer } from 'electron';
 import i18n from '../i18n';
+import { toLocalDateKey } from './dateKey';
 import '../styles/tokens.css';
 import '../styles/typography.css';
 import '../styles/base.css';
 import './App.css';
 
 const App = () => {
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-  });
+  const [selectedDate, setSelectedDate] = useState(() => toLocalDateKey());
   // Always the currently shown date; lets async loads detect that they are stale.
   const selectedDateRef = useRef(selectedDate);
   selectedDateRef.current = selectedDate;
@@ -128,7 +126,7 @@ const App = () => {
         const datesFromBackend = await ipcRenderer.invoke('get-available-dates');
         
         // Ensure today's date is always included
-        const today = new Date().toISOString().split('T')[0];
+        const today = toLocalDateKey();
         const datesSet = new Set(datesFromBackend);
         datesSet.add(today);
         
@@ -177,7 +175,7 @@ const App = () => {
   const summary = getSummary();
 
   // Live "App · Window title" for the running block (only while tracking today).
-  const isToday = selectedDate === new Date().toISOString().split('T')[0];
+  const isToday = selectedDate === toLocalDateKey();
   const currentActivityTitle = useCurrentActivity(isTracking && isToday);
 
   // Update notification handler
