@@ -131,7 +131,7 @@ Activities
   - 15-minute intervals: XX:00 - XX:15 - XX:30 - XX:45
   - 10-minute intervals: XX:00 - XX:10 - XX:20 - XX:30 - XX:40 - XX:50
   - 5-minute intervals: XX:00 - XX:05 - XX:10 - XX:15 - ... - XX:55
-- An activity is calculated when its end time is reached.
+- An activity is calculated when its end time is reached. Aggregation can also run mid-interval (app start with autosaved heartbeats, resuming tracking, changing the interval); the still-running interval is then skipped (`TimelineGenerator.generateActivities` compares the interval end with the current time) and is only shown as the renderer's running block.
 
 Activity Aggregation
 - Contains all heartbeats within the activity's time window

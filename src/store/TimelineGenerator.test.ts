@@ -260,4 +260,40 @@ describe('TimelineGenerator', () => {
       expect(summary.appUsage).toEqual({});
     });
   });
-}); 
+
+  describe("Laufendes Intervall (Spec 2.2.3: Aktivität erst bei erreichtem Intervallende)", () => {
+    // 10-Minuten-Intervall 22:40–22:50; Heartbeats bei :15/:45 von 22:40 bis 22:44:45 = 10 Stück = genau die Hälfte
+    const base = new Date("2026-11-03T21:40:00Z").getTime();
+    const halfInterval = Array.from({ length: 10 }, (_, i) => ({
+      timestamp: base + 15000 + i * 30000,
+      data: { userActivity: "active", appWindow: { app: "Claude", title: "Chat" } }
+    }));
+
+    beforeEach(() => generator.setAggregationInterval(10));
+
+    test("erzeugt keine Aktivität für ein Intervall, dessen Ende noch nicht erreicht ist", () => {
+      const now = base + 7 * 60 * 1000; // 22:47, mitten im Intervall
+      expect(generator.generateTimelineEvents(halfInterval as any, now)).toEqual([]);
+    });
+
+    test("erzeugt die Aktivität, sobald das Intervallende erreicht ist", () => {
+      const now = base + 10 * 60 * 1000; // 22:50
+      const events = generator.generateTimelineEvents(halfInterval as any, now);
+      expect(events).toHaveLength(1);
+      expect(events[0].timestamp).toBe(base);
+      expect(events[0].duration).toBe(10 * 60 * 1000);
+    });
+
+    test("behält abgeschlossene Intervalle vor dem laufenden", () => {
+      const previous = Array.from({ length: 20 }, (_, i) => ({
+        timestamp: base - 10 * 60 * 1000 + 15000 + i * 30000,
+        data: { userActivity: "active", appWindow: { app: "Claude", title: "Chat" } }
+      }));
+      const now = base + 7 * 60 * 1000;
+      const events = generator.generateTimelineEvents([...previous, ...halfInterval] as any, now);
+      expect(events).toHaveLength(1);
+      expect(events[0].timestamp).toBe(base - 10 * 60 * 1000);
+      expect(events[0].duration).toBe(10 * 60 * 1000);
+    });
+  });
+});

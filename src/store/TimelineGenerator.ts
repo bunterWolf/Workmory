@@ -66,9 +66,10 @@ export default class TimelineGenerator {
   /**
    * Generate timeline events from heartbeats for a single day
    * @param {Heartbeat[]} heartbeats - Array of heartbeat objects for a day
+   * @param {number} now - Current time; intervals whose end lies after it are still running and are skipped
    * @returns {TimelineEvent[]} Timeline events
    */
-  generateTimelineEvents(heartbeats: Heartbeat[]): TimelineEvent[] {
+  generateTimelineEvents(heartbeats: Heartbeat[], now: number = Date.now()): TimelineEvent[] {
     if (!heartbeats || !Array.isArray(heartbeats) || heartbeats.length === 0) {
       // console.log("[TimelineGenerator] generateTimelineEvents: No heartbeats received.");
       return [];
@@ -84,7 +85,7 @@ export default class TimelineGenerator {
     // console.log("[TimelineGenerator] Interval Groups:", JSON.stringify(Object.keys(intervalGroups).reduce((acc, key) => { acc[key] = intervalGroups[parseInt(key)].length; return acc; }, {} as any))); // Log group keys and counts
     
     // Generate activities from interval groups
-    const activities = this.generateActivities(intervalGroups);
+    const activities = this.generateActivities(intervalGroups, now);
     // console.log(`[TimelineGenerator] Generated ${activities.length} activities before merging.`);
     
     // Merge consecutive activities with same content
@@ -169,9 +170,10 @@ export default class TimelineGenerator {
   /**
    * Generate activities from interval groups
    * @param {IntervalGroups} intervalGroups - Map of interval start timestamps to heartbeats
+   * @param {number} now - Current time (see generateTimelineEvents)
    * @returns {TimelineEvent[]} Activities
    */
-  generateActivities(intervalGroups: IntervalGroups): TimelineEvent[] {
+  generateActivities(intervalGroups: IntervalGroups, now: number = Date.now()): TimelineEvent[] {
     const activities: TimelineEvent[] = [];
     // Restore original threshold now that mock data is denser
     const MIN_HEARTBEATS_RATIO = 0.5; 
@@ -181,6 +183,10 @@ export default class TimelineGenerator {
       if (!Array.isArray(intervalHeartbeats) || intervalHeartbeats.length === 0) return;
       const intervalStartTime = parseInt(intervalStartStr, 10);
       if (isNaN(intervalStartTime)) return;
+      // Spec 2.2.3: an activity is calculated when its end time is reached. Aggregation can
+      // run mid-interval (app start, resume, interval change); the running interval is shown
+      // by the renderer's running block and must not also appear as a finished activity.
+      if (intervalStartTime + this.intervalDuration > now) return;
 
       const expectedHeartbeats = this.aggregationInterval * 2;
       const minimumRequiredHeartbeats = Math.ceil(expectedHeartbeats * MIN_HEARTBEATS_RATIO);
