@@ -3,9 +3,29 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import TrackingDot from '../ui/TrackingDot';
 import useAppIcon from './useAppIcon';
-import { blendOver, readCssColorVar } from './eventColors';
+import { blendOver, isHexColor, readCssColorVar } from './eventColors';
 import { useColorScheme } from './useColorScheme';
 import './TimelineEvent.css';
+
+// Tokens already reported as invalid, so a bad value logs once instead of on every render.
+const reportedTokens = new Set();
+function reportInvalidToken(name, value) {
+  if (reportedTokens.has(name)) return;
+  reportedTokens.add(name);
+  console.error(`Invalid color token ${name}: ${JSON.stringify(value)}; event text is not blended.`);
+}
+
+// Text color for an app block: the app color blended with the EventInkMix token. A render
+// must never throw (there is no error boundary), so an invalid token or color degrades to
+// the unblended app color.
+function getEventTextColor(appColor) {
+  const mix = readCssColorVar('--event-ink-mix');
+  if (!isHexColor(mix)) {
+    reportInvalidToken('--event-ink-mix', mix);
+    return appColor;
+  }
+  return isHexColor(appColor) ? blendOver(appColor, mix) : appColor;
+}
 
 // One timeline block. App windows (and legacy Teams meetings) get the app-color
 // overlay and blended text color; inactive and the running block use --surface.
@@ -20,11 +40,11 @@ export default function TimelineEvent({ event, geometry, formatDuration, current
   const colorScheme = useColorScheme();
   // Token values change with the theme, so re-read them when the scheme flips.
   const appColor = useMemo(
-    () => (isApp ? iconData?.color || readCssColorVar('--ink-3') : null),
+    () => (isApp ? (isHexColor(iconData?.color) ? iconData.color : readCssColorVar('--ink-3')) : null),
     [isApp, iconData, colorScheme]
   );
   const textColor = useMemo(
-    () => (appColor ? blendOver(appColor, readCssColorVar('--event-ink-mix')) : null),
+    () => (appColor ? getEventTextColor(appColor) : null),
     [appColor, colorScheme]
   );
 

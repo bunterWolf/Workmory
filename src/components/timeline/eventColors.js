@@ -3,6 +3,11 @@
 
 const HEX_RE = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})?$/i;
 
+// True for a '#rrggbb' / '#rrggbbaa' string; never throws (parseHexColor is the strict variant).
+export function isHexColor(value) {
+  return typeof value === 'string' && HEX_RE.test(value);
+}
+
 // Parses '#rrggbb' or '#rrggbbaa' (case-insensitive) into channels 0..255 and alpha 0..1.
 export function parseHexColor(hex) {
   const match = HEX_RE.exec(hex);

@@ -1,4 +1,14 @@
-import { parseHexColor, blendOver } from './eventColors';
+import { parseHexColor, blendOver, isHexColor } from './eventColors';
+
+describe('isHexColor', () => {
+  it.each(['#4750cb', '#FF5757', '#ff57571a'])('accepts %p', (input) => {
+    expect(isHexColor(input)).toBe(true);
+  });
+
+  it.each(['red', '#fff', '', undefined, null, 42, 'rgb(1,2,3)'])('rejects %p without throwing', (input) => {
+    expect(isHexColor(input)).toBe(false);
+  });
+});
 
 describe('parseHexColor', () => {
   it('parses #rrggbb with full alpha', () => {
