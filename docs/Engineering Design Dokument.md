@@ -186,7 +186,7 @@ After an activity change, the summary times are updated. These are not based on 
 - Uses minimal **React**, written as plain JavaScript (`src/components/**/*.js`)
 - No third-party UI libraries or routing (no React Router)
 - Styling is done using **plain CSS files**, editable directly by designers. Design tokens (colors, sizes) live only in `src/styles/tokens.css` and mirror the Figma variables 1:1; text styles are in `typography.css`, reset and bundled Inter font in `base.css`. Component CSS uses only `var(--…)` tokens plus named constants (with Figma node id) at the top of the file. See `docs/design/figma-map.md` for the mapping Figma -> code and the update checklist.
-- Theme: the CSS follows `prefers-color-scheme` (Electron `nativeTheme.themeSource = 'system'`); there is no manual switch
+- Theme: the CSS follows `prefers-color-scheme` (Electron's default `nativeTheme.themeSource` is `'system'`; the code never sets it); there is no manual switch
 - One component in code corresponds to one Figma component (same name, Figma node id in the file header)
 - The window is frameless with a custom title bar and starts at 387 x 499 (content size), minimum 387 x 360
 

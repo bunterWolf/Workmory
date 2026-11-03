@@ -70,7 +70,7 @@ meeting tracking, which is no longer a pursued feature. Do not reinvent the rule
 ## Tech stack & project layout
 
 - **Electron** + **TypeScript** for the backend/main side.
-- **React** in the renderer, written as **plain JavaScript** (`src/components/*.js`, `src/renderer/*.js`)
+- **React** in the renderer, written as **plain JavaScript** (`src/components/<area>/*.js` — `footer/`, `settings/`, `timeline/`, `toolbar/`, `ui/`, `window/` — plus `src/components/App.js` and `src/renderer/*.js`)
   — no TypeScript, no router, no third-party UI library.
 - **Plain CSS**, organized after the Figma file (see `docs/design/figma-map.md`): `src/styles/tokens.css`
   holds the Figma variables 1:1 (light in `:root`, dark via `prefers-color-scheme`), `typography.css` the

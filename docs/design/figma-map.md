@@ -71,6 +71,12 @@ nativen Fensters (verhindert weißes Aufblitzen beim Resize; wird bei `nativeThe
 **spiegelt `--surface-2`**. Ändert sich die Variable `Surface 2` in Figma, müssen `tokens.css` **und**
 `SURFACE_2` in `main.ts` gemeinsam angepasst werden.
 
+### Timeline-Konstante `TL_PAD_Y`
+
+`src/components/timeline/Timeline.js` enthält `TL_PAD_Y = 30` (Scroll-Ziel für den laufenden Block). Sie
+**spiegelt `--tl-pad-y`** in `Timeline.css` (Figma `2066:772`, Container-Padding oben/unten). Beide Werte
+müssen gemeinsam geändert werden.
+
 ### Fenstergröße (`src/main/main.ts`)
 
 | Konstante | Wert | Bedeutung |
@@ -107,7 +113,7 @@ Pfade relativ zu `src/components/`. Jede Komponente hat `.js` und (falls vorhand
 | Tracking dot | `84678:838` | `ui/TrackingDot` | `wm-tracking-dot*` |
 | Button (Default, Hover, Pressed, Disabled) | `84658:1616` (`84658:1623`, `84734:3006`, `84734:2997`) | `ui/Button` | `wm-button` |
 | Toggle | `84699:3534` | `ui/Toggle` | `wm-toggle` |
-| Icons (arrow_back, arrow_forward, arrow_drop_down, more_horiz_20, pause_circle) | `84658:1621`, `84664:1382`, `84672:1583`, … | `ui/Icon`, `src/assets/icons/*.svg` | `wm-icon` |
+| Icons (arrow_back, arrow_forward, more_horiz_20, pause_circle) | `84658:1621`, `84664:1382`, `84686:535`, `84678:1461` | `ui/Icon`, `src/assets/icons/*.svg` | `wm-icon` |
 | Container (Scroll-Container) / Content (Event-Spalte) | `2066:772` / `2067:795` | `timeline/Timeline` | `wm-timeline*` |
 | Entry (Stundenzeile, Label, Halbstunden-Marker) | `2005:793` (`84783:3209`, `84783:3210`, `84783:3213`) | `timeline/TimelineHourGrid` | `wm-timeline-hour*`, `wm-timeline-half-marker` |
 | .Event-Master (Varianten Inactive, Tracking) | `2007:199` (`84653:1247`, `84722:2213`) | `timeline/TimelineEvent` | `wm-timeline-event*` |
