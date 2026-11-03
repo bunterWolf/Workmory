@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ipcRenderer } from 'electron';
 import Button from '../ui/Button';
 import Toggle from '../ui/Toggle';
+import SegmentedControl from '../ui/SegmentedControl';
 import SettingRow from './SettingRow';
 import StoreLocationSetting from './StoreLocationSetting';
 import './SettingsView.css';
@@ -20,6 +21,7 @@ export default function SettingsView({ onBack }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [appVersion, setAppVersion] = useState('');
+  const [themeMode, setThemeMode] = useState('system');
 
   // Lade aktuelle Einstellungen
   useEffect(() => {
@@ -35,6 +37,8 @@ export default function SettingsView({ onBack }) {
 
         const version = await ipcRenderer.invoke('get-app-version');
         setAppVersion(version);
+
+        setThemeMode(await ipcRenderer.invoke('get-theme-mode'));
       } catch (error) {
         console.error('Fehler beim Laden der Einstellungen:', error);
         setErrorMessage(t('errorLoadingSettings'));
@@ -76,6 +80,21 @@ export default function SettingsView({ onBack }) {
     }
   };
 
+  // Erscheinungsbild ändern (Main setzt nativeTheme.themeSource; das CSS folgt über prefers-color-scheme)
+  const handleThemeChange = async (mode) => {
+    try {
+      const result = await ipcRenderer.invoke('set-theme-mode', mode);
+      if (result.success) {
+        setThemeMode(mode);
+      } else {
+        setErrorMessage(t('errorChangingTheme'));
+      }
+    } catch (error) {
+      console.error('Fehler beim Ändern des Erscheinungsbilds:', error);
+      setErrorMessage(t('errorChangingTheme'));
+    }
+  };
+
   return (
     <section className="wm-settings">
       <header className="wm-settings-toolbar">
@@ -95,6 +114,18 @@ export default function SettingsView({ onBack }) {
           <div className="wm-settings-loading text-m-default">{t('loading')}</div>
         ) : (
           <>
+            <SettingRow title={t('appearance')} description={t('appearanceDescription')}>
+              <SegmentedControl
+                ariaLabel={t('appearance')}
+                value={themeMode}
+                onChange={handleThemeChange}
+                options={[
+                  { value: 'system', label: t('themeSystem') },
+                  { value: 'light', label: t('themeLight') },
+                  { value: 'dark', label: t('themeDark') },
+                ]}
+              />
+            </SettingRow>
             <SettingRow
               control={<Toggle on={autoLaunchEnabled} onChange={handleToggleAutoLaunch} ariaLabel={t('autoLaunch')} />}
               title={t('autoLaunch')}

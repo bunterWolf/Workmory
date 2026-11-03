@@ -250,7 +250,7 @@ src/components/
 
 #### 2.5.2.3 Footer and Settings view
 - **Footer**: menu button (opens the Settings view) and the day summary *Active · Inactive · Tracked*, calculated from the aggregated summary data.
-- **Settings view** (replaces the former settings modal, same window; the back arrow returns to the Day View): placeholder link and app version. The auto-delete setting is not part of the UI; the store deletes data after a fixed 30 days.
+- **Settings view** (replaces the former settings modal, same window; the back arrow returns to the Day View): appearance (Auto / Light / Dark, saved as `themeMode` in `settings.json`; the main process applies it to `nativeTheme.themeSource` before the window paints, so `prefers-color-scheme` and the window background follow; IPC `get-theme-mode` / `set-theme-mode`), auto-launch toggle, beta-release toggle, activity-file location (change, reset, adopt an existing file; the confirmation appears inline), placeholder link and app version. The auto-delete setting is not part of the UI; the store deletes data after a fixed 30 days.
 
 #### 2.5.4 Development & Debugging
 

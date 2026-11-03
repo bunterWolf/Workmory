@@ -15,6 +15,7 @@ import { version as appVersion } from '../../package.json';
 // Use default imports for our TypeScript modules
 import ActivityStore from '../store/ActivityStore';
 import HeartbeatManager from '../store/HeartbeatManager';
+import { SettingsManager, ThemeMode, THEME_MODES } from '../store/SettingsManager';
 
 // Auto-Launcher-Instanz
 let autoLauncher: AutoLaunch;
@@ -415,6 +416,22 @@ function registerIpcHandlers(): void { // Add return type void
     return { success: true };
   });
   
+  // Appearance: 'system' | 'light' | 'dark'. nativeTheme.themeSource drives
+  // prefers-color-scheme in the renderer and the window background ('updated' event).
+  ipcMain.handle('get-theme-mode', (): ThemeMode => {
+    return activityStore ? activityStore.getSettingsManager().getThemeMode() : nativeTheme.themeSource;
+  });
+
+  ipcMain.handle('set-theme-mode', (event: IpcMainInvokeEvent, mode: ThemeMode): { success: boolean } => {
+    if (!activityStore || !THEME_MODES.includes(mode)) {
+      console.error(`Cannot set theme mode: ${!activityStore ? 'activity store not initialized' : `invalid mode ${mode}`}`);
+      return { success: false };
+    }
+    activityStore.getSettingsManager().setThemeMode(mode);
+    nativeTheme.themeSource = mode;
+    return { success: true };
+  });
+
   // Open directory dialog
   ipcMain.handle('open-directory-dialog', async (event: IpcMainInvokeEvent): Promise<string | null> => {
     if (!mainWindow) {
@@ -563,6 +580,9 @@ function notifyAllWindows(channel: string, data: any) {
 // App is ready to start
 app.whenReady().then(async () => {
   console.log("App ready.");
+  // Apply the saved appearance before the window paints (no flash of the wrong theme).
+  // The store's own SettingsManager is created later in initializeTracking; this one only reads.
+  nativeTheme.themeSource = new SettingsManager().getThemeMode();
   createWindow();
   await initializeTracking();
   registerIpcHandlers();

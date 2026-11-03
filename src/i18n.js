@@ -50,6 +50,12 @@ const resources = {
       errorChangingPath: "Fehler beim Ändern des Speicherorts",
       errorUsingExistingFile: "Fehler beim Verwenden der vorhandenen Datei",
       errorChangingBetaSetting: "Fehler beim Ändern der Beta-Einstellung",
+      appearance: "Darstellung",
+      appearanceDescription: "Hell, dunkel oder wie im System eingestellt.",
+      themeSystem: "Auto",
+      themeLight: "Hell",
+      themeDark: "Dunkel",
+      errorChangingTheme: "Fehler beim Ändern der Darstellung",
       
       // Zeitformate
       timeFormats: {
@@ -110,6 +116,12 @@ const resources = {
       errorChangingPath: "Error changing storage location",
       errorUsingExistingFile: "Error using existing file",
       errorChangingBetaSetting: "Error changing beta setting",
+      appearance: "Appearance",
+      appearanceDescription: "Light, dark or follow the system setting.",
+      themeSystem: "Auto",
+      themeLight: "Light",
+      themeDark: "Dark",
+      errorChangingTheme: "Error changing the appearance",
       
       // Time formats
       timeFormats: {

@@ -113,6 +113,7 @@ Pfade relativ zu `src/components/`. Jede Komponente hat `.js` und (falls vorhand
 | Tracking dot | `84678:838` | `ui/TrackingDot` | `wm-tracking-dot*` |
 | Button (Default, Hover, Pressed, Disabled) | `84658:1616` (`84658:1623`, `84734:3006`, `84734:2997`) | `ui/Button` | `wm-button` |
 | Toggle | `84699:3534` | `ui/Toggle` | `wm-toggle` |
+| SegmentedControl (Darstellung Auto/Hell/Dunkel) | *noch kein Figma-Node* | `ui/SegmentedControl` | `wm-segmented*` |
 | Icons (arrow_back, arrow_forward, more_horiz_20, pause_circle) | `84658:1621`, `84664:1382`, `84686:535`, `84678:1461` | `ui/Icon`, `src/assets/icons/*.svg` | `wm-icon` |
 | Container (Scroll-Container) / Content (Event-Spalte) | `2066:772` / `2067:795` | `timeline/Timeline` | `wm-timeline*` |
 | Entry (Stundenzeile, Label, Halbstunden-Marker) | `2005:793` (`84783:3209`, `84783:3210`, `84783:3213`) | `timeline/TimelineHourGrid` | `wm-timeline-hour*`, `wm-timeline-half-marker` |
@@ -154,6 +155,7 @@ offen, TODO).
 | | `--wm-button-radius` | 100 px | `84658:1616` |
 | | `--wm-button-label-min-height` | 20 px | `84664:1561` |
 | `ui/Toggle.css` | `--wm-toggle-width` / `-height` / `-padding` / `-knob-size` / `-offset` | 35 / 20 / 3 / 14 / 18 px | `84699:3534` |
+| `ui/SegmentedControl.css` | `--wm-segmented-padding` / `--wm-segmented-track-opacity` | 3 px / 0.15 | kein eigener Node (übernommen von `84699:3534` / `84734:3056`) |
 | `ui/TrackingDot.css` | `--wm-dot-box-width` / `-box-height` | 16 / 20 px | `84678:838` |
 | | `--wm-dot-size` / `-pulse-size` | 5 / 16 px | `84678:838` |
 | | `--wm-dot-pulse-start-opacity` / `-pulse-duration` | 0.5 / 2s | `84678:838` |

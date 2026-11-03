@@ -1,0 +1,36 @@
+/* Figma: none yet — token-based placeholder until the appearance setting is designed */
+.wm-segmented {
+  --wm-segmented-padding: 3px;        /* matches the Toggle inset (Figma 84699:3534) */
+  --wm-segmented-track-opacity: 0.15; /* Button hover layer (Figma 84734:3056) */
+
+  display: inline-flex;
+  align-self: flex-start;
+  padding: var(--wm-segmented-padding);
+  gap: var(--wm-segmented-padding);
+  border-radius: var(--size-xxl);
+  background: color-mix(in srgb, var(--ink-4) calc(var(--wm-segmented-track-opacity) * 100%), transparent);
+}
+
+.wm-segmented-option {
+  padding: var(--size-xs) var(--size-m);
+  border: 0;
+  border-radius: var(--size-xxl);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.wm-segmented-option:hover {
+  color: var(--ink);
+}
+
+.wm-segmented-option-selected {
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: default;
+}
+
+.wm-segmented-option:focus-visible {
+  outline: 1px solid var(--ink-3);
+  outline-offset: -1px;
+}

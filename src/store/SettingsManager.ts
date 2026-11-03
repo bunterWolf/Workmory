@@ -2,11 +2,16 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { app } from 'electron';
 
+// Erscheinungsbild: 'system' folgt dem Betriebssystem (Electron nativeTheme.themeSource)
+export type ThemeMode = 'system' | 'light' | 'dark';
+export const THEME_MODES: ThemeMode[] = ['system', 'light', 'dark'];
+
 // Die Struktur der Settings
 export interface AppSettings {
   activityStoreDirPath: string | null; // null = Standard (userData)
   allowPrerelease: boolean;
   autoLaunchEnabled: boolean; // Neue Eigenschaft für Auto-Start
+  themeMode: ThemeMode;
 }
 
 /**
@@ -24,7 +29,8 @@ export class SettingsManager {
     this.settings = {
       activityStoreDirPath: null,
       allowPrerelease: false,
-      autoLaunchEnabled: false // Standard: Auto-Start deaktiviert
+      autoLaunchEnabled: false, // Standard: Auto-Start deaktiviert
+      themeMode: 'system'
     };
 
     // Lade Einstellungen aus der Datei, wenn sie existiert
@@ -57,6 +63,11 @@ export class SettingsManager {
           if ('autoLaunchEnabled' in parsedSettings && 
               typeof parsedSettings.autoLaunchEnabled === 'boolean') {
             this.settings.autoLaunchEnabled = parsedSettings.autoLaunchEnabled;
+          }
+
+          // themeMode ('system' | 'light' | 'dark')
+          if (THEME_MODES.includes(parsedSettings.themeMode)) {
+            this.settings.themeMode = parsedSettings.themeMode;
           }
         }
         
@@ -140,6 +151,22 @@ export class SettingsManager {
    */
   setAutoLaunchEnabled(enabled: boolean): void {
     this.settings.autoLaunchEnabled = enabled;
+    this.saveSettings();
+  }
+
+  /**
+   * Gibt das gewählte Erscheinungsbild zurück
+   */
+  getThemeMode(): ThemeMode {
+    return this.settings.themeMode;
+  }
+
+  /**
+   * Setzt das Erscheinungsbild
+   * @param mode 'system', 'light' oder 'dark'
+   */
+  setThemeMode(mode: ThemeMode): void {
+    this.settings.themeMode = mode;
     this.saveSettings();
   }
 } 
