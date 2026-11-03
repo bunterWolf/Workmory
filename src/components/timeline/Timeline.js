@@ -36,7 +36,9 @@ const Timeline = ({
     return t('timeFormats.time', { time: date });
   };
 
-  // Update tracking block every minute, only when tracking today
+  // Update tracking block every minute, only when tracking today. The minute timer is not
+  // aligned to the interval end, so also recompute when new data arrives: an aggregation
+  // lands exactly when an interval ends, and the block must move to the next interval then.
   useEffect(() => {
     const todayDateKey = toLocalDateKey();
     if (!isTracking || displayedDate !== todayDateKey) {
@@ -68,7 +70,7 @@ const Timeline = ({
     updateTrackingBlock();
     const interval = setInterval(updateTrackingBlock, 60000);
     return () => clearInterval(interval);
-  }, [isTracking, aggregationInterval, displayedDate, t]);
+  }, [isTracking, aggregationInterval, displayedDate, activityData, t]);
 
   const timelineEvents = activityData?.aggregated?.timelineOverview || [];
   const isToday = displayedDate === toLocalDateKey();
