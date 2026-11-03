@@ -1,6 +1,7 @@
 import TimelineGenerator from './TimelineGenerator';
 import { ActivityState } from './ActivityState';
 import { AggregatedData, Heartbeat, TimelineEvent, AggregationSummary } from './ActivityStore'; // Assuming types are still exported from ActivityStore
+import { toLocalDateKey } from './dateKey';
 
 /**
  * Manages the aggregation of heartbeat data and caching for the current day.
@@ -19,7 +20,8 @@ export class AggregationManager {
     constructor(timelineGenerator: TimelineGenerator, activityState: ActivityState) {
         this.timelineGenerator = timelineGenerator;
         this.activityState = activityState;
-        this.todayDateKey = this.getDateKey(Date.now());
+        // Same local-day key ActivityStore stores heartbeats under (never UTC).
+        this.todayDateKey = toLocalDateKey(Date.now());
         // Initialize cache for today if data already exists (e.g., from mock data pre-aggregation)
         this.aggregateAndCacheDay(this.todayDateKey);
     }
@@ -143,18 +145,12 @@ export class AggregationManager {
      * Clears the cache if the day rolls over.
      */
     private updateTodayKey(): void {
-        const currentDateKey = this.getDateKey(Date.now());
+        const currentDateKey = toLocalDateKey(Date.now());
         if (currentDateKey !== this.todayDateKey) {
             console.log(`[AggregationManager] Day changed. Old: ${this.todayDateKey}, New: ${currentDateKey}. Clearing cache.`);
             this.todayDateKey = currentDateKey;
             // Clear the *entire* cache when the day rolls over, as it only holds today's data
             this.todayAggregationCache = {}; 
         }
-    }
-
-    // Simple date key generation utility
-    private getDateKey(timestamp: number): string {
-        const date = new Date(timestamp);
-        return date.toISOString().split('T')[0];
     }
 } 
