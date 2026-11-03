@@ -25,19 +25,3 @@
   font-size: var(--size-m);
   flex: none;
 }
-
-/* Scrollbar styling for scroll areas without their own (e.g. settings view) */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--line-3);
-  border-radius: 999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--ink-4);
-}
