@@ -88,8 +88,9 @@ const App = () => {
       const data = await ipcRenderer.invoke('get-day-data', requestedDate);
       if (!isStale()) setActivityData(data);
     } catch (error) {
+      // Keep what is shown: a failed refresh of the same date must not blank the timeline
+      // and footer. Data is already null on the initial load and after a date change.
       console.error('Error loading activity data:', error);
-      if (!isStale()) setActivityData(null);
     } finally {
       if (!isStale()) setIsLoading(false);
     }
