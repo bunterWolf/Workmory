@@ -82,6 +82,26 @@ describe('getHourRange', () => {
     expect(getHourRange({ events, trackingBlock, isToday: true })).toEqual({ minHour: 8, maxHour: 17 });
   });
 
+  it('lowers minHour when the tracking block starts earlier than the events (today)', () => {
+    const events = [ev(10, 0, 60)];
+    const trackingBlock = { timestamp: at(6, 0), duration: 15 * MIN };
+    // events: min 10 - 1 = 9, max 11 + 1 = 12; block hour 6 -> min(9, 5) = 5, max(12, 8) = 12
+    expect(getHourRange({ events, trackingBlock, isToday: true })).toEqual({ minHour: 5, maxHour: 12 });
+  });
+
+  it('clamps the tracking block upper bound (start + 2) at 23 with events', () => {
+    const events = [ev(20, 0, 30)];
+    const trackingBlock = { timestamp: at(22, 45), duration: 15 * MIN };
+    // events: min 19, max 20 + 1 = 21; block hour 22 -> min(23, 24) = 23, so max(21, 23) = 23
+    expect(getHourRange({ events, trackingBlock, isToday: true })).toEqual({ minHour: 19, maxHour: 23 });
+  });
+
+  it('clamps the range at 23 for a tracking block in the last hour without events', () => {
+    const trackingBlock = { timestamp: at(23, 15), duration: 15 * MIN };
+    // block hour 23 -> min 22, max min(23, 25) = 23; the 3-hour span is capped at 23
+    expect(getHourRange({ events: [], trackingBlock, isToday: true })).toEqual({ minHour: 22, maxHour: 23 });
+  });
+
   it('ignores the tracking block when it is not today', () => {
     const events = [ev(9, 0, 60)];
     const trackingBlock = { timestamp: at(15, 0), duration: 15 * MIN };
