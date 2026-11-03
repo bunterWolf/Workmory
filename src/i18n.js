@@ -6,7 +6,7 @@ const resources = {
   de: {
     translation: {
       // UI Texte
-      tracking: "Aufzeichnung",
+      tracking: "Tracking",
       paused: "Pausiert",
       summaryActive: "Aktiv",
       summaryInactive: "Inaktiv",
@@ -14,7 +14,6 @@ const resources = {
       inactive: "Inaktiv",
       teamsMeeting: "Teams-Meeting",
       noActivity: "Keine Aktivität aufgezeichnet",
-      noActivitySub: "Workmory war an diesem Tag nicht aktiv.",
       mockData: "Beispieldaten",
       previousDay: "Vorheriger Tag",
       nextDay: "Nächster Tag",
@@ -75,7 +74,6 @@ const resources = {
       inactive: "Inactive",
       teamsMeeting: "Teams meeting",
       noActivity: "No activity recorded",
-      noActivitySub: "Workmory wasn't running on this day.",
       mockData: "Sample Data",
       previousDay: "Previous Day",
       nextDay: "Next Day",

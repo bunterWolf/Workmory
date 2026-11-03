@@ -47,11 +47,12 @@
 }
 
 /* ----- Hour grid (spec §5.4) ----- */
+/* Only as tall as its label: a full hour-height row would reach past the range end
+   and add empty scroll space. */
 .wm-timeline-hour {
   position: absolute;
   left: 0;
   right: 0;
-  height: var(--hour-height);
   display: flex;
   align-items: flex-start;
   padding-right: var(--tl-label-pad-right);
@@ -86,46 +87,16 @@
   right: calc(var(--tl-lane-right) - var(--tl-scrollbar-width));
 }
 
-/* ----- Loading and empty state ----- */
-.wm-timeline-loading {
+/* ----- Loading and empty state (no Figma node): one centered line, M/Default, Ink 3 ----- */
+.wm-timeline-loading,
+.wm-timeline-empty {
   flex: 1;
   min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0 var(--size-xxl);
   background: var(--surface);
   color: var(--ink-3);
-}
-
-.wm-timeline-empty {
-  /* Carried over from the previous empty state; no Figma node */
-  --tl-empty-offset-top: 80px;
-  --tl-empty-icon-size: 48px;
-  --tl-empty-icon-opacity: 0.18;
-
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--size-s);
-  padding: var(--tl-empty-offset-top) var(--size-xxl) 0;
-  background: var(--surface);
   text-align: center;
-}
-
-.wm-timeline-empty-icon {
-  width: var(--tl-empty-icon-size);
-  height: var(--tl-empty-icon-size);
-  object-fit: contain;
-  opacity: var(--tl-empty-icon-opacity);
-  margin-bottom: var(--size-l);
-}
-
-.wm-timeline-empty-title {
-  color: var(--ink);
-}
-
-.wm-timeline-empty-sub {
-  color: var(--ink-3);
 }

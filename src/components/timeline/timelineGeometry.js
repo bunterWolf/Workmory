@@ -1,8 +1,7 @@
-// Pure geometry helpers for the day timeline (hour height, visible hour range,
-// event position, half-hour marker). Pinned by timelineGeometry.test.js — the
-// timeline feeds billing, so keep behavior stable. getHourHeight and getHourRange
-// are unchanged from the original DayOverview.js; getEventGeometry follows the
-// Figma rules (1px offset below the hour line, full-duration height).
+// Pure geometry helpers for the day timeline (hour height, visible time range,
+// grid marks, event position, scroll target). Pinned by timelineGeometry.test.js —
+// the timeline feeds billing, so keep behavior stable. getEventGeometry follows the
+// Figma rules (1px offset below the grid line, full-duration height).
 
 // Hour height scales inversely with the aggregation interval so that a single
 // interval block always gets at least MIN_BLOCK_HEIGHT px — finer zoom (5 min)
@@ -10,63 +9,56 @@
 export const MIN_BLOCK_HEIGHT = 24;
 export const getHourHeight = (intervalMin) => MIN_BLOCK_HEIGHT * (60 / intervalMin);
 
-// Offset of the half-hour marker line from the top of an hour row.
-export const getHalfHourOffset = (hourHeight) => Math.round(hourHeight / 2);
-
-// Events sit 1px below the hour line; the visual gap between adjacent events
+// Events sit 1px below the grid line; the visual gap between adjacent events
 // comes from a 1px border on each event, not from reducing the height.
 export const EVENT_OFFSET_Y = 1;
 export const MIN_EVENT_HEIGHT = 14;
 
-// Determine the hour range to display.
+// Visible time range: hug the content so nothing scrolls through empty time. The
+// range starts at the first block and ends with the last one (running block today
+// included); the visual breathing room is the container's own --tl-pad-y.
+// Blocks start on interval boundaries and pxPerMin = MIN_BLOCK_HEIGHT / interval,
+// so every event and grid line lands on a whole pixel.
+export const GRID_STEP_MIN = 30;
+const DAY_MIN = 24 * 60;
+
+const minutesOfDay = (timestamp) => {
+  const d = new Date(timestamp);
+  return d.getHours() * 60 + d.getMinutes();
+};
+
+// Range in minutes since local midnight: { startMin, endMin }.
 // events: [{ timestamp, duration }], trackingBlock: { timestamp, duration } | null
-export function getHourRange({ events, trackingBlock, isToday }) {
-  let minHour, maxHour;
-  if (events.length === 0) {
-    if (isToday && trackingBlock) {
-      const blockStartHour = new Date(trackingBlock.timestamp).getHours();
-      minHour = Math.max(0, blockStartHour - 1);
-      maxHour = Math.min(23, blockStartHour + 2);
-    } else {
-      minHour = 8;
-      maxHour = 12;
-    }
-  } else {
-    const eventStartHours = events.map((e) => new Date(e.timestamp).getHours());
-    const eventEndHours = events.map((e) => new Date(e.timestamp + e.duration).getHours() + 1);
+// viewportContentHeight: scroll viewport height minus its padding (0 = unknown).
+// If the content is shorter than the viewport, the range grows in whole-block steps
+// (downward, upward once it reaches midnight) until it fills the viewport — never
+// beyond it, so filling the window never causes a scroll.
+export function getTimeRange({ events, trackingBlock, isToday, pxPerMin, viewportContentHeight }) {
+  const blocks = isToday && trackingBlock ? [...events, trackingBlock] : events;
+  let startMin = Math.max(0, Math.min(...blocks.map((b) => minutesOfDay(b.timestamp))));
+  let endMin = Math.min(DAY_MIN, Math.max(...blocks.map((b) => minutesOfDay(b.timestamp) + b.duration / 60000)));
 
-    let eventMinHour = Math.max(0, Math.min(...eventStartHours) - 1);
-    let eventMaxHour = Math.min(23, Math.max(...eventEndHours));
-
-    if (isToday && trackingBlock) {
-      const blockStartHour = new Date(trackingBlock.timestamp).getHours();
-      minHour = Math.min(eventMinHour, Math.max(0, blockStartHour - 1));
-      maxHour = Math.max(eventMaxHour, Math.min(23, blockStartHour + 2));
-    } else {
-      minHour = eventMinHour;
-      maxHour = eventMaxHour;
-    }
-
-    const longestEventDuration = Math.max(...events.map((e) => e.duration));
-    const longestEventHours = Math.ceil(longestEventDuration / (60 * 60 * 1000));
-    if (longestEventHours > 4) {
-      maxHour = Math.min(23, maxHour + Math.floor(longestEventHours / 2));
-    }
+  const fitMin = (Math.floor(viewportContentHeight / MIN_BLOCK_HEIGHT) * MIN_BLOCK_HEIGHT) / pxPerMin;
+  if (fitMin > endMin - startMin) {
+    endMin = Math.min(DAY_MIN, startMin + fitMin);
+    startMin = Math.max(0, endMin - fitMin);
   }
-
-  minHour = Math.max(0, minHour);
-  maxHour = Math.min(23, maxHour);
-  maxHour = Math.max(maxHour, minHour + 3);
-  maxHour = Math.min(23, maxHour);
-
-  return { minHour, maxHour };
+  return { startMin, endMin };
 }
 
-// Position helper (top/height in px relative to the first displayed hour).
-export function getEventGeometry(event, minHour, pxPerMin) {
-  const start = new Date(event.timestamp);
-  const startMinFromMidnight = start.getHours() * 60 + start.getMinutes();
-  const top = (startMinFromMidnight - minHour * 60) * pxPerMin + EVENT_OFFSET_Y;
+// Grid marks on every :00 (hour line with label) and :30 (half-hour marker) from
+// startMin up to (not including) endMin. top is relative to the content box.
+export function getGridMarks(startMin, endMin, pxPerMin) {
+  const marks = [];
+  for (let minute = Math.ceil(startMin / GRID_STEP_MIN) * GRID_STEP_MIN; minute < endMin; minute += GRID_STEP_MIN) {
+    marks.push({ minute, top: Math.round((minute - startMin) * pxPerMin), isHour: minute % 60 === 0 });
+  }
+  return marks;
+}
+
+// Position helper (top/height in px relative to the range start, in minutes since midnight).
+export function getEventGeometry(event, rangeStartMin, pxPerMin) {
+  const top = (minutesOfDay(event.timestamp) - rangeStartMin) * pxPerMin + EVENT_OFFSET_Y;
   const height = Math.max(MIN_EVENT_HEIGHT, (event.duration / 60000) * pxPerMin);
   return { top, height };
 }

@@ -213,8 +213,9 @@ src/components/
 1. **Zeitliche Darstellung**
    - Vertikale Timeline mit Stundenlinien, Stunden-Labels und Halbstunden-Markern
    - Stundenhöhe = 24 px × 60 / Intervall, also 288 px (5m), 144 px (10m), 96 px (15m)
-   - Angezeigt werden nur die aktiven Zeiten mit Puffer (erste Aktivität minus 1 Stunde, Verlängerung bei langen Events, Mindestspanne 3 Stunden, Grenzen 0–23 Uhr, laufender Block einbezogen). Die Berechnung steckt in den reinen Funktionen von `timelineGeometry.js` (getestet in `timelineGeometry.test.js`).
-   - Event-Position: `top = (Startminute − Startstunde × 60) × px/min + 1 px`, `height = max(14, Dauer × px/min)`. Die Lücke zwischen benachbarten Events entsteht durch den 1-px-Rand in `--surface` an jedem Event.
+   - Angezeigt wird nur der Bereich mit Aktivität (`getTimeRange`): vom Start des ersten bis zum Ende des letzten Blocks, laufender Block einbezogen; Grenzen 0–24 Uhr. Den optischen Abstand oben und unten liefert allein der 30-px-Innenabstand des Scroll-Containers (Figma), es gibt keinen zusätzlichen Zeitpuffer. Ist der Inhalt kürzer als das Fenster, wächst der Bereich in ganzen 24-px-Blockschritten (nach unten, ab Mitternacht nach oben), bis er das Fenster füllt, aber nie darüber hinaus, sodass kein leeres Scrollen entsteht. Weil Blöcke auf Intervallgrenzen beginnen und px/min = 24 / Intervall ist, liegen alle Events und Rasterlinien auf ganzen Pixeln. Die Berechnung steckt in den reinen Funktionen von `timelineGeometry.js` (getestet in `timelineGeometry.test.js`).
+   - Raster (`getGridMarks`): Stundenlinie mit Label zu jeder vollen Stunde, Halbstunden-Marker zu jeder :30, innerhalb des Bereichs.
+   - Event-Position: `top = (Startminute − Bereichsanfang in Minuten) × px/min + 1 px`, `height = max(14, Dauer × px/min)`. Die Lücke zwischen benachbarten Events entsteht durch den 1-px-Rand in `--surface` an jedem Event.
 
 ##### B. Event-Darstellung
 
@@ -249,7 +250,7 @@ src/components/
 
 #### 2.5.2.3 Footer and Settings view
 - **Footer**: menu button (opens the Settings view) and the day summary *Active · Inactive · Tracked*, calculated from the aggregated summary data.
-- **Settings view** (replaces the former settings modal, same window; the back arrow returns to the Day View): auto-launch toggle, beta-release toggle, activity-file location (change, reset, adopt an existing file; the confirmation appears inline), placeholder link and app version. The auto-delete setting is not part of the UI; the store deletes data after a fixed 30 days.
+- **Settings view** (replaces the former settings modal, same window; the back arrow returns to the Day View): placeholder link and app version. The auto-delete setting is not part of the UI; the store deletes data after a fixed 30 days.
 
 #### 2.5.4 Development & Debugging
 

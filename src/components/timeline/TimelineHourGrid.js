@@ -1,17 +1,17 @@
 // Figma: Entry 2005:793 (row 84783:3209, label 84783:3210, half-hour marker 84783:3213)
 import React from 'react';
-import { getHalfHourOffset } from './timelineGeometry';
 
-// One absolutely positioned hour label (with its hour line) per hour, plus a
-// half-hour marker. Positions are relative to the timeline content box.
-export default function TimelineHourGrid({ hours, hourHeight, formatHour }) {
-  const halfHourOffset = getHalfHourOffset(hourHeight);
-  return hours.map((hour, i) => (
-    <React.Fragment key={hour}>
-      <div className="wm-timeline-hour" style={{ top: i * hourHeight }}>
-        <div className="wm-timeline-hour-label text-m-default">{formatHour(hour)}</div>
+// marks: [{ minute, top, isHour }] from getGridMarks. Full hours get the hour line
+// with label, :30 marks the short half-hour marker. Positions are relative to the
+// timeline content box.
+export default function TimelineHourGrid({ marks, formatHour }) {
+  return marks.map((mark) =>
+    mark.isHour ? (
+      <div key={mark.minute} className="wm-timeline-hour" style={{ top: mark.top }}>
+        <div className="wm-timeline-hour-label text-m-default">{formatHour(mark.minute / 60)}</div>
       </div>
-      <div className="wm-timeline-half-marker" style={{ top: i * hourHeight + halfHourOffset }} />
-    </React.Fragment>
-  ));
+    ) : (
+      <div key={mark.minute} className="wm-timeline-half-marker" style={{ top: mark.top }} />
+    )
+  );
 }

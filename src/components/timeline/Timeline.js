@@ -1,8 +1,7 @@
 // Figma: Container 2066:772 (scroll container), Content 2067:795 (event lane)
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import ravenLogo from '../../assets/logo/rabe-raven.png';
-import { getHourHeight, getHourRange, getEventGeometry, getScrollTarget } from './timelineGeometry';
+import { getHourHeight, getTimeRange, getGridMarks, getEventGeometry, getScrollTarget } from './timelineGeometry';
 import TimelineHourGrid from './TimelineHourGrid';
 import TimelineEvent from './TimelineEvent';
 import { toLocalDateKey } from '../dateKey';
@@ -28,8 +27,10 @@ const Timeline = ({
   const scrollRef = useRef(null);
   // Date key the auto-scroll already ran for; reset when leaving today.
   const scrolledDateRef = useRef(null);
+  // Scroll viewport height; short days grow their range to fill it (see getTimeRange).
+  const [viewportHeight, setViewportHeight] = useState(0);
 
-    // Format hour for the gutter labels (locale-aware)
+  // Format hour for the gutter labels (locale-aware)
   const formatHour = (hour) => {
     const date = new Date();
     date.setHours(hour, 0, 0, 0);
@@ -75,14 +76,35 @@ const Timeline = ({
   const timelineEvents = activityData?.aggregated?.timelineOverview || [];
   const isToday = displayedDate === toLocalDateKey();
 
+  const hasContent = timelineEvents.length > 0 || currentTrackingBlock !== null;
+
+  // Track the scroll viewport's height while the timeline is mounted.
+  useLayoutEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const measure = () => setViewportHeight(container.clientHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [isLoading, hasContent]);
+
   // ---- Time → pixel geometry (layout offsets live in Timeline.css) ----
-  const { minHour, maxHour } = getHourRange({ events: timelineEvents, trackingBlock: currentTrackingBlock, isToday });
-  const timelineHours = Array.from({ length: maxHour - minHour + 1 }, (_, i) => i + minHour);
   // Interval-aware sizing: finer zoom → taller hours → roomier short blocks.
   const hourHeight = getHourHeight(aggregationInterval);
   const pxPerMin = hourHeight / 60;
-  const totalHeight = timelineHours.length * hourHeight;
-  const trackingGeometry = currentTrackingBlock ? getEventGeometry(currentTrackingBlock, minHour, pxPerMin) : null;
+  const { startMin, endMin } = hasContent
+    ? getTimeRange({
+        events: timelineEvents,
+        trackingBlock: currentTrackingBlock,
+        isToday,
+        pxPerMin,
+        viewportContentHeight: Math.max(0, viewportHeight - 2 * TL_PAD_Y),
+      })
+    : { startMin: 0, endMin: 0 };
+  const gridMarks = getGridMarks(startMin, endMin, pxPerMin);
+  const totalHeight = (endMin - startMin) * pxPerMin;
+  const trackingGeometry = currentTrackingBlock ? getEventGeometry(currentTrackingBlock, startMin, pxPerMin) : null;
 
   // Scroll to the running block once per "today" view (first appearance of the block,
   // or coming back to today). Minute ticks, reloads and interval changes must not
@@ -111,26 +133,22 @@ const Timeline = ({
   }
 
   // Empty state — no events and nothing being tracked
-  if (timelineEvents.length === 0 && !currentTrackingBlock) {
+  if (!hasContent) {
     return (
-      <div className="wm-timeline-empty">
-        <img src={ravenLogo} alt="" className="wm-timeline-empty-icon" />
-        <div className="wm-timeline-empty-title text-xl-default">{t('noActivity')}</div>
-        <div className="wm-timeline-empty-sub text-m-default">{t('noActivitySub')}</div>
-      </div>
+      <div className="wm-timeline-empty text-m-default">{t('noActivity')}</div>
     );
   }
 
   return (
-    <div ref={scrollRef} className="wm-timeline" style={{ '--hour-height': `${hourHeight}px` }}>
+    <div ref={scrollRef} className="wm-timeline">
       <div className="wm-timeline-content" style={{ height: totalHeight }}>
-        <TimelineHourGrid hours={timelineHours} hourHeight={hourHeight} formatHour={formatHour} />
+        <TimelineHourGrid marks={gridMarks} formatHour={formatHour} />
         <div className="wm-timeline-lane">
           {timelineEvents.map((event, index) => (
             <TimelineEvent
               key={event.id != null ? event.id : index}
               event={event}
-              geometry={getEventGeometry(event, minHour, pxPerMin)}
+              geometry={getEventGeometry(event, startMin, pxPerMin)}
               formatDuration={formatDuration}
             />
           ))}
