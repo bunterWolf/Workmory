@@ -1,10 +1,14 @@
-/* Figma: none yet — token-based placeholder until the appearance setting is designed */
+/* Figma: none yet — token-based until the appearance setting and the interval pill are designed */
 .wm-segmented {
+  --wm-segmented-height: 24px;        /* settings row: close to the 20px Toggle without crowding the label */
   --wm-segmented-padding: 3px;        /* matches the Toggle inset (Figma 84699:3534) */
   --wm-segmented-track-opacity: 0.15; /* Button hover layer (Figma 84734:3056) */
 
+  box-sizing: border-box;
   display: inline-flex;
+  flex: none;
   align-self: flex-start;
+  height: var(--wm-segmented-height);
   padding: var(--wm-segmented-padding);
   gap: var(--wm-segmented-padding);
   border-radius: var(--size-xxl);
@@ -12,11 +16,14 @@
 }
 
 .wm-segmented-option {
-  padding: var(--size-xs) var(--size-m);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--size-s);
   border: 0;
   border-radius: var(--size-xxl);
   background: transparent;
   color: var(--ink-3);
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -27,7 +34,6 @@
 .wm-segmented-option-selected {
   background: var(--surface-2);
   color: var(--ink);
-  cursor: default;
 }
 
 .wm-segmented-option:focus-visible {

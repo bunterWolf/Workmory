@@ -204,7 +204,7 @@ src/components/
 
 ##### 2.5.2.1 Toolbar
 - **Date navigation** with friendly labels ("Today", "Yesterday"): arrow buttons (previous/next day) and the date text; "next" is disabled on the current day
-- **Interval selector**: a trigger button showing the current interval (5m, 10m, 15m); it opens a slider flyout to choose the aggregation block size (5, 10, or 15 minutes). The new Figma design for this menu is still open.
+- **Interval selector**: a trigger button showing the current interval (5m, 10m, 15m). A click opens it in place into a pill *15m · 10m · 5m* (no popup) that grows to the left over the date; the toolbar does not shift. A choice applies and closes the pill at once; an outside click or Esc closes without change, arrow keys move the selection. There is no Figma design for the pill yet.
 - **Tracking button** to pause or start tracking (states *Tracking* with a pulsing dot, and *Paused*)
 
 #### 2.5.2.2 Content: Timeline
@@ -250,7 +250,7 @@ src/components/
 
 #### 2.5.2.3 Footer and Settings view
 - **Footer**: the centered day summary *Active · Inactive · Tracked*, calculated from the aggregated summary data. The Settings view is opened (and closed again) with the `…` button in the title bar.
-- **Settings view** (replaces the former settings modal, same window; the back arrow returns to the Day View): appearance (Auto / Light / Dark, saved as `themeMode` in `settings.json`; the main process applies it to `nativeTheme.themeSource` before the window paints, so `prefers-color-scheme` and the window background follow; IPC `get-theme-mode` / `set-theme-mode`), auto-launch toggle, beta-release toggle, activity-file location (change, reset, adopt an existing file; the confirmation appears inline), placeholder link and app version. The auto-delete setting is not part of the UI; the store deletes data after a fixed 30 days.
+- **Settings view** (replaces the former settings modal, same window; the back arrow returns to the Day View): auto-launch toggle, beta-release toggle, appearance (one line: title plus Auto / Light / Dark on the right, aligned with the toggle rows; saved as `themeMode` in `settings.json`; the main process applies it to `nativeTheme.themeSource` before the window paints, so `prefers-color-scheme` and the window background follow; IPC `get-theme-mode` / `set-theme-mode`), activity-file location (change, reset, adopt an existing file; the confirmation appears inline), placeholder link and app version. The auto-delete setting is not part of the UI; the store deletes data after a fixed 30 days.
 
 #### 2.5.4 Development & Debugging
 
@@ -401,7 +401,7 @@ Die Anwendung unterstützt konfigurierbare Zeitintervalle für die Aggregation v
 
 #### 12.2.1 Benutzereinstellung
 
-- Die Intervallauswahl wird als Intervall-Button mit Slider-Flyout in der Toolbar der Anwendung implementiert
+- Die Intervallauswahl wird als Intervall-Button in der Toolbar implementiert, der sich zur Auswahl-Pille 15m · 10m · 5m aufklappt (siehe 2.5.2)
 - Die Einstellung wird in der ActivityStore-Datenstruktur als `aggregationInterval`-Feld gespeichert
 - Bei Änderung der Einstellung werden alle betroffenen Tage neu aggregiert
 

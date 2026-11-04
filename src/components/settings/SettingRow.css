@@ -7,6 +7,27 @@
   padding: var(--size-l);
 }
 
+/* Empty leading column of a row without Toggle, so its title lines up with the Toggle rows */
+.wm-setting-row-control-slot {
+  --wm-setting-row-control-width: 35px; /* = Toggle width (Figma 84699:3534) */
+
+  flex: none;
+  width: var(--wm-setting-row-control-width);
+}
+
+/* Title with a right-aligned control on the same line */
+.wm-setting-row-title-line {
+  display: flex;
+  align-items: center;
+  gap: var(--size-m);
+  width: 100%;
+}
+.wm-setting-row-title-line .wm-setting-row-title {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
 /* Text column: title, description and any extra content */
 .wm-setting-row-text {
   flex: 1;

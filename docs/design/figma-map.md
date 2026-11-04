@@ -109,12 +109,14 @@ Pfade relativ zu `src/components/`. Jede Komponente hat `.js` und (falls vorhand
 | Toolbar | `2005:832` | `toolbar/Toolbar` | `wm-toolbar` |
 | Pfeile ←/→ (arrow_back / arrow_forward) | `84658:1621` / `84664:1382` | `toolbar/DateNav`, `ui/Icon` | `wm-date-nav*` |
 | Button (Intervall-Trigger) | `84671:1463` | `toolbar/IntervalPicker` | `wm-interval*` |
-| SliderDropDownText (Marken) | `84672:1736` | `toolbar/IntervalPicker` | |
+| SliderDropDownText (Vorbild für die Optionen der Intervall-Pille) | `84672:1736` | `toolbar/IntervalPicker` → `ui/SegmentedControl` | |
+| Intervall-Pille (aufgeklappter Trigger, 15m · 10m · 5m) | *noch kein Figma-Node* | `toolbar/IntervalPicker` | `wm-interval-pill`, `wm-segmented--toolbar` |
 | ButtonTracking (Tracking, Paused) | `84678:1437` | `toolbar/TrackingButton` | `wm-tracking-button` |
 | Tracking dot | `84678:838` | `ui/TrackingDot` | `wm-tracking-dot*` |
 | Button (Default, Hover, Pressed, Disabled) | `84658:1616` (`84658:1623`, `84734:3006`, `84734:2997`) | `ui/Button` | `wm-button` |
 | Toggle | `84699:3534` | `ui/Toggle` | `wm-toggle` |
-| SegmentedControl (Darstellung Auto/Hell/Dunkel) | *noch kein Figma-Node* | `ui/SegmentedControl` | `wm-segmented*` |
+| SegmentedControl (Darstellung Auto/Hell/Dunkel, Intervall-Pille) | *noch kein Figma-Node* | `ui/SegmentedControl` | `wm-segmented*` |
+| Darstellungs-Zeile (Titel + Auswahl rechts, leere Schalter-Spalte) | *noch kein Figma-Node* (aus SettingRow `84699:2276` abgeleitet) | `settings/SettingRow` (`trailing`, `alignWithControls`) | `wm-setting-row-title-line`, `wm-setting-row-control-slot` |
 | Icons (arrow_back, arrow_forward, more_horiz_20, pause_circle) | `84658:1621`, `84664:1382`, `84686:535`, `84678:1461` | `ui/Icon`, `src/assets/icons/*.svg` | `wm-icon` |
 | Container (Scroll-Container) / Content (Event-Spalte) | `2066:772` / `2067:795` | `timeline/Timeline` | `wm-timeline*` |
 | Entry (Stundenzeile, Label, Halbstunden-Marker) | `2005:793` (`84783:3209`, `84783:3210`, `84783:3213`) | `timeline/TimelineHourGrid` | `wm-timeline-hour*`, `wm-timeline-half-marker` |
@@ -125,8 +127,8 @@ Pfade relativ zu `src/components/`. Jede Komponente hat `.js` und (falls vorhand
 | SettingRow | `84699:2276` | `settings/SettingRow`, `settings/StoreLocationSetting` | `wm-setting-row*` |
 
 Ohne Figma-Vorlage: **Speicherort der Aktivitätsdatei** (`settings/StoreLocationSetting`, aus dem
-Zeilenmuster abgeleitet, Figma wird später nachgezogen) und das **Intervall-Flyout** mit Slider (in Figma noch
-offen, TODO).
+Zeilenmuster abgeleitet, Figma wird später nachgezogen) die **Intervall-Pille** und die
+**Darstellungs-Zeile** (beide aus vorhandenen Tokens gebaut, Figma-Komponenten fehlen noch).
 
 ### Figma-only-Konstanten (benannte Custom Properties, Kopf der Komponenten-CSS)
 
@@ -158,13 +160,16 @@ offen, TODO).
 | | `--wm-button-radius` | 100 px | `84658:1616` |
 | | `--wm-button-label-min-height` | 20 px | `84664:1561` |
 | `ui/Toggle.css` | `--wm-toggle-width` / `-height` / `-padding` / `-knob-size` / `-offset` | 35 / 20 / 3 / 14 / 18 px | `84699:3534` |
-| `ui/SegmentedControl.css` | `--wm-segmented-padding` / `--wm-segmented-track-opacity` | 3 px / 0.15 | kein eigener Node (übernommen von `84699:3534` / `84734:3056`) |
+| `ui/SegmentedControl.css` | `--wm-segmented-height` | 24 px | kein Node (Einstellungs-Zeile; nah am 20-px-Toggle) |
+| | `--wm-segmented-padding` / `--wm-segmented-track-opacity` | 3 px / 0.15 | kein eigener Node (übernommen von `84699:3534` / `84734:3056`) |
+| `settings/SettingRow.css` | `--wm-setting-row-control-width` | 35 px | = Toggle-Breite `84699:3534` (leere Spalte der Darstellungs-Zeile) |
 | `ui/TrackingDot.css` | `--wm-dot-box-width` / `-box-height` | 16 / 20 px | `84678:838` |
 | | `--wm-dot-size` / `-pulse-size` | 5 / 16 px | `84678:838` |
 | | `--wm-dot-pulse-start-opacity` / `-pulse-duration` | 0.5 / 2s | `84678:838` |
 | `toolbar/Toolbar.css` | `--wm-toolbar-height` | 60 px | `2005:832` |
 | `toolbar/TrackingButton.css` | `--wm-tracking-button-width` | 110 px | `84678:1437` |
-| `toolbar/IntervalPicker.css` | `--wm-interval-track-height` / `-thumb-size` / `-thumb-border` / `-flyout-width` | 4 / 18 / 2 / 216 px | kein Figma-Design (vom alten Header übernommen) |
+| `toolbar/IntervalPicker.css` | `--wm-interval-pill-height` | 36 px | = Button-Höhe `84671:1463` |
+| | `--wm-interval-option-pad-x` | 9 px | kein Node: Button-Padding 8 + Label 4 − Spur 3, damit das gewählte Label an der Stelle des geschlossenen Buttons bleibt |
 | `footer/Footer.css` | `--wm-footer-height` | 41 px | `2005:845` (Status Bar zentriert) |
 | `settings/SettingsView.css` | `--wm-settings-toolbar-height` | 60 px | `84699:2887` |
 | `window/WindowTitleBar.css` | `--wm-titlebar-height` | 32 px | `2061:4850` |

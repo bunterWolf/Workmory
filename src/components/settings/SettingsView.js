@@ -82,6 +82,7 @@ export default function SettingsView({ onBack }) {
 
   // Erscheinungsbild ändern (Main setzt nativeTheme.themeSource; das CSS folgt über prefers-color-scheme)
   const handleThemeChange = async (mode) => {
+    if (mode === themeMode) return;
     try {
       const result = await ipcRenderer.invoke('set-theme-mode', mode);
       if (result.success) {
@@ -114,18 +115,6 @@ export default function SettingsView({ onBack }) {
           <div className="wm-settings-loading text-m-default">{t('loading')}</div>
         ) : (
           <>
-            <SettingRow title={t('appearance')} description={t('appearanceDescription')}>
-              <SegmentedControl
-                ariaLabel={t('appearance')}
-                value={themeMode}
-                onChange={handleThemeChange}
-                options={[
-                  { value: 'system', label: t('themeSystem') },
-                  { value: 'light', label: t('themeLight') },
-                  { value: 'dark', label: t('themeDark') },
-                ]}
-              />
-            </SettingRow>
             <SettingRow
               control={<Toggle on={autoLaunchEnabled} onChange={handleToggleAutoLaunch} ariaLabel={t('autoLaunch')} />}
               title={t('autoLaunch')}
@@ -135,6 +124,22 @@ export default function SettingsView({ onBack }) {
               control={<Toggle on={allowPrerelease} onChange={handleToggleBetaReleases} ariaLabel={t('betaReleases')} />}
               title={t('betaReleases')}
               description={t('betaDescription')}
+            />
+            <SettingRow
+              alignWithControls
+              title={t('appearance')}
+              trailing={
+                <SegmentedControl
+                  ariaLabel={t('appearance')}
+                  value={themeMode}
+                  onChange={handleThemeChange}
+                  options={[
+                    { value: 'system', label: t('themeSystem') },
+                    { value: 'light', label: t('themeLight') },
+                    { value: 'dark', label: t('themeDark') },
+                  ]}
+                />
+              }
             />
             <StoreLocationSetting
               path={activityStorePath}

@@ -1,83 +1,34 @@
-/* Figma: Button 84671:1463 (trigger), SliderDropDownText 84672:1736 (marks) */
+/* Figma: Button 84671:1463 (trigger). Open pill: no Figma design yet (uses ui/SegmentedControl). */
 .wm-interval-picker {
-  /* Slider flyout: no Figma design yet (spec 7.2 TODO); dimensions carried over from the old header. */
-  --wm-interval-track-height: 4px;
-  --wm-interval-thumb-size: 18px;
-  --wm-interval-thumb-border: 2px;
-  --wm-interval-flyout-width: 216px;
+  /* Option padding so the selected label sits exactly where the closed button's label was:
+     Button padding (--size-s) + label padding (--size-xs) - track padding (3px). */
+  --wm-interval-option-pad-x: 9px;
+  --wm-interval-pill-height: 36px; /* = Button height (padding 8 + label 20, Figma 84671:1463) */
 
   position: relative;
 }
 
-.wm-interval-scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
+/* The closed button keeps its place (no layout shift) but is hidden behind the pill */
+.wm-interval-picker.is-open > .wm-button {
+  visibility: hidden;
 }
 
-.wm-interval-flyout {
+/* Grows to the left over the date. The padding is a --size-m fade from transparent to
+   Surface 2, so a covered date fades out instead of being cut mid-letter; under the
+   translucent track the background is solid Surface 2. */
+.wm-interval-pill {
   position: absolute;
-  top: calc(100% + var(--size-xs));
+  top: 0;
   right: 0;
-  z-index: 40;
-  width: var(--wm-interval-flyout-width);
-  padding: var(--size-m) var(--size-l);
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--size-m);
+  z-index: 1;
+  padding-left: var(--size-m);
+  background: linear-gradient(to right, transparent, var(--surface-2) var(--size-m));
 }
 
-.wm-interval-flyout-label {
-  display: block;
-  margin-bottom: var(--size-m);
-  color: var(--ink-3);
+.wm-segmented--toolbar {
+  --wm-segmented-height: var(--wm-interval-pill-height);
 }
 
-/* Range input: custom track and thumb */
-.wm-interval-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  display: block;
-  width: 100%;
-  height: var(--wm-interval-track-height);
-  border: 0;
-  border-radius: 100px;
-  outline: none;
-  cursor: pointer;
-  background: linear-gradient(
-    to right,
-    var(--ink) var(--wm-interval-pct, 0%),
-    var(--line-3) var(--wm-interval-pct, 0%)
-  );
-}
-
-.wm-interval-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: var(--wm-interval-thumb-size);
-  height: var(--wm-interval-thumb-size);
-  border-radius: 50%;
-  background: var(--surface-2);
-  border: var(--wm-interval-thumb-border) solid var(--ink);
-  cursor: pointer;
-}
-
-.wm-interval-slider:focus-visible {
-  outline: 1px solid var(--ink-3);
-  outline-offset: var(--size-xs);
-}
-
-.wm-interval-marks {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: var(--size-s);
-}
-
-.wm-interval-mark {
-  color: var(--ink-3);
-  cursor: pointer;
-}
-
-.wm-interval-mark.is-active {
-  color: var(--ink);
+.wm-segmented--toolbar .wm-segmented-option {
+  padding: 0 var(--wm-interval-option-pad-x);
 }
