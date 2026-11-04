@@ -49,6 +49,12 @@
   line-height: 1;
   cursor: default;
 }
+/* Settings (Figma 84822:1653): 20px more_horiz_20 icon centered in a caption button */
+.wm-titlebar-button-settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .wm-titlebar-button:hover { background: var(--line-3); }
 .wm-titlebar-button-close:hover {
   background: var(--wm-titlebar-close-hover);

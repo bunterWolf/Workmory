@@ -1,47 +1,22 @@
 /* Figma: Footer 2005:845 */
 .wm-footer {
   --wm-footer-height: 41px;    /* Figma 2005:845 */
-  --wm-footer-menu-left: 20px; /* Figma 84686:550 */
-  --wm-footer-menu-top: 7px;   /* Figma 84686:550 */
-  --wm-footer-menu-size: 28px; /* Figma 84686:550 */
-  /* Content must start right of the menu button (+ gap), measured from the footer's padding edge */
-  --wm-footer-content-inset: calc(var(--wm-footer-menu-left) + var(--wm-footer-menu-size) + var(--size-s) - var(--size-xxl));
 
-  position: relative;
   flex: none;
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: var(--size-l);
   height: var(--wm-footer-height);
   padding: var(--size-l) var(--size-xxl);
   background: var(--surface-2);
 }
 
-/* Absolute and 28 x 28 (icon 20 + padding --size-xs); overrides the Button's own padding */
-.wm-footer .wm-footer-menu {
-  position: absolute;
-  left: var(--wm-footer-menu-left);
-  top: var(--wm-footer-menu-top);
-  width: var(--wm-footer-menu-size);
-  height: var(--wm-footer-menu-size);
-  padding: var(--size-xs);
-}
-
-/* Right part: stays right-aligned (Figma) but can never reach under the menu button */
-.wm-footer-content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--size-l);
-  margin-left: var(--wm-footer-content-inset);
-}
-
-/* Left of the summary; gives way first when space runs out (shrink factor far above the summary's) */
+/* Mock-data hint (dev only), left of the summary; gives way first when space runs out
+   (shrink factor far above the summary's) */
 .wm-footer-mock {
   flex: 0 1000 auto;
   min-width: 0;
-  margin-right: auto;
   /* padding + negative margin keep descenders inside the clip box (text-box trim shrinks the line box) */
   padding-block: var(--size-xs);
   margin-block: calc(-1 * var(--size-xs));

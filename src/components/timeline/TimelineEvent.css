@@ -12,12 +12,13 @@
   --tl-hatch-period: 3px;
   --tl-hatch-opacity: 9%;
 
+  --tl-event-outer-stroke: 1px;        /* Figma 2007:199, stroke in --surface */
+  --tl-event-inner-stroke: 1px;        /* Figma 2067:853, stroke in --event-background */
+
   position: absolute;
   left: 0;
   right: 0;
   display: flex;
-  /* 1px --surface border: the visible gap between adjacent events (spec §5.5) */
-  border: 1px solid var(--surface);
   border-radius: var(--size-m);
   background: var(--event-background);
   overflow: clip;
@@ -26,13 +27,28 @@
   cursor: default;
 }
 
+/* Outer --surface stroke = the gap between adjacent events (spec §5.5). As in Figma it
+   takes no layout space and is drawn on top of the content, so it covers the outermost
+   pixel of the inner stroke and of the app-color overlay. A real CSS border would push
+   the inner stroke inward and leave it visible as a ring (Figma render: surface, then
+   directly the tinted color; content starts 1px + 16px from the edge). */
+.wm-timeline-event::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border: var(--tl-event-outer-stroke) solid var(--surface);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
 .wm-timeline-event-inner {
   position: relative;
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--event-background);
+  border: var(--tl-event-inner-stroke) solid var(--event-background);
   border-radius: var(--size-m);
 }
 

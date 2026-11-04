@@ -214,7 +214,10 @@ const App = () => {
   return (
     <I18nextProvider i18n={i18n}>
       <div className="wm-app">
-        <WindowTitleBar />
+        <WindowTitleBar
+          isSettingsOpen={view === 'settings'}
+          onToggleSettings={() => setView(view === 'settings' ? 'day' : 'settings')}
+        />
 
         {view === 'settings' ? (
           <SettingsView onBack={() => setView('day')} />
@@ -252,7 +255,6 @@ const App = () => {
             <Footer
               summary={summary}
               isMockData={isMockData}
-              onOpenSettings={() => setView('settings')}
             />
           </>
         )}

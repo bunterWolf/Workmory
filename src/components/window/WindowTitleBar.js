@@ -1,8 +1,10 @@
-// Figma: Title bar 2061:4850
-// Frameless-window title bar: Windows caption buttons (minimize, close) or macOS traffic lights.
+// Figma: Title bar 2061:4850 (settings caption button 84822:1653)
+// Frameless-window title bar: settings button plus Windows caption buttons (minimize, close),
+// or macOS traffic lights with the settings button on the right.
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ipcRenderer } from 'electron';
+import Icon from '../ui/Icon';
 import './WindowTitleBar.css';
 
 const isMac = typeof process !== 'undefined' && process.platform === 'darwin';
@@ -15,9 +17,22 @@ const minimize = () => ipcRenderer.invoke('window-minimize');
 const maximize = () => ipcRenderer.invoke('window-maximize'); // macOS only (traffic lights)
 const close = () => ipcRenderer.invoke('window-close');
 
-export default function WindowTitleBar() {
+// isSettingsOpen: the settings view is shown; the button then leads back to the day view.
+export default function WindowTitleBar({ isSettingsOpen = false, onToggleSettings }) {
   const { t } = useTranslation();
   const title = <span className="wm-titlebar-title text-m-primary">{t('appTitle')}</span>;
+  const settingsButton = (
+    <button
+      type="button"
+      className="wm-titlebar-button wm-titlebar-button-settings"
+      onClick={onToggleSettings}
+      aria-label={t('settings')}
+      aria-pressed={isSettingsOpen}
+      title={t('settings')}
+    >
+      <Icon name="more_horiz_20" size={20} />
+    </button>
+  );
 
   if (isMac) {
     return (
@@ -42,6 +57,7 @@ export default function WindowTitleBar() {
           </button>
         </div>
         {title}
+        <div className="wm-titlebar-buttons">{settingsButton}</div>
       </div>
     );
   }
@@ -50,6 +66,7 @@ export default function WindowTitleBar() {
     <div className="wm-titlebar">
       {title}
       <div className="wm-titlebar-buttons">
+        {settingsButton}
         <button type="button" className="wm-titlebar-button" onClick={minimize} aria-label={t('minimize')} title={t('minimize')}>
           {GLYPH_MINIMIZE}
         </button>

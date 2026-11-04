@@ -35,7 +35,7 @@ enthält die Checkliste für spätere Figma-Änderungen. Hintergrund und Entsche
 - **Dateikopf:** Jede Komponentendatei beginnt mit `// Figma: <Node-Name> <Node-ID>` (CSS: `/* Figma: … */`).
 - **Klassen:** Präfix `wm-<komponente>` (z. B. `wm-timeline`, `wm-footer`, `wm-button`). Timeline-interne
   Konstanten tragen das Präfix `--tl-`.
-- **Theme:** Light in `:root`, Dark per `@media (prefers-color-scheme: dark)`. Kein manueller Schalter.
+- **Theme:** Light in `:root`, Dark per `@media (prefers-color-scheme: dark)`. Die Einstellung Darstellung (Auto / Hell / Dunkel) setzt im Main-Prozess `nativeTheme.themeSource`; das CSS kennt keinen eigenen Schalter.
 - **Schrift:** Inter 500/600 lokal über `@fontsource/inter` (`base.css`), kein CDN. Alle Textklassen nutzen
   `text-box: trim-both cap alphabetic`.
 
@@ -48,10 +48,10 @@ enthält die Checkliste für spätere Figma-Änderungen. Hintergrund und Entsche
 | Ink 3 | `--ink-3` | #737373 | #8a8a8a |
 | Ink 4 | `--ink-4` | #a3a3a3 | #5c5c5c |
 | Line | `--line` | #a3a3a3 | #262626 |
-| Line 3 | `--line-3` | #00000017 | #ffffff17 |
+| Line 3 | `--line-3` | #0000001a | #ffffff1a |
 | Line Tracking | `--line-tracking` | #ff57571a | #ff575733 |
 | Tracking | `--tracking` | #ff5757 | #ff5757 |
-| Surface | `--surface` | #fbfaf9 | #141414 |
+| Surface | `--surface` | #f8f7f6 | #141414 |
 | Surface 2 | `--surface-2` | #ffffff | #0a0a0a |
 | EventBackground | `--event-background` | #e8e8e8 | #1c1c1c |
 | EventInkMix | `--event-ink-mix` | #00000066 | #ffffff66 |
@@ -105,6 +105,7 @@ Pfade relativ zu `src/components/`. Jede Komponente hat `.js` und (falls vorhand
 | Figma-Komponente | Node-ID | Code | Klasse(n) |
 |---|---|---|---|
 | Title bar | `2061:4850` | `window/WindowTitleBar` | `wm-titlebar*` |
+| Settings-Button in der Titelleiste (more_horiz_20, öffnet/schließt die Einstellungen) | `84822:1653` | `window/WindowTitleBar` | `wm-titlebar-button-settings` |
 | Toolbar | `2005:832` | `toolbar/Toolbar` | `wm-toolbar` |
 | Pfeile ←/→ (arrow_back / arrow_forward) | `84658:1621` / `84664:1382` | `toolbar/DateNav`, `ui/Icon` | `wm-date-nav*` |
 | Button (Intervall-Trigger) | `84671:1463` | `toolbar/IntervalPicker` | `wm-interval*` |
@@ -146,9 +147,11 @@ offen, TODO).
 | `timeline/timelineGeometry.js` (JS) | `EVENT_OFFSET_Y` | 1 px | `2067:795` (top der Event-Spalte) |
 | | `MIN_EVENT_HEIGHT` | 14 px | Mindesthöhe eines Events (Verhalten, nicht Figma) |
 | | `MIN_BLOCK_HEIGHT` | 24 px | Verhalten: Stundenhöhe = 24 × 60 / Intervall |
-| `timeline/TimelineEvent.css` | `--tl-event-header-max-height` | 32 px | `2007:151` |
+| `timeline/TimelineEvent.css` | `--tl-event-outer-stroke` | 1 px | `2007:199` (Rand in `--surface`, ohne Layout-Platz, über dem Inhalt: `::after`) |
+| | `--tl-event-inner-stroke` | 1 px | `2067:853` (Rand in `--event-background`, äußerstes Pixel vom äußeren Rand verdeckt) |
+| | `--tl-event-header-max-height` | 32 px | `2007:151` |
 | | `--tl-event-title-gap` | 6 px | `2007:152` |
-| | `--tl-event-tracking-border` | 2 px | `84722:2213` (innerer Rand) |
+| | `--tl-event-tracking-border` | 2 px | `84722:2213` (innerer Rand; sichtbar 1 px, das äußere Pixel liegt unter dem `--surface`-Rand) |
 | | `--tl-hatch-angle` / `-stripe` / `-period` / `-opacity` | 135deg / 1px / 3px / 9% | `84653:1248` (am Bild `442f5.png` abgemessen; Streifen in `--ink`) |
 | `ui/Button.css` | `--wm-button-hover-opacity` | 0.15 | `84734:3056` |
 | | `--wm-button-pressed-opacity` | 0.3 | `84734:3051` |
@@ -162,16 +165,16 @@ offen, TODO).
 | `toolbar/Toolbar.css` | `--wm-toolbar-height` | 60 px | `2005:832` |
 | `toolbar/TrackingButton.css` | `--wm-tracking-button-width` | 110 px | `84678:1437` |
 | `toolbar/IntervalPicker.css` | `--wm-interval-track-height` / `-thumb-size` / `-thumb-border` / `-flyout-width` | 4 / 18 / 2 / 216 px | kein Figma-Design (vom alten Header übernommen) |
-| `footer/Footer.css` | `--wm-footer-height` | 41 px | `2005:845` |
-| | `--wm-footer-menu-left` / `-menu-top` / `-menu-size` | 20 / 7 / 28 px | `84686:550` |
+| `footer/Footer.css` | `--wm-footer-height` | 41 px | `2005:845` (Status Bar zentriert) |
 | `settings/SettingsView.css` | `--wm-settings-toolbar-height` | 60 px | `84699:2887` |
 | `window/WindowTitleBar.css` | `--wm-titlebar-height` | 32 px | `2061:4850` |
 | | `--wm-titlebar-button-width` | 46 px | `2061:4850` |
 | | `--wm-titlebar-glyph-size` | 10 px | `2061:4850` (Segoe Fluent Icons) |
 | | `--wm-titlebar-close-hover(-ink)`, `--wm-titlebar-light-*`, `--wm-titlebar-transition` | | OS-Konvention (Windows-Close-Rot, macOS-Ampel), nicht in Figma |
 
-Titelleiste: Hintergrund `--surface-2`, Titel „Workmory“ in `.text-m-primary` / `--ink-3`, Minimieren und
-Schließen je 46 × 32, **kein** Maximieren-Button (macOS: Ampel-Buttons).
+Titelleiste: Hintergrund `--surface-2`, Titel „Workmory“ in `.text-m-primary` / `--ink-3`, Settings (`…`, Icon 20 px),
+Minimieren und Schließen je 46 × 32, **kein** Maximieren-Button (macOS: Ampel-Buttons links, Settings rechts).
+Der leere 28-px-Platzhalter `84822:1564` links davon ist unsichtbar und wird nicht umgesetzt.
 
 ### Event-Farben (`timeline/eventColors.js`)
 

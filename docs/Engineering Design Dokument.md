@@ -186,9 +186,9 @@ After an activity change, the summary times are updated. These are not based on 
 - Uses minimal **React**, written as plain JavaScript (`src/components/**/*.js`)
 - No third-party UI libraries or routing (no React Router)
 - Styling is done using **plain CSS files**, editable directly by designers. Design tokens (colors, sizes) live only in `src/styles/tokens.css` and mirror the Figma variables 1:1; text styles are in `typography.css`, reset and bundled Inter font in `base.css`. Component CSS uses only `var(--…)` tokens plus named constants (with Figma node id) at the top of the file. See `docs/design/figma-map.md` for the mapping Figma -> code and the update checklist.
-- Theme: the CSS follows `prefers-color-scheme` (Electron's default `nativeTheme.themeSource` is `'system'`; the code never sets it); there is no manual switch
+- Theme: the CSS follows `prefers-color-scheme`; the main process sets `nativeTheme.themeSource` from the appearance setting (Auto / Light / Dark, see 2.5.2.3), so there is no theme logic in the CSS
 - One component in code corresponds to one Figma component (same name, Figma node id in the file header)
-- The window is frameless with a custom title bar and starts at 387 x 499 (content size), minimum 387 x 360
+- The window is frameless with a custom title bar and starts at 387 x 499 (content size), minimum 387 x 360. The title bar holds the settings button (`…`, left of minimize; on macOS at the right end) besides the window controls
 
 ```
 src/components/
@@ -215,7 +215,7 @@ src/components/
    - Stundenhöhe = 24 px × 60 / Intervall, also 288 px (5m), 144 px (10m), 96 px (15m)
    - Angezeigt wird nur der Bereich mit Aktivität (`getTimeRange`): vom Start des ersten bis zum Ende des letzten Blocks, laufender Block einbezogen; Grenzen 0–24 Uhr. Den optischen Abstand oben und unten liefert allein der 30-px-Innenabstand des Scroll-Containers (Figma), es gibt keinen zusätzlichen Zeitpuffer. Ist der Inhalt kürzer als das Fenster, wächst der Bereich in ganzen 24-px-Blockschritten (nach unten, ab Mitternacht nach oben), bis er das Fenster füllt, aber nie darüber hinaus, sodass kein leeres Scrollen entsteht. Weil Blöcke auf Intervallgrenzen beginnen und px/min = 24 / Intervall ist, liegen alle Events und Rasterlinien auf ganzen Pixeln. Die Berechnung steckt in den reinen Funktionen von `timelineGeometry.js` (getestet in `timelineGeometry.test.js`).
    - Raster (`getGridMarks`): Stundenlinie mit Label zu jeder vollen Stunde, Halbstunden-Marker zu jeder :30, innerhalb des Bereichs.
-   - Event-Position: `top = (Startminute − Bereichsanfang in Minuten) × px/min + 1 px`, `height = max(14, Dauer × px/min)`. Die Lücke zwischen benachbarten Events entsteht durch den 1-px-Rand in `--surface` an jedem Event.
+   - Event-Position: `top = (Startminute − Bereichsanfang in Minuten) × px/min + 1 px`, `height = max(14, Dauer × px/min)`. Die Lücke zwischen benachbarten Events entsteht durch den 1-px-Rand in `--surface` an jedem Event. Wie in Figma nimmt dieser Rand keinen Platz ein und liegt über dem Inhalt (verdeckt das äußerste Pixel des inneren Rands und des App-Farb-Overlays).
 
 ##### B. Event-Darstellung
 
@@ -249,7 +249,7 @@ src/components/
    - Nahtlose Fortsetzung der Aktualisierungen
 
 #### 2.5.2.3 Footer and Settings view
-- **Footer**: menu button (opens the Settings view) and the day summary *Active · Inactive · Tracked*, calculated from the aggregated summary data.
+- **Footer**: the centered day summary *Active · Inactive · Tracked*, calculated from the aggregated summary data. The Settings view is opened (and closed again) with the `…` button in the title bar.
 - **Settings view** (replaces the former settings modal, same window; the back arrow returns to the Day View): appearance (Auto / Light / Dark, saved as `themeMode` in `settings.json`; the main process applies it to `nativeTheme.themeSource` before the window paints, so `prefers-color-scheme` and the window background follow; IPC `get-theme-mode` / `set-theme-mode`), auto-launch toggle, beta-release toggle, activity-file location (change, reset, adopt an existing file; the confirmation appears inline), placeholder link and app version. The auto-delete setting is not part of the UI; the store deletes data after a fixed 30 days.
 
 #### 2.5.4 Development & Debugging
