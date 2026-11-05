@@ -5,22 +5,22 @@ on:
     tags:
       - 'v*'
 
-permissions:
-  contents: write
-
 jobs:
+  # Builds only. Nothing reaches GitHub Releases until every platform has succeeded.
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
+      # Must satisfy the "engines" of the Electron version in package.json
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -30,87 +30,60 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Check if beta release (Unix)
-        if: runner.os != 'Windows'
-        id: check-beta-unix
-        shell: bash
-        run: |
-          if [[ "${{ github.ref }}" == *"beta"* ]]; then
-            echo "is_beta=true" >> $GITHUB_OUTPUT
-            echo "EP_PRE_RELEASE=true" >> $GITHUB_ENV
-          else
-            echo "is_beta=false" >> $GITHUB_OUTPUT
-            echo "EP_PRE_RELEASE=false" >> $GITHUB_ENV
-          fi
-
-      - name: Check if beta release (Windows)
-        if: runner.os == 'Windows'
-        id: check-beta-windows
-        shell: pwsh
-        run: |
-          if ("${{ github.ref }}" -like "*beta*") {
-            "is_beta=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "EP_PRE_RELEASE=true" | Out-File -FilePath $env:GITHUB_ENV -Append
-          } else {
-            "is_beta=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "EP_PRE_RELEASE=false" | Out-File -FilePath $env:GITHUB_ENV -Append
-          }
-
+      # Runs the tests and compiles; a failure here is real and is not retried
       - name: Build application
         run: npm run build
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create Distribution
-        run: npm run dist
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          EP_PRE_RELEASE: ${{ env.EP_PRE_RELEASE }}
+      # electron-builder downloads its tools from GitHub while packaging, and those
+      # downloads fail now and then with a 504. Update files are still generated.
+      - name: Package installers
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            npx electron-builder --publish never && exit 0
+            echo "Packaging attempt $attempt failed"
+            sleep 30
+          done
+          exit 1
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-artifacts
+          if-no-files-found: error
           path: |
-            release/**/*.exe
-            release/**/*.zip
-            release/**/*.yml
-            release/**/*.blockmap
+            release/*/Workmory-*
+            release/*/latest*.yml
 
-  # Diese Job läuft nur, wenn der GitHub Release von electron-builder fehlschlägt
-  fallback-release:
+  # Single publishing step, so a failed build never leaves a partial release behind.
+  # Safe to re-run: existing assets of the same release are replaced.
+  publish:
     needs: build
     runs-on: ubuntu-latest
-    if: failure()
+    permissions:
+      contents: write
+
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
-
-      - name: List downloaded artifacts
-        run: |
-          echo "Listing downloaded artifacts:"
-          find . -type f | sort
-
-      - name: Check if beta release
-        id: check-beta
-        shell: bash
-        run: |
-          if [[ "${{ github.ref }}" == *"beta"* ]]; then
-            echo "is_beta=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_beta=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create GitHub Release as fallback
-        id: create_release
-        uses: softprops/action-gh-release@v1
         with:
-          files: |
-            **/*.exe
-            **/*.zip
-            **/*.yml
-            **/*.blockmap
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -la artifacts
+
+      - name: Read version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.version.outputs.version }}
+          prerelease: ${{ contains(github.ref_name, 'beta') }}
           draft: false
-          prerelease: ${{ steps.check-beta.outputs.is_beta == 'true' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          fail_on_unmatched_files: true
+          files: |
+            artifacts/Workmory-*
+            artifacts/latest*.yml
