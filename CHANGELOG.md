@@ -2,6 +2,51 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.2-beta.3](///compare/v0.0.2-beta.2...v0.0.2-beta.3) (2026-11-05)
+
+
+### Features
+
+* add Figma design tokens, typography and bundled Inter 4996134
+* add Figma UI primitives (Icon, Button, Toggle, TrackingDot) ccaf2f3
+* appearance setting (Auto / Light / Dark) 71fb7e1
+* auto-scroll timeline to running block once per day view 65628c7
+* compact window and Figma title bar with theme-aware background 3521c8c
+* event text color blend from EventInkMix token c798fb4
+* Figma footer with day summary and settings entry 0dbd4f9
+* Figma settings view replaces settings modal 7145a58
+* Figma timeline (hour grid, events, scrollbar) replaces DayOverview a4e3564
+* Figma toolbar (date nav, interval trigger, tracking button) replaces Header 8342f82
+* hug the timeline range to the tracked blocks, minimal empty state, untranslated Tracking label 8d968ab
+* interval pill instead of slider flyout, appearance row in the settings grid f9dca09
+* settings button in the title bar, Figma token and event stroke updates d6f749c, closes #f8f7f6 #0000001 #ffffff1
+* show live app and window title in running timeline block bab9c0c
+* theme-aware inactive hatch in CSS ecba3ec
+* timeline geometry per Figma (1px offset, border gap, half-hour marker) 2adc656
+* zoom label and wider fade on the interval pill, taller appearance control bc24f68
+
+
+### Bug Fixes
+
+* build releases on Node 22 74a0068
+* **deps:** resolve all Dependabot vulnerabilities (33 → 0) 0fadfba
+* don't aggregate the still-running interval 974241b
+* handle empty app name or title in the running block title d470b5b
+* ignore stale get-day-data responses after a date switch 7a6d2ce
+* keep footer summary clear of the menu button at 387px 31e783d
+* keep the shown day data when a background reload fails 189dccf
+* keep timeline mounted on background reloads so scroll position survives 17be9d4
+* lock store location buttons while the existing-file confirmation is open ce65a8e
+* make jest test discovery robust to dot-dir worktree paths 6898859
+* move nsis config to top-level build configuration 6c3994e
+* move the running block when a new aggregation arrives e940aaa
+* never let an invalid color throw while rendering a timeline event 8328838
+* scope settings scrollbar so it no longer overrides the timeline thumb on hover 9b4dcb9
+* size the window by content area so it is exactly 387x499 c34086b
+* use allowPrerelease instead of channel for beta auto-updates 3ccc90f
+* use local date keys in the renderer so 'today' matches the store 4d9da14
+* use NativeImage.toBitmap (getBitmap removed in updated Electron) e31e0d4
+
 ### [0.0.1-beta.13](https://github.com/bunterWolf/Chronflow/compare/v0.0.1-beta.12...v0.0.1-beta.13) (2025-05-07)
 
 ### [0.0.1-beta.12](https://github.com/bunterWolf/Chronflow/compare/v0.0.1-beta.11...v0.0.1-beta.12) (2025-05-07)
