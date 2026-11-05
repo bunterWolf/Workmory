@@ -1,117 +1,133 @@
 # Beta Release Prozess
 
-Dieses Dokument beschreibt den Prozess zur Erstellung von Beta-Releases für Workmory.
+Dieses Dokument beschreibt, wie ein Beta-Release für Workmory entsteht. Lokal wird nur die Version
+erhöht und ein Tag gepusht; gebaut und veröffentlicht wird ausschließlich von GitHub Actions.
 
-## Übersicht
+## Grundregeln
 
-Der Beta-Release-Prozess verwendet dedizierte Beta-Branches, um Vorversionen zu erstellen und zu testen, bevor sie in den Hauptrelease-Zyklus integriert werden.
+- **Betas entstehen auf einem Beta-Branch** (`beta` oder `beta/*`), das Skript prüft den Namen.
+  Aktuell ist das `beta/v0.0.2`.
+- **Die Version in `package.json` muss die zuletzt veröffentlichte Beta sein.** Das Skript zählt von
+  dort weiter. Steht dort eine ältere Version (z. B. `0.0.1` aus `main`), kollidiert der neue Tag mit
+  einem vorhandenen oder die Version ist niedriger als die letzte Beta, und der Auto-Updater bietet
+  sie nicht an. Darum neue Arbeit in den bestehenden Beta-Branch mergen, statt einen neuen von `main`
+  abzuzweigen.
+- **Release-Korrekturen landen auch in `main`.** Korrekturen an Workflow und Build-Konfiguration, die
+  nur auf einem Beta-Branch liegen, fehlen sonst beim nächsten Release.
+- **Einen Tag nie verschieben oder neu vergeben.** Bei einem Fehlschlag den Lauf neu starten (siehe
+  unten) oder eine neue Beta-Version erstellen.
 
-## Workflow
+## Ablauf
 
-### 1. Beta-Branch erstellen
-
-Um einen neuen Beta-Branch zu erstellen:
+### 1. Änderungen in den Beta-Branch bringen
 
 ```bash
-# Empfohlen: Starte vom develop-Branch
-git checkout develop
-git pull origin develop
-
-# Alternative: Automatisiertes Tool verwenden
-npm run beta:create
+git checkout beta/v0.0.2
+git pull origin beta/v0.0.2
+git merge <feature-branch>
 ```
 
-Das Tool `npm run beta:create` führt dich durch die folgenden Schritte:
-- Prüft, ob du auf dem develop-Branch bist
-- Stellt sicher, dass alle Änderungen committed sind
-- Schlägt einen Branchnamen basierend auf der aktuellen Version vor
-- Erstellt den Branch
-- Bietet an, den Branch direkt zu pushen
+Wird der Beta-Branch von einem Stand übernommen, der den alten Beta-Inhalt ersetzt, bleibt die
+Historie mit `git merge -s ours` erhalten. Dann müssen die Version aus dem alten Beta-Branch und alle
+Release-Korrekturen von Hand übernommen werden.
 
-### 2. Änderungen vornehmen
+> `npm run beta:create` ist veraltet: Das Skript geht von einem `develop`-Branch aus und schlägt bei
+> einer Beta-Version in `package.json` einen falschen Branchnamen vor.
 
-Auf dem Beta-Branch kannst du nun:
-- Letzte Bugfixes für die Beta-Version vornehmen
-- Tests durchführen
-- Alles committen
+### 2. Vorab prüfen
+
+```bash
+npm install
+npm test
+npx standard-version --prerelease beta --dry-run
+```
+
+Der Testlauf von `standard-version` ändert nichts und zeigt die nächste Version und den Changelog.
+Die Version muss direkt auf die letzte Beta folgen (siehe `gh release list`).
+
+Wurde die Build-Konfiguration in `package.json` geändert, zusätzlich das Packen lokal prüfen:
+
+```bash
+npx electron-builder --publish never
+```
+
+Wurde Electron aktualisiert, prüfen, ob `node-version` in `.github/workflows/release.yml` zu dessen
+`engines` passt.
 
 ### 3. Beta-Release erstellen
-
-Wenn der Beta-Branch bereit ist:
 
 ```bash
 npm run release:beta
 ```
 
-Dieses Skript:
-- Prüft, ob du auf einem Beta-Branch bist (Name beginnt mit `beta` oder `beta/`)
-- Erstellt einen neuen Tag mit Beta-Suffix (z.B. v1.2.0-beta.0)
-- Aktualisiert package.json mit der neuen Version
-- Generiert einen Changelog
-- Pusht den Branch und den Tag
+Das Skript prüft Branch und Arbeitsverzeichnis, erhöht die Version (z. B. `0.0.2-beta.3` →
+`0.0.2-beta.4`), schreibt den Changelog, führt den Build mit Tests aus, committet, taggt und pusht
+Branch und Tag.
 
 ### 4. GitHub Action
 
-Sobald der Tag gepusht wird:
-- Die GitHub Action wird automatisch ausgelöst
-- Sie erkennt, dass es sich um einen Beta-Release handelt
-- Baut die Anwendung
-- Erstellt ein GitHub Pre-Release
-- Lädt die Installationsdateien hoch
+Der Tag löst `.github/workflows/release.yml` aus:
 
-### 5. Beta-Testing
+1. **`build`** läuft unabhängig voneinander auf Windows und macOS: Tests, Kompilieren, Packen. Das
+   Packen wird bis zu dreimal versucht, weil electron-builder dabei Werkzeuge von GitHub lädt und
+   diese Downloads gelegentlich mit `504` scheitern. Fehlgeschlagene Tests werden nicht wiederholt.
+2. **`publish`** läuft nur, wenn beide Builds erfolgreich waren, und erstellt das Release in einem
+   Schritt. Schlägt ein Build fehl, wird nichts veröffentlicht. Tags mit `beta` im Namen werden zum
+   Pre-Release.
 
-Beta-Tester können nun:
-- Die Anwendung aus dem GitHub Pre-Release installieren
-- Oder, wenn sie die Beta-Updates aktiviert haben, über den Auto-Update-Mechanismus aktualisieren
+### 5. Ergebnis prüfen
 
-### 6. Weitere Beta-Versionen
+```bash
+gh run list --workflow=release.yml --limit 1
+gh release view v<version> --json isPrerelease,assets -q '{pre:.isPrerelease,assets:[.assets[].name]}'
+```
 
-Falls nach dem Testing Probleme gefunden werden:
-- Fixe die Probleme im Beta-Branch
-- Führe erneut `npm run release:beta` aus
-- Ein neuer Tag wird erstellt (z.B. v1.2.0-beta.1)
+Ein vollständiges Release enthält:
+
+- `Workmory-Setup-<version>-win-x64.exe` mit `.blockmap` und `Workmory-<version>-win-x64.zip`
+- `Workmory-<version>-mac-x64.zip` und `Workmory-<version>-mac-arm64.zip`, jeweils mit `.blockmap`
+- `latest.yml` und `latest-mac.yml` mit der neuen Version
+
+### 6. Wenn der Build fehlschlägt
+
+Log lesen:
+
+```bash
+gh run view <run-id> --log-failed
+```
+
+- **Vorübergehender Fehler** (z. B. `504`, Netzwerk): denselben Lauf neu starten. Tag und Commit
+  bleiben gleich.
+
+  ```bash
+  gh run rerun <run-id> --failed
+  ```
+
+- **Fehler im Code oder in der Konfiguration:** im Beta-Branch beheben und mit `npm run release:beta`
+  eine neue Beta-Version erstellen. Der Workflow läuft immer in der Fassung des getaggten Commits; ein
+  Neustart übernimmt also keine Korrektur.
 
 ### 7. Finaler Release
 
 Wenn das Beta-Testing erfolgreich war:
 
 ```bash
-# Zum main-Branch wechseln
 git checkout main
-
-# Beta-Branch in main mergen
-git merge beta/v1.2.0  # oder wie auch immer dein Beta-Branch heißt
+git merge beta/v0.0.2
 git push origin main
-
-# Stabilen Release erstellen
 npm run release
 ```
 
+Siehe [RELEASE-PROZESS.md](RELEASE-PROZESS.md).
+
 ## Beta-Updates für Benutzer
 
-Benutzer können Beta-Updates erhalten, indem sie:
-1. Die Umgebungsvariable `ALLOW_PRERELEASE=true` setzen
-2. Die Anwendung neu starten
-
-Oder:
-- Manuell den Beta-Installer von GitHub herunterladen und installieren
-
-## Beta-Branch-Struktur
-
-Es gibt zwei empfohlene Namenskonventionen für Beta-Branches:
-- `beta` (ein einzelner Langzeit-Beta-Branch)
-- `beta/v1.2.0` (versionsspezifische Beta-Branches)
-
-Das Release-Skript akzeptiert beide Formate.
+- In den Einstellungen **„Auf Beta-Versionen aktualisieren“** einschalten. Der Auto-Updater berücksichtigt dann
+  auch Pre-Releases (`autoUpdater.allowPrerelease`).
+- Oder den Installer von der GitHub-Release-Seite herunterladen. Für weitere Beta-Updates muss der
+  Schalter trotzdem eingeschaltet sein.
 
 ## Commit-Konventionen
 
-Verwende konventionelle Commit-Nachrichten, um einen aussagekräftigen Changelog zu generieren:
-
-- `feat: Neue Funktion hinzugefügt`
-- `fix: Problem mit X behoben`
-- `docs: Dokumentation aktualisiert`
-- usw.
-
-Diese Konventionen werden von standard-version verwendet, um automatisch den Changelog zu generieren. 
+`standard-version` erzeugt den Changelog aus [Conventional Commits](https://www.conventionalcommits.org/)
+(`feat:`, `fix:`, `docs:`, …). Der Präfix bestimmt, ob und wo ein Commit im Changelog erscheint.

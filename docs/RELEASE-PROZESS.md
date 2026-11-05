@@ -1,123 +1,93 @@
 # Release-Prozess für Workmory
 
-Dieses Dokument beschreibt den vollständigen Release-Prozess für Workmory, einschließlich Beta-Releases und stabilen Releases.
+Dieses Dokument beschreibt den Release-Prozess für stabile Releases und die Technik dahinter. Beta-Releases
+stehen im Detail in [BETA-RELEASE-PROZESS.md](BETA-RELEASE-PROZESS.md).
 
 ## Übersicht
 
-Der Release-Prozess verwendet:
-1. Lokale Skripte zur Versionsverwaltung und Tag-Erstellung
-2. GitHub Actions für automatisierte Builds
-3. electron-builder für die Erstellung von Installationspaketen
-4. GitHub Releases für die Veröffentlichung
+1. Lokale Skripte erhöhen die Version, schreiben den Changelog und pushen einen Tag.
+2. Der Tag löst GitHub Actions aus. Dort wird für Windows und macOS getestet, gebaut und gepackt.
+3. Erst wenn beide Plattformen erfolgreich waren, entsteht das GitHub Release mit allen Dateien.
 
-## Workflow
+Lokal wird nichts veröffentlicht.
 
-### 1. Lokale Vorbereitung
-
-#### Für Beta-Releases:
+## Stabiler Release
 
 ```bash
-# Wechsle zu einem Beta-Branch
-git checkout beta/v1.x.x  # oder: git checkout beta
-
-# Stelle sicher, dass alles committed ist
-git status
-
-# Erzeuge ein neues Beta-Release
-npm run release:beta
-```
-
-#### Für stabile Releases:
-
-```bash
-# Wechsle zum main Branch
 git checkout main
-
-# Stelle sicher, dass alles committed ist
-git status
-
-# Erzeuge ein neues Release
+git status   # muss sauber sein
 npm run release
 ```
 
-### 2. Automatisierter Build-Prozess
+Das Skript läuft nur auf `main`. Es erhöht die Version, schreibt den Changelog, führt den Build mit
+Tests aus, committet, taggt und pusht.
 
-Sobald das Tag gepusht wird:
+Ein stabiler Release wird sofort als reguläres Release veröffentlicht, nicht als Entwurf. Alle
+Benutzer erhalten ihn über den Auto-Updater.
 
-1. GitHub Actions wird automatisch ausgelöst
-2. Die Anwendung wird für Windows und macOS gebaut
-3. electron-builder erstellt ein GitHub Release
-   - Beta-Releases werden als Pre-Releases markiert
-   - Stabile Releases werden als reguläre Releases markiert
-4. Die Installationsdateien werden hochgeladen
-
-### 3. Aktualisierung für Benutzer
-
-- Benutzer mit Beta-Updates aktiviert erhalten Beta-Releases automatisch
-- Alle Benutzer erhalten stabile Releases automatisch
+> Bevor der erste stabile Release erstellt wird, müssen die Release-Korrekturen aus dem Beta-Branch in
+> `main` sein (siehe [BETA-RELEASE-PROZESS.md](BETA-RELEASE-PROZESS.md)). Dieser Weg wurde bisher noch
+> nicht mit einem echten stabilen Release durchlaufen.
 
 ## Technische Details
 
-### Umgebungsvariablen
+### Workflow (`.github/workflows/release.yml`)
 
-- `EP_PRE_RELEASE`: Steuert, ob electron-builder ein Pre-Release oder reguläres Release erstellt
-  - `true` = Pre-Release (Beta)
-  - `false` = Reguläres Release
-- `ELECTRON_BUILDER_PUBLISH_CHANNEL`: Bestimmt den Veröffentlichungskanal
-  - `beta` = Beta-Kanal (generiert `beta.yml` für Updates)
-  - `latest` = Standard-Kanal (generiert `latest.yml` für Updates)
+| Job | Läuft auf | Aufgabe |
+| --- | --- | --- |
+| `build` | Windows, macOS | `npm run build` (Tests, TypeScript, Webpack), dann `electron-builder --publish never` mit bis zu drei Versuchen; lädt die Dateien als Artefakte hoch |
+| `publish` | Ubuntu | läuft nur, wenn alle Builds erfolgreich waren; erstellt das Release und lädt alle Dateien hoch |
+
+- Die Plattformen brechen sich gegenseitig nicht ab (`fail-fast: false`).
+- Tags mit `beta` im Namen werden zum Pre-Release, alle anderen zum regulären Release.
+- `node-version` muss die `engines`-Vorgabe der Electron-Version in `package.json` erfüllen.
 
 ### Konfiguration
 
-Die Hauptkonfiguration für den Release-Prozess befindet sich in:
-- `package.json` - electron-builder Konfiguration
-- `.github/workflows/release.yml` - GitHub Actions Workflow
-- `scripts/release.js` und `scripts/release-beta.js` - Lokale Release-Skripte
-- `src/main/main.ts` - Auto-Updater-Konfiguration
+- `package.json`: electron-builder (`build`), `standard-version`
+- `.github/workflows/release.yml`: GitHub Actions
+- `scripts/release.js`, `scripts/release-beta.js`: lokale Release-Skripte
+- `src/main/main.ts`: Auto-Updater
 
 ### Update-Dateien
 
-Für die automatischen Updates werden folgende Dateien generiert:
-- `latest.yml` - Für Standard-Updates
-- `beta.yml` - Für Beta-Updates
-
-Der Auto-Updater sucht je nach Konfiguration nach der entsprechenden Datei.
-
-### Fallback-Mechanismus
-
-Falls die automatische Release-Erstellung durch electron-builder fehlschlägt, enthält der GitHub Actions Workflow einen Fallback-Job, der ein Release manuell erstellt und die Artefakte hochlädt.
+electron-builder erzeugt `latest.yml` (Windows) und `latest-mac.yml` (macOS). Es gibt keine eigenen
+Dateien für den Beta-Kanal: Stabile Releases und Betas nutzen dieselben Dateinamen, jeweils im eigenen
+Release. Der Einstellungs-Schalter für Beta-Updates setzt `autoUpdater.allowPrerelease`; damit
+berücksichtigt der Auto-Updater auch Pre-Releases.
 
 ## Fehlerbehebung
 
-### Doppelte Releases
+### Der Build ist fehlgeschlagen
 
-Wenn doppelte Releases angezeigt werden, könnte das folgende Ursachen haben:
-- Manuelles Erstellen eines Releases mit demselben Tag
-- Fehler in der Release-Konfiguration
+Es wurde nichts veröffentlicht. Log lesen:
 
-**Lösung**: 
-Die publish-Konfiguration in package.json wurde aktualisiert, um eine dynamische Konfiguration basierend auf der EP_PRE_RELEASE-Umgebungsvariable zu verwenden. Dies verhindert, dass beim Beta-Release sowohl ein reguläres als auch ein Beta-Release erstellt wird.
-
-```json
-"publish": {
-  "provider": "github",
-  "owner": "bunterWolf",
-  "repo": "Workmory",
-  "releaseType": "${env.EP_PRE_RELEASE === 'true' ? 'prerelease' : 'release'}",
-  "channel": "${env.EP_PRE_RELEASE === 'true' ? 'beta' : 'latest'}"
-}
+```bash
+gh run view <run-id> --log-failed
 ```
 
-Diese Änderung stellt sicher, dass jetzt nur noch ein Release pro Tag erstellt wird.
+- **Vorübergehender Fehler** (z. B. `Response code 504`): `gh run rerun <run-id> --failed`. Ein `504` beim
+  Packen stammt von den Downloads, mit denen electron-builder seine Werkzeuge von GitHub lädt, nicht
+  vom Veröffentlichen.
+- **Fehler im Code oder in der Konfiguration:** beheben und eine neue Version erstellen. Ein Neustart
+  nutzt immer den Workflow und den Code des getaggten Commits.
 
-### Fehlende Artefakte
+### Es fehlen Dateien im Release
 
-Wenn Artefakte fehlen, überprüfe:
-- Die Build-Logs in GitHub Actions
-- Die Pfade in der Upload-Artifacts-Konfiguration
+- Prüfen, ob die Dateinamen noch zu `release/*/Workmory-*` und `release/*/latest*.yml` im Upload-Schritt
+  und zu den `files` im Schritt `Create GitHub Release` passen.
+- Die erwartete Dateiliste steht in [BETA-RELEASE-PROZESS.md](BETA-RELEASE-PROZESS.md).
+
+### Die Konfiguration von electron-builder wird abgelehnt
+
+Das Packen lokal prüfen, ohne etwas zu veröffentlichen:
+
+```bash
+npx electron-builder --publish never
+```
 
 ## Best Practices
 
-1. Verwende konventionelle Commit-Nachrichten für aussagekräftige Changelogs
-2. Teste Beta-Releases gründlich, bevor du einen stabilen Release erstellst
-3. Halte die Dokumentation aktuell 
+1. Conventional Commits verwenden, der Changelog entsteht daraus.
+2. Beta-Releases mit echtem Tracking testen, bevor ein stabiler Release erstellt wird.
+3. Release-Korrekturen immer auch nach `main` bringen.

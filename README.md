@@ -122,15 +122,16 @@ This will:
 3. Create a git tag
 4. Push to GitHub
 5. Trigger the GitHub Actions workflow that will:
-   - Build the installers for all platforms
-   - Create a GitHub Release
-   - Upload the installers and update files
+   - Run the tests and build the installers for all platforms
+   - Create the GitHub Release with all files, once every platform has succeeded
+
+See `docs/RELEASE-PROZESS.md` for details and troubleshooting.
 
 ### Beta Testing
 
 #### Creating a Beta Release
 
-To create a beta version for testing:
+To create a beta version for testing, from a beta branch (`beta` or `beta/*`):
 ```bash
 npm run release:beta
 ```
@@ -138,21 +139,21 @@ npm run release:beta
 This will:
 1. Create a version with beta tag (e.g., v1.1.0-beta.0)
 2. Generate a changelog
-3. Create a GitHub Pre-Release
-4. Build and upload installers to the beta channel
+3. Push the branch and the tag
+4. Trigger the GitHub Actions workflow, which builds the installers and creates a GitHub Pre-Release
+
+See `docs/BETA-RELEASE-PROZESS.md` for the full process, including how the version number continues.
 
 #### Setting Up Beta Testers
 
-Beta testers need to opt-in to receive beta updates. There are two ways to enable beta updates:
+Beta testers need to opt-in to receive beta updates:
 
-1. **Environment Variable**:
-   - Set `ALLOW_PRERELEASE=true` in the system environment
-   - Restart the application
+1. **In the app**: turn on the beta updates toggle in the settings.
 
-2. **Manual Installation**:
+2. **Manual installation**:
    - Download the beta installer from GitHub Pre-Releases
    - Install the beta version
-   - The app will automatically update to newer beta versions
+   - Turn on the toggle to receive newer beta versions automatically
 
 #### Beta Testing Workflow
 
