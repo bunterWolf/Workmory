@@ -3,7 +3,7 @@
   /* Option padding so the selected label sits exactly where the closed button's label was:
      Button padding (--size-s) + label padding (--size-xs) - track padding (3px). */
   --wm-interval-option-pad-x: 9px;
-  --wm-interval-pill-height: 36px; /* = Button height (padding 8 + label 20, Figma 84671:1463) */
+  --wm-interval-fade-width: 48px; /* no Figma node: fades a covered date well before the label starts */
 
   position: relative;
 }
@@ -13,20 +13,30 @@
   visibility: hidden;
 }
 
-/* Grows to the left over the date. The padding is a --size-m fade from transparent to
-   Surface 2, so a covered date fades out instead of being cut mid-letter; under the
+/* Grows to the left over the date. The padding is a fade from transparent to Surface 2,
+   so a covered date fades out instead of being cut mid-letter; under the label and the
    translucent track the background is solid Surface 2. */
 .wm-interval-pill {
   position: absolute;
   top: 0;
   right: 0;
   z-index: 1;
-  padding-left: var(--size-m);
-  background: linear-gradient(to right, transparent, var(--surface-2) var(--size-m));
+  display: flex;
+  align-items: center;
+  gap: var(--size-s);
+  padding-left: calc(var(--wm-interval-fade-width) + var(--size-m)); /* fade, then solid space before the label */
+  background: linear-gradient(to right, transparent, var(--surface-2) var(--wm-interval-fade-width));
+  pointer-events: none; /* only the options take clicks; a click on the fade or label counts as outside */
+}
+
+/* Label in front of the options, so it is clear what the choice changes */
+.wm-interval-pill-label {
+  color: var(--ink-3);
+  white-space: nowrap;
 }
 
 .wm-segmented--toolbar {
-  --wm-segmented-height: var(--wm-interval-pill-height);
+  pointer-events: auto;
 }
 
 .wm-segmented--toolbar .wm-segmented-option {

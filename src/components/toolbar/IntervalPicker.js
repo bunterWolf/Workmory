@@ -72,6 +72,8 @@ export default function IntervalPicker({ value, onChange }) {
       />
       {open && (
         <div className="wm-interval-pill">
+          {/* Names what the choice changes; the radiogroup carries the same text as its aria-label */}
+          <span className="wm-interval-pill-label text-m-default" aria-hidden="true">{label}</span>
           <SegmentedControl
             ref={pillRef}
             className="wm-segmented--toolbar"

@@ -204,7 +204,7 @@ src/components/
 
 ##### 2.5.2.1 Toolbar
 - **Date navigation** with friendly labels ("Today", "Yesterday"): arrow buttons (previous/next day) and the date text; "next" is disabled on the current day
-- **Interval selector**: a trigger button showing the current interval (5m, 10m, 15m). A click opens it in place into a pill *15m · 10m · 5m* (no popup) that grows to the left over the date; the toolbar does not shift. A choice applies and closes the pill at once; an outside click or Esc closes without change, arrow keys move the selection. There is no Figma design for the pill yet.
+- **Interval selector**: a trigger button showing the current interval (5m, 10m, 15m). A click opens it in place into a pill *Zoom 15m · 10m · 5m* (no popup; the label *Zoom* names what the choice changes) that grows to the left over the date, which fades out over 48 px; the toolbar does not shift. A choice applies and closes the pill at once; an outside click or Esc closes without change, arrow keys move the selection. There is no Figma design for the pill yet.
 - **Tracking button** to pause or start tracking (states *Tracking* with a pulsing dot, and *Paused*)
 
 #### 2.5.2.2 Content: Timeline
@@ -401,7 +401,7 @@ Die Anwendung unterstützt konfigurierbare Zeitintervalle für die Aggregation v
 
 #### 12.2.1 Benutzereinstellung
 
-- Die Intervallauswahl wird als Intervall-Button in der Toolbar implementiert, der sich zur Auswahl-Pille 15m · 10m · 5m aufklappt (siehe 2.5.2)
+- Die Intervallauswahl wird als Intervall-Button in der Toolbar implementiert, der sich zur Auswahl-Pille „Zoom 15m · 10m · 5m“ aufklappt (siehe 2.5.2)
 - Die Einstellung wird in der ActivityStore-Datenstruktur als `aggregationInterval`-Feld gespeichert
 - Bei Änderung der Einstellung werden alle betroffenen Tage neu aggregiert
 

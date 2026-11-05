@@ -110,7 +110,7 @@ Pfade relativ zu `src/components/`. Jede Komponente hat `.js` und (falls vorhand
 | Pfeile ←/→ (arrow_back / arrow_forward) | `84658:1621` / `84664:1382` | `toolbar/DateNav`, `ui/Icon` | `wm-date-nav*` |
 | Button (Intervall-Trigger) | `84671:1463` | `toolbar/IntervalPicker` | `wm-interval*` |
 | SliderDropDownText (Vorbild für die Optionen der Intervall-Pille) | `84672:1736` | `toolbar/IntervalPicker` → `ui/SegmentedControl` | |
-| Intervall-Pille (aufgeklappter Trigger, 15m · 10m · 5m) | *noch kein Figma-Node* | `toolbar/IntervalPicker` | `wm-interval-pill`, `wm-segmented--toolbar` |
+| Intervall-Pille (aufgeklappter Trigger, Label „Zoom“ in Ink 3 + 15m · 10m · 5m) | *noch kein Figma-Node* | `toolbar/IntervalPicker` | `wm-interval-pill`, `wm-segmented--toolbar` |
 | ButtonTracking (Tracking, Paused) | `84678:1437` | `toolbar/TrackingButton` | `wm-tracking-button` |
 | Tracking dot | `84678:838` | `ui/TrackingDot` | `wm-tracking-dot*` |
 | Button (Default, Hover, Pressed, Disabled) | `84658:1616` (`84658:1623`, `84734:3006`, `84734:2997`) | `ui/Button` | `wm-button` |
@@ -160,7 +160,7 @@ Zeilenmuster abgeleitet, Figma wird später nachgezogen) die **Intervall-Pille**
 | | `--wm-button-radius` | 100 px | `84658:1616` |
 | | `--wm-button-label-min-height` | 20 px | `84664:1561` |
 | `ui/Toggle.css` | `--wm-toggle-width` / `-height` / `-padding` / `-knob-size` / `-offset` | 35 / 20 / 3 / 14 / 18 px | `84699:3534` |
-| `ui/SegmentedControl.css` | `--wm-segmented-height` | 24 px | kein Node (Einstellungs-Zeile; nah am 20-px-Toggle) |
+| `ui/SegmentedControl.css` | `--wm-segmented-height` | 36 px | = Button-Höhe `84671:1463` (Darstellungs-Zeile und Intervall-Pille) |
 | | `--wm-segmented-padding` / `--wm-segmented-track-opacity` | 3 px / 0.15 | kein eigener Node (übernommen von `84699:3534` / `84734:3056`) |
 | `settings/SettingRow.css` | `--wm-setting-row-control-width` | 35 px | = Toggle-Breite `84699:3534` (leere Spalte der Darstellungs-Zeile) |
 | `ui/TrackingDot.css` | `--wm-dot-box-width` / `-box-height` | 16 / 20 px | `84678:838` |
@@ -168,8 +168,8 @@ Zeilenmuster abgeleitet, Figma wird später nachgezogen) die **Intervall-Pille**
 | | `--wm-dot-pulse-start-opacity` / `-pulse-duration` | 0.5 / 2s | `84678:838` |
 | `toolbar/Toolbar.css` | `--wm-toolbar-height` | 60 px | `2005:832` |
 | `toolbar/TrackingButton.css` | `--wm-tracking-button-width` | 110 px | `84678:1437` |
-| `toolbar/IntervalPicker.css` | `--wm-interval-pill-height` | 36 px | = Button-Höhe `84671:1463` |
-| | `--wm-interval-option-pad-x` | 9 px | kein Node: Button-Padding 8 + Label 4 − Spur 3, damit das gewählte Label an der Stelle des geschlossenen Buttons bleibt |
+| `toolbar/IntervalPicker.css` | `--wm-interval-option-pad-x` | 9 px | kein Node: Button-Padding 8 + Label 4 − Spur 3, damit das gewählte Label an der Stelle des geschlossenen Buttons bleibt |
+| | `--wm-interval-fade-width` | 48 px | kein Node: Ausblendung des überdeckten Datums, danach `--size-m` Abstand zum Label |
 | `footer/Footer.css` | `--wm-footer-height` | 41 px | `2005:845` (Status Bar zentriert) |
 | `settings/SettingsView.css` | `--wm-settings-toolbar-height` | 60 px | `84699:2887` |
 | `window/WindowTitleBar.css` | `--wm-titlebar-height` | 32 px | `2061:4850` |

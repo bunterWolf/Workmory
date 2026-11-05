@@ -1,6 +1,6 @@
 /* Figma: none yet — token-based until the appearance setting and the interval pill are designed */
 .wm-segmented {
-  --wm-segmented-height: 24px;        /* settings row: close to the 20px Toggle without crowding the label */
+  --wm-segmented-height: 36px;        /* = Button height (padding 8 + label 20, Figma 84671:1463), in settings and toolbar */
   --wm-segmented-padding: 3px;        /* matches the Toggle inset (Figma 84699:3534) */
   --wm-segmented-track-opacity: 0.15; /* Button hover layer (Figma 84734:3056) */
 

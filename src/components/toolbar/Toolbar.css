@@ -28,7 +28,10 @@
 
 .wm-date-nav-label {
   min-width: 0;
-  overflow: hidden;
+  /* Clip horizontally only: the text box is trimmed to cap height, so a
+     vertical clip would cut descenders and accents. */
+  overflow-x: clip;
+  overflow-y: visible;
   color: var(--ink);
   white-space: nowrap;
   text-overflow: ellipsis;
