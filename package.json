@@ -2,6 +2,10 @@
   "name": "workmory",
   "version": "0.0.2-beta.3",
   "description": "Productivity Tracker",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bunterWolf/Workmory.git"
+  },
   "main": "dist/main/main.js",
   "scripts": {
     "start": "electron .",
