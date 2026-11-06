@@ -13,7 +13,7 @@
   --tl-hatch-opacity: 9%;
 
   --tl-event-outer-stroke: 1px;        /* Figma 2007:199, stroke in --surface */
-  --tl-event-inner-stroke: 1px;        /* Figma 2067:853, stroke in --event-background */
+  --tl-event-inner-stroke: 1px;        /* Figma 2067:853, hidden under the outer stroke */
 
   position: absolute;
   left: 0;
@@ -22,16 +22,14 @@
   border-radius: var(--size-m);
   background: var(--event-background);
   overflow: clip;
-  /* The overlay layer may only blend with this event's own background */
-  isolation: isolate;
   cursor: default;
 }
 
 /* Outer --surface stroke = the gap between adjacent events (spec §5.5). As in Figma it
    takes no layout space and is drawn on top of the content, so it covers the outermost
-   pixel of the inner stroke and of the app-color overlay. A real CSS border would push
+   pixel of the inner stroke. A real CSS border would push
    the inner stroke inward and leave it visible as a ring (Figma render: surface, then
-   directly the tinted color; content starts 1px + 16px from the edge). */
+   directly the event color; content starts 1px + 16px from the edge). */
 .wm-timeline-event::after {
   content: '';
   position: absolute;
@@ -48,17 +46,8 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  border: var(--tl-event-inner-stroke) solid var(--event-background);
+  border: var(--tl-event-inner-stroke) solid transparent;
   border-radius: var(--size-m);
-}
-
-.wm-timeline-event-overlay {
-  position: absolute;
-  inset: 0;
-  border-radius: var(--size-m);
-  background: var(--app-color);
-  mix-blend-mode: overlay;
-  pointer-events: none;
 }
 
 /* Header row. The --size-m vertical padding of Figma's 32px row is expressed as
@@ -109,6 +98,11 @@
 }
 
 /* ----- Variants (spec §6.2) ----- */
+/* App: background and text are set inline from eventColors.js; this is only the neutral fallback */
+.wm-timeline-event--app {
+  color: var(--ink-2);
+}
+
 /* Inactive: --surface plus the theme-aware hatch (Figma 84653:1248) */
 .wm-timeline-event--inactive {
   background-color: var(--surface);

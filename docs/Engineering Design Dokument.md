@@ -220,7 +220,7 @@ src/components/
 ##### B. Event-Darstellung
 
 1. **Event-Block Informationen**
-   - App-Fenster: App-Icon, Anwendungsname und Fenstertitel, Dauer. Hintergrund `--event-background` mit einer Ebene in der aus dem App-Icon extrahierten Farbe (`mix-blend-mode: overlay`); die Textfarbe wird in `eventColors.js` (`blendOver`) aus App-Farbe und `--event-ink-mix` berechnet und bei Theme-Wechsel neu bestimmt.
+   - App-Fenster: App-Icon, Anwendungsname und Fenstertitel, Dauer. Hintergrund und Textfarbe werden in `eventColors.js` (`eventPalette`) in OKLCH berechnet: Der Farbton kommt aus dem App-Icon, Helligkeit und Farbstärke aus den `--event-*`-Tokens, sodass alle Apps gleich hell wirken. Bei Theme-Wechsel werden sie neu bestimmt. Standard-Event als Fallback: Ohne eigenes App-Icon wird kein Icon angezeigt, und ohne Icon oder Markenfarbe gilt die Farbe `--event-default`. Das Icon wird unter Windows direkt aus der Exe gelesen (`src/main/appIcon.ts`), weil `app.getFileIcon` PNG-Icon-Frames in der Chromium-Sandbox nicht lädt.
    - Inaktive Zeiten: Standardisierte Beschreibung auf `--surface` mit CSS-Schraffur
    - Laufender Block (nur „Heute“, nur bei aktivem Tracking): Intervall-Block ab der aktuellen Intervallgrenze, pulsierender Punkt, Titel „App · Fenstertitel“ des letzten Heartbeats (siehe §3.3), wird jede Minute neu berechnet
    - Einheitliche Blockbreite unabhängig vom Inhalt, Dauer in benutzerfreundlichem Format

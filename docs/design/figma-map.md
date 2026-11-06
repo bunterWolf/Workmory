@@ -29,7 +29,7 @@ enthält die Checkliste für spätere Figma-Änderungen. Hintergrund und Entsche
   die keine Variablen sind, stehen als benannte Custom Properties oben in der Komponenten-CSS, mit
   Figma-Node-ID im Kommentar (Abschnitt 5).
 - **Benennung:** Figma-Name in kebab-case (`Ink 3` → `--ink-3`, `size/M` → `--size-m`,
-  `EventInkMix` → `--event-ink-mix`, `Line Tracking` → `--line-tracking`).
+  `Line Tracking` → `--line-tracking`).
 - **Farbwerte immer als Hex** (`#rrggbb` oder `#rrggbbaa`), weil `timeline/eventColors.js` sie per
   `getComputedStyle` liest und parst.
 - **Dateikopf:** Jede Komponentendatei beginnt mit `// Figma: <Node-Name> <Node-ID>` (CSS: `/* Figma: … */`).
@@ -54,13 +54,22 @@ enthält die Checkliste für spätere Figma-Änderungen. Hintergrund und Entsche
 | Surface | `--surface` | #f8f7f6 | #141414 |
 | Surface 2 | `--surface-2` | #ffffff | #0a0a0a |
 | EventBackground | `--event-background` | #e8e8e8 | #1c1c1c |
-| EventInkMix | `--event-ink-mix` | #00000066 | #ffffff66 |
+| (noch nicht in Figma) | `--event-default` | #737373 | gleich |
+| (noch nicht in Figma) | `--event-bg-lightness` / `--event-bg-chroma` | 0.93 / 0.035 | 0.29 / 0.04 |
+| (noch nicht in Figma) | `--event-text-lightness` / `--event-text-chroma` | 0.42 / 0.11 | 0.86 / 0.09 |
 | size/XS · S · M · L · XL · XXL | `--size-xs` … `--size-xxl` | 4 · 8 · 12 · 16 · 20 · 24 px | gleich |
 | AppIconSize | `--app-icon-size` | 16 px | gleich |
 
 - Die Figma-Variablen `Teams`, `Chrome`, `Claude` und `Excel` sind Beispieldaten und stehen **nicht** in
-  `tokens.css`. Die App-Farbe eines Events ist zur Laufzeit die aus dem App-Icon extrahierte Farbe
-  (`get-app-icon` → `color`); ohne Icon `--ink-3`.
+  `tokens.css`. Die Markenfarbe eines Events kommt zur Laufzeit aus dem App-Icon (`get-app-icon` → `color`): der
+  häufigste kräftige Farbton, nicht der Mittelwert aller Farben. Davon wird nur der Farbton verwendet (Abschnitt
+  „Event-Farben“).
+- **Standard-Event als Fallback:** Ohne Icon (z. B. `LockApp.exe`) wird kein Icon angezeigt, und ohne Icon oder
+  Markenfarbe (graustufiges Icon) gilt `--event-default`. Der endgültige Wert (grau oder blau) ist noch offen.
+- **`--event-background`** ist nur noch die neutrale Rückfallfarbe, falls die Palette nicht berechnet werden kann.
+- **`EventInkMix` ist entfallen:** Die Variable und die Overlay-Ebene in Figma werden im Code nicht mehr verwendet.
+  Die neuen `--event-*`-Tokens müssen in Figma noch nachgezogen werden; OKLCH-Formeln kann Figma selbst nicht
+  rechnen, dort stehen also nur die fertigen Prüfwerte.
 - **Inactive-Text** (in Figma noch als Hex #454545 / #b9b9b9): Entscheidung: in Figma an `Ink 2` binden; der
   Code nutzt `--ink-2`.
 
@@ -150,7 +159,7 @@ Zeilenmuster abgeleitet, Figma wird später nachgezogen) die **Intervall-Pille**
 | | `MIN_EVENT_HEIGHT` | 14 px | Mindesthöhe eines Events (Verhalten, nicht Figma) |
 | | `MIN_BLOCK_HEIGHT` | 24 px | Verhalten: Stundenhöhe = 24 × 60 / Intervall |
 | `timeline/TimelineEvent.css` | `--tl-event-outer-stroke` | 1 px | `2007:199` (Rand in `--surface`, ohne Layout-Platz, über dem Inhalt: `::after`) |
-| | `--tl-event-inner-stroke` | 1 px | `2067:853` (Rand in `--event-background`, äußerstes Pixel vom äußeren Rand verdeckt) |
+| | `--tl-event-inner-stroke` | 1 px | `2067:853` (transparent, liegt unter dem äußeren Rand) |
 | | `--tl-event-header-max-height` | 32 px | `2007:151` |
 | | `--tl-event-title-gap` | 6 px | `2007:152` |
 | | `--tl-event-tracking-border` | 2 px | `84722:2213` (innerer Rand; sichtbar 1 px, das äußere Pixel liegt unter dem `--surface`-Rand) |
@@ -183,13 +192,18 @@ Der leere 28-px-Platzhalter `84822:1564` links davon ist unsichtbar und wird nic
 
 ### Event-Farben (`timeline/eventColors.js`)
 
-Textfarbe eines App-Events = App-Farbe, darüber `--event-ink-mix` normal überblendet (`blendOver`). Der
-Token-Wert wird zur Laufzeit per `getComputedStyle` gelesen und bei Theme-Wechsel neu berechnet. Prüfwerte:
+Hintergrund und Text eines App-Events werden in OKLCH berechnet (`eventPalette`): Der Farbton kommt von der
+Markenfarbe, Helligkeit und Farbstärke kommen aus den `--event-*`-Tokens. So wirken alle Apps gleich hell und haben
+fast denselben Kontrast. Passt eine Farbe nicht in sRGB, wird nur die Farbstärke gesenkt, Helligkeit und Farbton
+bleiben. Die Tokens sind Zahlen, keine Farben (Ausnahme von der Hex-Regel), werden per `getComputedStyle` gelesen und
+bei Theme-Wechsel neu berechnet. `eventColors.test.js` prüft über alle Farbtöne mit den echten Token-Werten, dass der
+Kontrast mindestens 4,5:1 beträgt. Prüfwerte:
 
-| App-Farbe | Light | Dark |
+| Markenfarbe | Light: Hintergrund / Text | Dark: Hintergrund / Text |
 |---|---|---|
-| Teams #4750cb | #2b307a | #9196e0 |
-| Chrome #1a73e8 | #10458b | #76abf1 |
+| Word #2980e7 | #d9e9ff / #1e4d87 | #1e2c3f / #b3d4ff |
+| Explorer #f5c133 | #f2e7ce / #614900 | #342a13 / #ebce8c |
+| Standard #737373 | #e8e8e8 / #4d4d4d | #2b2b2b / #d1d1d1 |
 
 ## 6. Update-Checkliste (Figma hat sich geändert)
 
