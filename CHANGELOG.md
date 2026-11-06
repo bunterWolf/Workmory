@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.2-beta.4](https://github.com/bunterWolf/Workmory/compare/v0.0.2-beta.3...v0.0.2-beta.4) (2026-11-06)
+
+
+### Features
+
+* real app icons and perceptual OKLCH event colors ([2b3b82b](https://github.com/bunterWolf/Workmory/commit/2b3b82b8894c2ef2dcdb1095237b088ca2666b22))
+
+
+### Bug Fixes
+
+* publish a release only after every platform has built ([a588903](https://github.com/bunterWolf/Workmory/commit/a588903152986abfdef41d8b203088a34446a9b2))
+* repair the links in the generated changelog ([ae54e73](https://github.com/bunterWolf/Workmory/commit/ae54e73fb91c26fe1ef6cb19292c8587df11981d))
+* roll the aggregation "today" cache over at local midnight ([77836fd](https://github.com/bunterWolf/Workmory/commit/77836fd91dfcdc63dad6f2b39b0ccc85b67731fe))
+
 ### [0.0.2-beta.3](https://github.com/bunterWolf/Workmory/compare/v0.0.2-beta.2...v0.0.2-beta.3) (2026-11-05)
 
 
