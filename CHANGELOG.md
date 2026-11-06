@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.2-beta.5](https://github.com/bunterWolf/Workmory/compare/v0.0.2-beta.4...v0.0.2-beta.5) (2026-11-06)
+
+
+### Bug Fixes
+
+* find the build artifacts when publishing a release ([284d8c6](https://github.com/bunterWolf/Workmory/commit/284d8c6a6bb65e3deeeea222d15fe8ed077963d0))
+
 ### [0.0.2-beta.4](https://github.com/bunterWolf/Workmory/compare/v0.0.2-beta.3...v0.0.2-beta.4) (2026-11-06)
 
 
