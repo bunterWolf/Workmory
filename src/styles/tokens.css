@@ -18,7 +18,12 @@
   --surface: #f8f7f6;
   --surface-2: #ffffff;
   --event-background: #e8e8e8;
-  --event-ink-mix: #00000066;
+  --event-default: #737373;
+  /* Event colors are computed in OKLCH: the hue comes from the app, these values are the same for all apps. */
+  --event-bg-lightness: 0.93;
+  --event-bg-chroma: 0.035;
+  --event-text-lightness: 0.42;
+  --event-text-chroma: 0.11;
 }
 
 /* Figma collection "Color", mode Dark */
@@ -35,7 +40,10 @@
     --surface: #141414;
     --surface-2: #0a0a0a;
     --event-background: #1c1c1c;
-    --event-ink-mix: #ffffff66;
+    --event-bg-lightness: 0.29;
+    --event-bg-chroma: 0.04;
+    --event-text-lightness: 0.86;
+    --event-text-chroma: 0.09;
   }
 }
 

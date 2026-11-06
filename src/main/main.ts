@@ -1,7 +1,7 @@
 // Remove ts-node/register as this file will be compiled
 // require('ts-node/register');
 
-import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, dialog, nativeTheme } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, dialog, nativeImage, nativeTheme, screen } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import * as remoteMain from '@electron/remote/main'; // Use import for @electron/remote/main
@@ -16,6 +16,7 @@ import { version as appVersion } from '../../package.json';
 import ActivityStore from '../store/ActivityStore';
 import HeartbeatManager from '../store/HeartbeatManager';
 import { SettingsManager, ThemeMode, THEME_MODES } from '../store/SettingsManager';
+import { deriveIconColor, ExeIcon, readExeIcon } from './appIcon';
 
 // Auto-Launcher-Instanz
 let autoLauncher: AutoLaunch;
@@ -30,32 +31,34 @@ let activityStore: ActivityStore | null = null;
 let heartbeatManager: HeartbeatManager | null = null;
 
 // ---- App icon resolution (real OS icons for timeline events) ----
-interface AppIconResult { dataUrl: string; color: string; }
+// color is null if the icon has no brand color; the renderer then uses the default event color.
+interface AppIconResult { dataUrl: string; color: string | null; }
 const appIconCache = new Map<string, AppIconResult | null>();
+const APP_ICON_SIZE = 32; // the size app.getFileIcon loads for 'normal'
 
-// Derive a representative tint from an icon by averaging its opaque pixels,
-// weighted by saturation so vivid brand colors dominate over neutral pixels.
-// Returns a neutral gray for grayscale/monochrome icons.
-function deriveIconColor(img: Electron.NativeImage): string {
+async function readExeIconFromFile(exePath: string, targetSize: number): Promise<ExeIcon> {
+  const file = await fs.promises.open(exePath, 'r');
   try {
-    const { width, height } = img.getSize();
-    if (!width || !height) return '#737373';
-    const bmp = img.toBitmap(); // BGRA bytes, length = width * height * 4
-    let r = 0, g = 0, b = 0, wsum = 0;
-    for (let i = 0; i < bmp.length; i += 4) {
-      const B = bmp[i], G = bmp[i + 1], R = bmp[i + 2], A = bmp[i + 3];
-      if (A < 128) continue;
-      const max = Math.max(R, G, B), min = Math.min(R, G, B);
-      const sat = max === 0 ? 0 : (max - min) / max;
-      const w = sat * sat * (A / 255); // emphasize saturated, opaque pixels
-      r += R * w; g += G * w; b += B * w; wsum += w;
-    }
-    if (wsum < 0.001) return '#737373'; // monochrome icon → neutral gray
-    const toHex = (v: number) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
-    return `#${toHex(r / wsum)}${toHex(g / wsum)}${toHex(b / wsum)}`;
-  } catch {
-    return '#737373';
+    return await readExeIcon(async (offset, length) => {
+      const buffer = Buffer.alloc(length);
+      const { bytesRead } = await file.read(buffer, 0, length, offset);
+      return buffer.subarray(0, bytesRead);
+    }, targetSize);
+  } finally {
+    await file.close();
   }
+}
+
+// Loads an app's real icon, or null if it has none (no generic system icon in that case).
+async function loadAppIcon(exePath: string): Promise<Electron.NativeImage | null> {
+  if (process.platform !== 'win32') return app.getFileIcon(exePath, { size: 'normal' });
+  // app.getFileIcon scales its size by the display factor, so the same frame must be checked here.
+  const targetSize = Math.round(APP_ICON_SIZE * screen.getPrimaryDisplay().scaleFactor);
+  const icon = await readExeIconFromFile(exePath, targetSize);
+  if (icon.kind === 'none') return null;
+  if (icon.kind === 'bitmap') return app.getFileIcon(exePath, { size: 'normal' });
+  const img = nativeImage.createFromBuffer(icon.png);
+  return icon.width > targetSize ? img.resize({ width: targetSize, quality: 'best' }) : img;
 }
 
 // Prüfe, ob bereits eine Instanz läuft
@@ -274,21 +277,25 @@ function registerIpcHandlers(): void { // Add return type void
 
   // Real OS app icons for timeline events.
   // Resolves an executable path to { dataUrl, color } where color is the icon's
-  // dominant (most saturated) hue, used to tint the event block. Cached per path.
+  // dominant (most saturated) hue, used to tint the event block, or to null if the
+  // app has no icon. Cached per path.
   ipcMain.handle('get-app-icon', async (event: IpcMainInvokeEvent, exePath: string): Promise<AppIconResult | null> => {
     if (!exePath || typeof exePath !== 'string') return null;
     if (appIconCache.has(exePath)) return appIconCache.get(exePath) ?? null;
     try {
-      const img = await app.getFileIcon(exePath, { size: 'normal' });
+      const img = await loadAppIcon(exePath);
       if (!img || img.isEmpty()) {
         appIconCache.set(exePath, null);
         return null;
       }
-      const result: AppIconResult = { dataUrl: img.toDataURL(), color: deriveIconColor(img) };
+      const result: AppIconResult = { dataUrl: img.toDataURL(), color: deriveIconColor(img.toBitmap()) };
       appIconCache.set(exePath, result);
       return result;
     } catch (err) {
-      console.error('get-app-icon failed for', exePath, err);
+      // A missing file is normal: tracked paths of updated or uninstalled apps no longer exist.
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+        console.error('get-app-icon failed for', exePath, err);
+      }
       appIconCache.set(exePath, null);
       return null;
     }
