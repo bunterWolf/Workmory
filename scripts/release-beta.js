@@ -1,7 +1,6 @@
 const { execSync } = require('child_process');
-const standardVersion = require('standard-version');
 
-async function releaseBeta() {
+function releaseBeta() {
     try {
 
         // 1. Stelle sicher, dass alles committed ist
@@ -21,12 +20,9 @@ async function releaseBeta() {
 
         // 3. Führe standard-version aus mit Beta-Flag
         console.log('📦 Erstelle neue Beta-Version...');
-        await standardVersion({
-            prerelease: 'beta',
-            skip: {
-                changelog: false
-            }
-        });
+        // Über die CLI aufrufen: Nur sie liest die standard-version-Konfiguration aus package.json
+        // (Build mit Tests vor dem Commit, Changelog-Abschnitte, Commit-Format).
+        execSync('npx standard-version --prerelease beta', { stdio: 'inherit' });
 
         // 4. Hole die neue Version
         const version = require('../package.json').version;

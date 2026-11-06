@@ -1,7 +1,6 @@
 const { execSync } = require('child_process');
-const standardVersion = require('standard-version');
 
-async function release() {
+function release() {
     try {
 
         // 1. Stelle sicher, dass wir auf main sind und alles committed ist
@@ -19,9 +18,9 @@ async function release() {
 
         // 2. Führe standard-version aus
         console.log('📦 Erstelle neue Version...');
-        await standardVersion({
-            // Nutze die Konfiguration aus package.json
-        });
+        // Über die CLI aufrufen: Nur sie liest die standard-version-Konfiguration aus package.json
+        // (Build mit Tests vor dem Commit, Changelog-Abschnitte, Commit-Format).
+        execSync('npx standard-version', { stdio: 'inherit' });
 
         // 3. Hole die neue Version
         const version = require('../package.json').version;

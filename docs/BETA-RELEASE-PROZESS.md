@@ -64,6 +64,13 @@ Das Skript prüft Branch und Arbeitsverzeichnis, erhöht die Version (z. B. `0.0
 `0.0.2-beta.4`), schreibt den Changelog, führt den Build mit Tests aus, committet, taggt und pusht
 Branch und Tag.
 
+Schlagen Tests oder Build fehl, bricht das Skript vor dem Commit ab: Es entsteht kein Tag und kein
+Push, aber die Versionsänderung bleibt im Arbeitsverzeichnis. Vor dem nächsten Versuch zurücksetzen:
+
+```bash
+git restore package.json package-lock.json CHANGELOG.md
+```
+
 ### 4. GitHub Action
 
 Der Tag löst `.github/workflows/release.yml` aus:
