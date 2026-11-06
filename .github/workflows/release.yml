@@ -70,8 +70,10 @@ jobs:
           path: artifacts
           merge-multiple: true
 
+      # upload-artifact keeps the version folder from release/<version>/, so the files
+      # are in artifacts/<version>/. A tag that doesn't match package.json finds nothing.
       - name: List artifacts
-        run: ls -la artifacts
+        run: ls -laR artifacts
 
       - name: Read version from tag
         id: version
@@ -85,5 +87,5 @@ jobs:
           draft: false
           fail_on_unmatched_files: true
           files: |
-            artifacts/Workmory-*
-            artifacts/latest*.yml
+            artifacts/${{ steps.version.outputs.version }}/Workmory-*
+            artifacts/${{ steps.version.outputs.version }}/latest*.yml
