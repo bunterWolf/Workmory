@@ -110,8 +110,21 @@ describe('Abwesenheit und Ruhemodus', () => {
 
   test('Lücke ohne suspend zählt nicht', () => {
     startStoreAt(BASE);
-    simulate(BASE, [work, { from: 60, to: 68 }, { from: 68, to: 78, gap: true }, { from: 78, to: 90, input: true }]);
-    const c = statusCounts(BASE, '2026-03-04T10:00:00');
+    // Leerlauf läuft nach der Lücke weiter bis inactive; ohne markSuspend bleiben die Heartbeats davor may_be_inactive
+    simulate(BASE, [work, { from: 60, to: 68 }, { from: 68, to: 78, gap: true }, { from: 78, to: 100 }, { from: 100, to: 110, input: true }]);
+    expect(statusCounts('2026-03-04T09:00:45', '2026-03-04T09:08:00').inactive).toBe(0);
+    expect(statusCounts('2026-03-04T09:00:45', '2026-03-04T09:08:00').may_be_inactive).toBeGreaterThan(0);
+    expect(statusCounts('2026-03-04T09:18:00', '2026-03-04T09:40:00').inactive).toBeGreaterThan(0);
+  });
+
+  test('Eingabe direkt vor dem Ruhemodus beendet die Abwesenheit', () => {
+    startStoreAt(BASE);
+    simulate(BASE, [work, { from: 60, to: 65 }]);
+    // Eingabe löst den Ruhemodus aus (Start > Energie > Ruhezustand); kein Heartbeat sieht sie mehr
+    store.markSuspend(at(BASE) + 65 * MIN + 10000, 5000);
+    Date.now = jest.fn(() => at(BASE) + 95 * MIN + 15000);
+    store.addHeartbeat({ userActivity: 'active' });
+    const c = statusCounts('2026-03-04T09:01:00', '2026-03-04T09:05:00');
     expect(c.may_be_inactive).toBeGreaterThan(0);
     expect(c.inactive).toBe(0);
   });
@@ -137,8 +150,9 @@ describe('Abwesenheit und Ruhemodus', () => {
     expect(c.inactive).toBe(c.total);
   });
 
-  test('knapp 10 min mit Ruhemodus bleibt Arbeit', () => {
+  test('konservative Messung: knapp gemessen unter 10 min bleibt Arbeit', () => {
     startStoreAt(BASE);
+    // Simuliert 11 min weg (09:00:45 bis 09:11:45), gemessen 9,5 min: bewusst zugunsten von Arbeit (bis ca. 90 s)
     // letzter active-Heartbeat 09:01:15, Aufwach-Heartbeat (active) 09:11:45: Eingabe liegt bis zu 60 s davor
     simulate(BASE, [{ from: 0, to: 61, input: true }, { from: 61, to: 63 }, { from: 63, to: 71.5, sleep: true }, { from: 71.5, to: 80, input: true }]);
     const c = statusCounts('2026-03-04T09:01:30', '2026-03-04T09:03:00');

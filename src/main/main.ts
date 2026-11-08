@@ -237,7 +237,7 @@ async function initializeTracking(): Promise<void> { // Add return type Promise<
         heartbeatManager.start();
 
         // System sleep produces no heartbeats; remember it so the store can count it toward an absence
-        powerMonitor.on('suspend', () => activityStore?.markSuspend());
+        powerMonitor.on('suspend', () => activityStore?.markSuspend(Date.now(), powerMonitor.getSystemIdleTime() * 1000));
 
         console.log('Activity tracking initialized and started');
       } else if (useMockData) {

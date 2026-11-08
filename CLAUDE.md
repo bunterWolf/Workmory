@@ -54,7 +54,7 @@ Main process / renderer process architecture connected via Electron IPC.
 | --- | --- |
 | `src/main/main.ts` | App entry: windows, IPC handlers, auto-update, auto-launch, app-icon resolution; wires up store + heartbeat manager |
 | `src/main/appIcon.ts` | Reads an app's icon from its Windows executable (`app.getFileIcon` cannot load PNG icon frames in the Chromium sandbox and returns the generic icon) and derives its brand color; no icon or no brand color falls back to the default event style (`--event-default`) |
-| `src/store/ActivityStore.ts` | Core: stores/persists heartbeats, triggers aggregation, cleanup, settings |
+| `src/store/ActivityStore.ts` | Core: stores/persists heartbeats, triggers aggregation, cleanup, settings; `markSuspend` remembers a system sleep for the absence rule |
 | `src/store/HeartbeatManager.ts` | Emits a heartbeat at :15 and :45 each minute (every 30s), collects data from watchers, supports pause/resume |
 | `src/store/AggregationManager.ts` / `TimelineGenerator.ts` | Aggregate heartbeats into fixed-boundary timeline blocks; merge consecutive identical blocks; compute the day summary |
 | `src/watchers/ActiveWindowWatcher.ts` | Current active window/app (via `active-win`) |

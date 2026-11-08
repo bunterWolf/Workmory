@@ -302,10 +302,11 @@ class ActivityStore {
   /**
    * Remembers that the system went to sleep (powerMonitor 'suspend'). Sleep produces no heartbeats,
    * so the first heartbeat afterwards decides whether the sleep belongs to an absence (see addHeartbeat).
-   * Ignored while not tracking.
+   * Ignored while not tracking, and when `idleMs` (system idle time at the suspend) is below ACTIVE_WINDOW_MS:
+   * input right before the sleep ends the absence at the sleep, so there is nothing to convert.
    */
-  markSuspend(timestamp: number = Date.now()): void {
-    if (this.isTracking) {
+  markSuspend(timestamp: number = Date.now(), idleMs: number = Infinity): void {
+    if (this.isTracking && idleMs >= ACTIVE_WINDOW_MS) {
       this.suspendedAt = timestamp;
     }
   }
@@ -327,11 +328,6 @@ class ActivityStore {
     const timestamp = Date.now();
     const newDateKey = this.getDateKey(timestamp);
 
-    // Handle Day Change
-    if (newDateKey !== this.currentDayKey) {
-        this.handleDayChange(newDateKey);
-    }
-
     // Sleep counts toward an absence: if the user was away >= threshold when the system went to sleep
     // (measured from the last active heartbeat to the input; for an `active` wake heartbeat the input lies up to 60 s before it), the awake idle heartbeats before the sleep become inactive.
     if (this.suspendedAt !== null) {
@@ -341,6 +337,11 @@ class ActivityStore {
             backfillAbsence(this.activityState, this.suspendedAt);
         }
         this.suspendedAt = null;
+    }
+
+    // Handle Day Change
+    if (newDateKey !== this.currentDayKey) {
+        this.handleDayChange(newDateKey);
     }
 
     // Update Heartbeats in State
