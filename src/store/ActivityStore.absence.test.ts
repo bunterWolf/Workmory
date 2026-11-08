@@ -137,6 +137,15 @@ describe('Abwesenheit und Ruhemodus', () => {
     expect(c.inactive).toBe(c.total);
   });
 
+  test('knapp 10 min mit Ruhemodus bleibt Arbeit', () => {
+    startStoreAt(BASE);
+    // letzter active-Heartbeat 09:01:15, Aufwach-Heartbeat (active) 09:11:45: Eingabe liegt bis zu 60 s davor
+    simulate(BASE, [{ from: 0, to: 61, input: true }, { from: 61, to: 63 }, { from: 63, to: 71.5, sleep: true }, { from: 71.5, to: 80, input: true }]);
+    const c = statusCounts('2026-03-04T09:01:30', '2026-03-04T09:03:00');
+    expect(c.may_be_inactive).toBeGreaterThan(0);
+    expect(c.inactive).toBe(0);
+  });
+
   test('Ruhemodus ohne active in der Historie', () => {
     startStoreAt(BASE);
     for (let i = 0; i < 3; i++) {
@@ -153,10 +162,10 @@ describe('Abwesenheit und Ruhemodus', () => {
     const base = '2026-03-06T23:00:00';
     startStoreAt(base);
     simulate(base, [
-      { from: 0, to: 52, input: true }, { from: 52, to: 62 },
+      { from: 0, to: 55, input: true }, { from: 55, to: 62 },
       { from: 62, to: 510, sleep: true }, { from: 510, to: 540, input: true },
     ]);
-    const before = statusCounts('2026-03-06T23:53:00', '2026-03-07T00:00:00');
+    const before = statusCounts('2026-03-06T23:56:00', '2026-03-07T00:00:00');
     const after = statusCounts('2026-03-07T00:00:00', '2026-03-07T00:02:00');
     expect(before.total).toBeGreaterThan(0);
     expect(before.inactive).toBe(before.total);

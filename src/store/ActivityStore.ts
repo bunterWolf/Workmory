@@ -9,7 +9,7 @@ import { IntervalScheduler } from './IntervalScheduler';
 import { AggregationManager } from './AggregationManager';
 import { SettingsManager } from './SettingsManager';
 import { toLocalDateKey } from './dateKey';
-import { ABSENCE_THRESHOLD_MS, backfillAbsence, findLastActiveTimestamp } from './AbsenceBackfill';
+import { ABSENCE_THRESHOLD_MS, ACTIVE_WINDOW_MS, backfillAbsence, findLastActiveTimestamp } from './AbsenceBackfill';
 
 // ---- TYPE DEFINITIONS ----
 
@@ -333,10 +333,11 @@ class ActivityStore {
     }
 
     // Sleep counts toward an absence: if the user was away >= threshold when the system went to sleep
-    // (measured from the last active heartbeat), the awake idle heartbeats before the sleep become inactive.
+    // (measured from the last active heartbeat to the input; for an `active` wake heartbeat the input lies up to 60 s before it), the awake idle heartbeats before the sleep become inactive.
     if (this.suspendedAt !== null) {
         const lastActive = findLastActiveTimestamp(this.activityState, this.suspendedAt);
-        if (lastActive !== null && timestamp - lastActive >= ABSENCE_THRESHOLD_MS) {
+        const absenceEnd = heartbeatData.userActivity === 'active' ? timestamp - ACTIVE_WINDOW_MS : timestamp;
+        if (lastActive !== null && absenceEnd - lastActive >= ABSENCE_THRESHOLD_MS) {
             backfillAbsence(this.activityState, this.suspendedAt);
         }
         this.suspendedAt = null;

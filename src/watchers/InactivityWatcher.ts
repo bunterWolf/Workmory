@@ -1,6 +1,6 @@
 import { powerMonitor, BrowserWindow } from 'electron';
 import { HeartbeatData } from '../store/ActivityStore';
-import { ABSENCE_THRESHOLD_MS } from '../store/AbsenceBackfill';
+import { ABSENCE_THRESHOLD_MS, ACTIVE_WINDOW_MS } from '../store/AbsenceBackfill';
 
 // Define the possible user activity states
 type UserActivityStatus = 'active' | 'may_be_inactive' | 'inactive';
@@ -44,7 +44,7 @@ export default class InactivityWatcher {
       const idleSeconds = powerMonitor.getSystemIdleTime();
       
       // Define thresholds
-      const MAY_BE_INACTIVE_THRESHOLD = 60; // seconds (1min)
+      const MAY_BE_INACTIVE_THRESHOLD = ACTIVE_WINDOW_MS / 1000; // seconds (1min)
       const INACTIVE_THRESHOLD = ABSENCE_THRESHOLD_MS / 1000; // seconds (10 minutes)
 
       // Bestimme den Status basierend auf der Inaktivitätszeit
