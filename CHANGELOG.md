@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.2-beta.6](https://github.com/bunterWolf/Workmory/compare/v0.0.2-beta.5...v0.0.2-beta.6) (2026-11-08)
+
+
+### Bug Fixes
+
+* backfill absences across midnight and multiple days ([96a0e09](https://github.com/bunterWolf/Workmory/commit/96a0e09ebc9445c4d04671952b66dc22de218a3d))
+* count system sleep toward absences without tracking it ([5a0b347](https://github.com/bunterWolf/Workmory/commit/5a0b347814d09b48b4cd97ac9dce114c1c03629a))
+* ignore suspend right after input ([00967ed](https://github.com/bunterWolf/Workmory/commit/00967ed221a7e0e0a86f7c3bff19123de075e8f4))
+* measure absence to the input and harden the midnight sleep test ([f789651](https://github.com/bunterWolf/Workmory/commit/f7896513201262d7890c16d0e4a47cdc3441639f))
+* pick block type by type majority as specified ([25a4076](https://github.com/bunterWolf/Workmory/commit/25a4076617db1389521ba6cfdda044e988a500e6))
+* run tests and build in the release scripts again ([3f502b6](https://github.com/bunterWolf/Workmory/commit/3f502b66d4dcf21a619fb4e7bb24541182bd4e55))
+* stop absence backfill at heartbeat gaps ([d69baa3](https://github.com/bunterWolf/Workmory/commit/d69baa3b116720b4e12def05e8b5afb175c61cd5))
+* use local days for the aggregation cache and cleanup ([2507c39](https://github.com/bunterWolf/Workmory/commit/2507c394f5206c96773d8d66ae1263e0799c4711))
+
+
+### Documentation
+
+* design for absence and sleep-mode handling ([8eb0970](https://github.com/bunterWolf/Workmory/commit/8eb0970037b993c245bbe2da792dac3c63b01159))
+* implementation plan for absence and sleep-mode handling ([ddd985b](https://github.com/bunterWolf/Workmory/commit/ddd985b9ca2ea5422859469c167d9b7fd386aec0))
+
+
+### Tests
+
+* pin the Jest timezone to Europe/Berlin ([5991dfc](https://github.com/bunterWolf/Workmory/commit/5991dfc770d0290bc9d9a0600165db6c680d11ec))
+
 ### [0.0.2-beta.5](https://github.com/bunterWolf/Workmory/compare/v0.0.2-beta.4...v0.0.2-beta.5) (2026-11-06)
 
 
