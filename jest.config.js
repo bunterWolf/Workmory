@@ -12,6 +12,7 @@ module.exports = {
   //     `dot: false` refuses to descend through a dot-directory segment (e.g. a
   //     worktree at '.claude/worktrees/<name>') — silently matching 0 tests
   //     while still exiting non-zero. The relative form avoids that entirely.
+  globalSetup: '<rootDir>/jest.globalSetup.js',
   roots: ['<rootDir>/src'],
   testMatch: [
     '**/*.test.(ts|js)',
