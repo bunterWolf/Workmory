@@ -8,6 +8,7 @@ import { ActivityState } from './ActivityState';
 import { IntervalScheduler } from './IntervalScheduler';
 import { AggregationManager } from './AggregationManager';
 import { SettingsManager } from './SettingsManager';
+import { toLocalDateKey } from './dateKey';
 
 // ---- TYPE DEFINITIONS ----
 
@@ -434,12 +435,7 @@ class ActivityStore {
    * @returns The date key string in YYYY-MM-DD format based on local time.
    */
   getDateKey(timestamp: number): string {
-    const date = new Date(timestamp);
-    // Use local date components to avoid timezone issues around midnight
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // getMonth() is 0-indexed
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return toLocalDateKey(timestamp);
   }
 
   /**
@@ -560,14 +556,12 @@ class ActivityStore {
   }
 
   // Helper for cleanupOldData
-  // IMPORTANT: This function determines dates to delete based on comparing the *UTC* midnight
-  // timestamp of the dateKey with the UTC threshold timestamp.
-  // This means cleanup happens based on UTC days, not local days.
+  // Compares the local midnight of each dateKey with the threshold timestamp (local days).
   private getDatesOlderThan(timestampThreshold: number): string[] {
       const datesToDelete: string[] = [];
       for (const dateKey of this.activityState.getAvailableDates()) {
           try {
-              const dateTimestamp = Date.parse(dateKey + 'T00:00:00Z');
+              const dateTimestamp = new Date(dateKey + 'T00:00:00').getTime();
               if (!isNaN(dateTimestamp) && dateTimestamp < timestampThreshold) {
                   datesToDelete.push(dateKey);
               }

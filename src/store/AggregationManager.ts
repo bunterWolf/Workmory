@@ -1,5 +1,6 @@
 import TimelineGenerator from './TimelineGenerator';
 import { ActivityState } from './ActivityState';
+import { toLocalDateKey } from './dateKey';
 import { AggregatedData, Heartbeat, TimelineEvent, AggregationSummary } from './ActivityStore'; // Assuming types are still exported from ActivityStore
 
 /**
@@ -154,7 +155,6 @@ export class AggregationManager {
 
     // Simple date key generation utility
     private getDateKey(timestamp: number): string {
-        const date = new Date(timestamp);
-        return date.toISOString().split('T')[0];
+        return toLocalDateKey(timestamp);
     }
 } 

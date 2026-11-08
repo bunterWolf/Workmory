@@ -490,3 +490,18 @@ describe('ActivityStore Mock Data Tests', () => {
     });
   });
 }); 
+describe('ActivityStore Aufräumen', () => {
+  test('Aufräumen nach 30 Tagen rechnet in lokalen Tagen', () => {
+    const realNow = Date.now;
+    Date.now = () => new Date('2026-03-05T00:30:00').getTime();
+    const store = new ActivityStore({ useMockData: false, storagePath: '/tmp/nonexistent/activity-test.json' });
+    try {
+      (store as any).activityState.setData({ version: 1, startTime: 0, lastCleanup: 0, aggregationInterval: 15, days: { '2026-02-03': { heartbeats: [] }, '2026-02-04': { heartbeats: [] } } });
+      store.cleanupOldData();
+      expect(store.getAvailableDates()).toEqual(['2026-02-04']);
+    } finally {
+      Date.now = realNow;
+      store.cleanup();
+    }
+  });
+});
