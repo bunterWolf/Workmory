@@ -1,7 +1,7 @@
 // Remove ts-node/register as this file will be compiled
 // require('ts-node/register');
 
-import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, dialog, nativeImage, nativeTheme, screen } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, dialog, nativeImage, nativeTheme, powerMonitor, screen } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import * as remoteMain from '@electron/remote/main'; // Use import for @electron/remote/main
@@ -235,6 +235,9 @@ async function initializeTracking(): Promise<void> { // Add return type Promise<
 
         // Start generating heartbeats
         heartbeatManager.start();
+
+        // System sleep produces no heartbeats; remember it so the store can count it toward an absence
+        powerMonitor.on('suspend', () => activityStore?.markSuspend(Date.now(), powerMonitor.getSystemIdleTime() * 1000));
 
         console.log('Activity tracking initialized and started');
       } else if (useMockData) {

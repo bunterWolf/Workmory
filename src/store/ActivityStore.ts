@@ -9,6 +9,7 @@ import { IntervalScheduler } from './IntervalScheduler';
 import { AggregationManager } from './AggregationManager';
 import { SettingsManager } from './SettingsManager';
 import { toLocalDateKey } from './dateKey';
+import { ABSENCE_THRESHOLD_MS, ACTIVE_WINDOW_MS, backfillAbsence, findLastActiveTimestamp } from './AbsenceBackfill';
 
 // ---- TYPE DEFINITIONS ----
 
@@ -79,72 +80,6 @@ export interface StoreOptions {
 }
 
 
-// ---- HELPER FUNCTION ----
-
-/**
- * Behandelt may_be_inactive Heartbeats wenn ein inactive Status erkannt wurde
- * @param {Heartbeat[]} heartbeats - Liste von Heartbeats
- * @param {number} currentTimestamp - Timestamp des aktuellen Heartbeats
- * @param {HeartbeatData} heartbeatData - Daten des aktuellen Heartbeats
- * @returns {Heartbeat[]} Aktualisierte Liste von Heartbeats (kann dieselbe Referenz sein, wenn nichts geändert wurde)
- */
-// Add type annotations
-export function handleMayBeInactive(heartbeats: Heartbeat[], currentTimestamp: number, heartbeatData: HeartbeatData): Heartbeat[] {
-  // Only proceed if the current heartbeat indicates inactivity and there are heartbeats to check
-  if (!heartbeats || heartbeats.length === 0 || heartbeatData.userActivity !== 'inactive') {
-      return heartbeats;
-  }
-
-  // Check if there are any 'may_be_inactive' heartbeats to potentially change
-  const hasMayBeInactive = heartbeats.some(hb => hb.data?.userActivity === 'may_be_inactive');
-  if (!hasMayBeInactive) {
-      return heartbeats; // No changes needed
-  }
-
-
-  // Kopie der Heartbeats erstellen, da wir sie potenziell modifizieren
-  const updatedHeartbeats = [...heartbeats];
-
-  // Finde den Index des letzten 'active' Heartbeats *vor* dem aktuellen Inaktivitäts-Timestamp
-  let lastActiveIndex = -1;
-  for (let i = updatedHeartbeats.length - 1; i >= 0; i--) {
-    const hb = updatedHeartbeats[i];
-    // Skip heartbeats at or after the current inactive one
-    if (hb.timestamp >= currentTimestamp) continue;
-
-    // Found the last active period
-    if (hb.data?.userActivity === 'active') {
-      lastActiveIndex = i;
-        break;
-    }
-  }
-
-  let changed = false;
-  // Alle 'may_be_inactive' Heartbeats *nach* dem letzten 'active' (oder vom Anfang an, falls keiner gefunden wurde)
-  // und *vor* dem aktuellen Inaktivitäts-Timestamp zu 'inactive' konvertieren
-  for (let i = lastActiveIndex + 1; i < updatedHeartbeats.length; i++) {
-    const hb = updatedHeartbeats[i];
-    // Stop when we reach the current heartbeat's timestamp
-    if (hb.timestamp >= currentTimestamp) break;
-
-    if (hb.data?.userActivity === 'may_be_inactive') {
-      // Ensure data exists before spreading
-      const existingData = hb.data || {};
-      updatedHeartbeats[i] = {
-        ...hb, // Spread the original heartbeat
-        data: {
-          ...existingData, // Spread its data
-          userActivity: 'inactive' // Overwrite the status
-        }
-      };
-      changed = true;
-    }
-  }
-
-  // Return the updated array only if changes were made
-  return changed ? updatedHeartbeats : heartbeats;
-}
-
 // ---- ACTIVITY STORE CLASS ----
 
 /**
@@ -166,6 +101,8 @@ class ActivityStore {
   private currentDayKey: string = '';
   private settingsManager: SettingsManager;
   private autoSaveTimer: NodeJS.Timeout | null = null;
+  /** Moment of the last system suspend (in memory only); consumed by the first heartbeat afterwards. */
+  private suspendedAt: number | null = null;
 
   /** Fixed autosave interval (5 minutes), independent of the aggregation interval. */
   private static readonly AUTOSAVE_INTERVAL_MS = 5 * 60 * 1000;
@@ -297,6 +234,7 @@ class ActivityStore {
 
     console.log('[Store] Starting tracking...');
     this.isTracking = true;
+    this.suspendedAt = null;
     this.currentDayKey = this.getDateKey(Date.now());
     this.aggregationManager.clearCache(); // Clear cache on start
 
@@ -349,6 +287,7 @@ class ActivityStore {
 
     console.log('[Store] Pausing tracking...');
     this.isTracking = false;
+    this.suspendedAt = null;
     this.scheduler.pause(); // Pause the scheduler
     this.stopAutoSave(); // Stop the fixed 5-minute autosave
 
@@ -361,10 +300,22 @@ class ActivityStore {
   }
 
   /**
+   * Remembers that the system went to sleep (powerMonitor 'suspend'). Sleep produces no heartbeats,
+   * so the first heartbeat afterwards decides whether the sleep belongs to an absence (see addHeartbeat).
+   * Ignored while not tracking, and when `idleMs` (system idle time at the suspend) is below ACTIVE_WINDOW_MS:
+   * input right before the sleep ends the absence at the sleep, so there is nothing to convert.
+   */
+  markSuspend(timestamp: number = Date.now(), idleMs: number = Infinity): void {
+    if (this.isTracking && idleMs >= ACTIVE_WINDOW_MS) {
+      this.suspendedAt = timestamp;
+    }
+  }
+
+  /**
    * Adds a new heartbeat to the store.
    * Handles day changes (saving previous day, updating current key).
    * Delegates the actual storage of the heartbeat to ActivityState.
-   * Applies inactivation logic using `handleMayBeInactive`.
+   * Applies inactivation logic using `backfillAbsence` (across days).
    * Note: Does not trigger immediate aggregation by default.
    * @param heartbeatData The data for the new heartbeat.
    */
@@ -376,6 +327,17 @@ class ActivityStore {
 
     const timestamp = Date.now();
     const newDateKey = this.getDateKey(timestamp);
+
+    // Sleep counts toward an absence: if the user was away >= threshold when the system went to sleep
+    // (measured from the last active heartbeat to the input; for an `active` wake heartbeat the input lies up to 60 s before it), the awake idle heartbeats before the sleep become inactive.
+    if (this.suspendedAt !== null) {
+        const lastActive = findLastActiveTimestamp(this.activityState, this.suspendedAt);
+        const absenceEnd = heartbeatData.userActivity === 'active' ? timestamp - ACTIVE_WINDOW_MS : timestamp;
+        if (lastActive !== null && absenceEnd - lastActive >= ABSENCE_THRESHOLD_MS) {
+            backfillAbsence(this.activityState, this.suspendedAt);
+        }
+        this.suspendedAt = null;
+    }
 
     // Handle Day Change
     if (newDateKey !== this.currentDayKey) {
@@ -416,11 +378,11 @@ class ActivityStore {
   }
 
   private updateHeartbeats(timestamp: number, heartbeatData: HeartbeatData): void {
-      let dayHeartbeats = this.activityState.getHeartbeats(this.currentDayKey) || [];
-      const potentiallyUpdatedHeartbeats = handleMayBeInactive([...dayHeartbeats], timestamp, heartbeatData);
-      const newHeartbeat: Heartbeat = { timestamp, data: heartbeatData };
-      potentiallyUpdatedHeartbeats.push(newHeartbeat);
-      this.activityState.setHeartbeats(this.currentDayKey, potentiallyUpdatedHeartbeats);
+      if (heartbeatData.userActivity === 'inactive') {
+          backfillAbsence(this.activityState, timestamp);
+      }
+      const dayHeartbeats = this.activityState.getHeartbeats(this.currentDayKey) || [];
+      this.activityState.setHeartbeats(this.currentDayKey, [...dayHeartbeats, { timestamp, data: heartbeatData }]);
   }
 
   // --- End of private helper methods ---
@@ -553,14 +515,12 @@ class ActivityStore {
   }
 
   // Helper for cleanupOldData
-  // IMPORTANT: This function determines dates to delete based on comparing the *UTC* midnight
-  // timestamp of the dateKey with the UTC threshold timestamp.
-  // This means cleanup happens based on UTC days, not local days.
+  // Compares the local midnight of each dateKey with the threshold timestamp (local days).
   private getDatesOlderThan(timestampThreshold: number): string[] {
       const datesToDelete: string[] = [];
       for (const dateKey of this.activityState.getAvailableDates()) {
           try {
-              const dateTimestamp = Date.parse(dateKey + 'T00:00:00Z');
+              const dateTimestamp = new Date(dateKey + 'T00:00:00').getTime();
               if (!isNaN(dateTimestamp) && dateTimestamp < timestampThreshold) {
                   datesToDelete.push(dateKey);
               }

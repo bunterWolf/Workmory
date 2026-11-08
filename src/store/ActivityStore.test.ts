@@ -1,4 +1,4 @@
-import ActivityStore, { HeartbeatData, Heartbeat, handleMayBeInactive, StoreData, DayData, AggregatedData, AggregationSummary, TimelineEvent } from './ActivityStore';
+import ActivityStore, { HeartbeatData, Heartbeat, StoreData, DayData, AggregatedData, AggregationSummary, TimelineEvent } from './ActivityStore';
 import fs from 'fs';
 import path from 'path';
 
@@ -20,118 +20,6 @@ jest.mock('electron', () => ({
     // e.g., isDestroyed: jest.fn(() => false), webContents: { send: jest.fn() }
   },
 }), { virtual: true });
-
-describe('ActivityStore Utilities', () => {
-  describe('handleMayBeInactive', () => {
-    test('sollte may_be_inactive zu inactive umwandeln wenn userActivity inactive ist', () => {
-      const currentTime = new Date('2024-03-20T10:05:00Z').getTime();
-      // Ensure heartbeatData matches Partial<HeartbeatData>
-      const heartbeatData: Partial<HeartbeatData> = { userActivity: 'inactive' };
-
-      // Ensure heartbeats match the Heartbeat[] type
-      const heartbeats: Heartbeat[] = [
-        {
-          timestamp: new Date('2024-03-20T10:00:00Z').getTime(),
-          data: {
-            userActivity: 'may_be_inactive',
-            appWindow: { app: 'VS Code', title: 'test.js' }
-          }
-        },
-        {
-          timestamp: new Date('2024-03-20T10:01:00Z').getTime(),
-          data: {
-            userActivity: 'active',
-            appWindow: { app: 'VS Code', title: 'test.js' }
-          }
-        },
-        {
-          timestamp: new Date('2024-03-20T10:02:00Z').getTime(),
-          data: {
-            userActivity: 'may_be_inactive',
-            appWindow: { app: 'VS Code', title: 'test.js' }
-          }
-        },
-        {
-          timestamp: new Date('2024-03-20T10:03:00Z').getTime(),
-          data: {
-            userActivity: 'may_be_inactive',
-            appWindow: { app: 'VS Code', title: 'test.js' }
-          }
-        },
-        {
-          timestamp: new Date('2024-03-20T10:04:00Z').getTime(),
-          data: {
-            userActivity: 'inactive'
-          }
-        }
-      ];
-
-      const result = handleMayBeInactive(heartbeats, currentTime, heartbeatData);
-
-      expect(result[0].data.userActivity).toBe('may_be_inactive');
-      expect(result[1].data.userActivity).toBe('active');
-      expect(result[2].data.userActivity).toBe('inactive');
-      expect(result[3].data.userActivity).toBe('inactive');
-      expect(result[4].data.userActivity).toBe('inactive');
-    });
-    
-    test('sollte keine Änderungen vornehmen wenn userActivity nicht inactive ist', () => {
-      const currentTime = new Date('2024-03-20T10:05:00Z').getTime();
-      const heartbeatData: Partial<HeartbeatData> = { userActivity: 'active' };
-
-      const heartbeats: Heartbeat[] = [
-        {
-          timestamp: new Date('2024-03-20T10:00:00Z').getTime(),
-          data: { userActivity: 'active' }
-        },
-        {
-          timestamp: new Date('2024-03-20T10:01:00Z').getTime(),
-          data: { userActivity: 'may_be_inactive' }
-        },
-        {
-          timestamp: new Date('2024-03-20T10:02:00Z').getTime(),
-          data: { userActivity: 'active' }
-        },
-        {
-          timestamp: new Date('2024-03-20T10:03:00Z').getTime(),
-          data: { userActivity: 'may_be_inactive' }
-        },
-        {
-          timestamp: new Date('2024-03-20T10:04:00Z').getTime(),
-          data: { userActivity: 'may_be_inactive' }
-        }
-      ];
-
-      const result = handleMayBeInactive(heartbeats, currentTime, heartbeatData);
-
-      expect(result).toEqual(heartbeats);
-    });
-
-    test('sollte mit leeren oder ungültigen Eingaben umgehen können', () => {
-      const currentTime = Date.now();
-      const heartbeatData: Partial<HeartbeatData> = { userActivity: 'inactive' };
-
-      // Check empty array
-      expect(handleMayBeInactive([], currentTime, heartbeatData)).toEqual([]);
-
-      // Check undefined and null for heartbeats - function returns them unchanged
-      expect(handleMayBeInactive(undefined as any, currentTime, heartbeatData)).toBeUndefined();
-      expect(handleMayBeInactive(null as any, currentTime, heartbeatData)).toBeNull();
-
-      // Check incomplete Heartbeat objects
-      const invalidHeartbeats: Heartbeat[] = [
-        { timestamp: currentTime - 1000, data:{} }, // No userActivity
-        { timestamp: currentTime - 2000, data: null } as any, // data is null (with type assertion)
-        { timestamp: currentTime - 3000, data: {} } // Empty data object
-      ];
-
-      const result = handleMayBeInactive(invalidHeartbeats, currentTime, heartbeatData);
-      expect(result).toHaveLength(3);
-      // It is expected here that no changes are made, as no 'may_be_inactive' exist.
-      expect(result).toEqual(invalidHeartbeats);
-    });
-  });
-});
 
 describe('ActivityStore Integration', () => {
   let activityStore: ActivityStore;
@@ -166,6 +54,25 @@ describe('ActivityStore Integration', () => {
     // Delete any created test file if necessary
     try { fs.unlinkSync('/tmp/nonexistent/activity-test.json'); } catch (e) { /* Ignorieren */ }
     try { fs.rmdirSync('/tmp/nonexistent'); } catch (e) { /* Ignorieren */ }
+  });
+
+  test('Abwesenheit über Mitternacht wird im Vortag inaktiv', () => {
+    const at = (iso: string) => new Date(iso).getTime(); // lokale Zeit, ohne Z
+    const lastInput = at('2026-03-04T23:55:00');
+    const end = at('2026-03-05T00:40:45');
+    Date.now = jest.fn(() => at('2026-03-04T23:50:00'));
+    activityStore.startTracking();
+    for (let t = at('2026-03-04T23:50:15'); t <= end; t += 30000) {
+      const idle = Math.max(0, t - lastInput);
+      Date.now = jest.fn(() => t);
+      activityStore.addHeartbeat({ userActivity: idle < 60000 ? 'active' : idle < 600000 ? 'may_be_inactive' : 'inactive' });
+    }
+    const state = (activityStore as any).activityState;
+    const dayBefore = state.getHeartbeats('2026-03-04') as Heartbeat[];
+    const afterInput = dayBefore.filter((h) => h.timestamp > at('2026-03-04T23:56:00'));
+    expect(afterInput.length).toBeGreaterThan(0);
+    expect(afterInput.some((h) => h.data.userActivity === 'may_be_inactive')).toBe(false);
+    expect(afterInput.every((h) => h.data.userActivity === 'inactive')).toBe(true);
   });
 
   test('sollte Heartbeats korrekt aggregieren und Timeline-Events generieren', () => {
@@ -490,3 +397,18 @@ describe('ActivityStore Mock Data Tests', () => {
     });
   });
 }); 
+describe('ActivityStore Aufräumen', () => {
+  test('Aufräumen nach 30 Tagen rechnet in lokalen Tagen', () => {
+    const realNow = Date.now;
+    Date.now = () => new Date('2026-03-05T00:30:00').getTime();
+    const store = new ActivityStore({ useMockData: false, storagePath: '/tmp/nonexistent/activity-test.json' });
+    try {
+      (store as any).activityState.setData({ version: 1, startTime: 0, lastCleanup: 0, aggregationInterval: 15, days: { '2026-02-03': { heartbeats: [] }, '2026-02-04': { heartbeats: [] } } });
+      store.cleanupOldData();
+      expect(store.getAvailableDates()).toEqual(['2026-02-04']);
+    } finally {
+      Date.now = realNow;
+      store.cleanup();
+    }
+  });
+});

@@ -54,11 +54,12 @@ Main process / renderer process architecture connected via Electron IPC.
 | --- | --- |
 | `src/main/main.ts` | App entry: windows, IPC handlers, auto-update, auto-launch, app-icon resolution; wires up store + heartbeat manager |
 | `src/main/appIcon.ts` | Reads an app's icon from its Windows executable (`app.getFileIcon` cannot load PNG icon frames in the Chromium sandbox and returns the generic icon) and derives its brand color; no icon or no brand color falls back to the default event style (`--event-default`) |
-| `src/store/ActivityStore.ts` | Core: stores/persists heartbeats, triggers aggregation, cleanup, settings |
+| `src/store/ActivityStore.ts` | Core: stores/persists heartbeats, triggers aggregation, cleanup, settings; `markSuspend` remembers a system sleep for the absence rule |
 | `src/store/HeartbeatManager.ts` | Emits a heartbeat at :15 and :45 each minute (every 30s), collects data from watchers, supports pause/resume |
 | `src/store/AggregationManager.ts` / `TimelineGenerator.ts` | Aggregate heartbeats into fixed-boundary timeline blocks; merge consecutive identical blocks; compute the day summary |
 | `src/watchers/ActiveWindowWatcher.ts` | Current active window/app (via `active-win`) |
 | `src/watchers/InactivityWatcher.ts` | `active` / `may_be_inactive` / `inactive` based on input since last heartbeats |
+| `src/store/AbsenceBackfill.ts` | Rule 7: on an `inactive` heartbeat, `backfillAbsence` walks back across days and converts `may_be_inactive` to `inactive` until the last `active` heartbeat or a gap > `MAX_HEARTBEAT_GAP_MS` (app not running / PC asleep); also `findLastActiveTimestamp`, `ABSENCE_THRESHOLD_MS` |
 | `src/store/ActivityPersistence.ts` | JSON persistence in `app.getPath('userData')` |
 | `src/store/ActivityIpc.ts` | IPC bridge between store and renderer. Besides `activity-data-updated` it exposes two **read-only** additions for the running timeline block: handler `get-current-activity` (latest heartbeat's app + window title of today, via `ActivityStore.getLatestAppWindow()`) and event `heartbeat-added` (no payload, sent after `addHeartbeat`) |
 | `src/components/{ui,window,toolbar,timeline,footer,settings}/`, `src/renderer/` | React UI (title bar, toolbar, timeline, footer, settings view), one folder per area; Figma node id in each file header |
