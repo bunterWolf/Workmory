@@ -168,6 +168,25 @@ describe('ActivityStore Integration', () => {
     try { fs.rmdirSync('/tmp/nonexistent'); } catch (e) { /* Ignorieren */ }
   });
 
+  test('Abwesenheit über Mitternacht wird im Vortag inaktiv', () => {
+    const at = (iso: string) => new Date(iso).getTime(); // lokale Zeit, ohne Z
+    const lastInput = at('2026-03-04T23:55:00');
+    const end = at('2026-03-05T00:40:45');
+    Date.now = jest.fn(() => at('2026-03-04T23:50:00'));
+    activityStore.startTracking();
+    for (let t = at('2026-03-04T23:50:15'); t <= end; t += 30000) {
+      const idle = Math.max(0, t - lastInput);
+      Date.now = jest.fn(() => t);
+      activityStore.addHeartbeat({ userActivity: idle < 60000 ? 'active' : idle < 600000 ? 'may_be_inactive' : 'inactive' });
+    }
+    const state = (activityStore as any).activityState;
+    const dayBefore = state.getHeartbeats('2026-03-04') as Heartbeat[];
+    const afterInput = dayBefore.filter((h) => h.timestamp > at('2026-03-04T23:56:00'));
+    expect(afterInput.length).toBeGreaterThan(0);
+    expect(afterInput.some((h) => h.data.userActivity === 'may_be_inactive')).toBe(false);
+    expect(afterInput.every((h) => h.data.userActivity === 'inactive')).toBe(true);
+  });
+
   test('sollte Heartbeats korrekt aggregieren und Timeline-Events generieren', () => {
     // ---- Add test heartbeats ----
     // Helper to add heartbeat with specific timestamp
