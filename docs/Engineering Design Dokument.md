@@ -144,6 +144,18 @@ Activity Aggregation
   - First, "inactive" is weighed against "appWindow" (all windows together). "inactive" needs a strict majority; on a tie, "appWindow" applies.
   - Within "appWindow" the block shows the most frequent window (on a tie, the one occurring first).
 
+Absences
+An absence lasts from the last input (mouse or keyboard, as `powerMonitor.getSystemIdleTime()` measures it) to the next input. The threshold is 10 minutes (`ABSENCE_THRESHOLD_MS`, one constant).
+1. Shorter than 10 minutes: counts as work (accidental lock, short break, a meeting without mouse use).
+2. 10 minutes or longer: it is a break. The awake time without input is retroactively set to `inactive`, starting with the first heartbeat without input (formerly `may_be_inactive`). This reaches back into every affected day (midnight, several days) and stops at the first `active` heartbeat.
+3. System sleep is not tracked. It shows up as a gap in the timeline (not inactive, not a "sleep" section) and counts neither as active, inactive nor tracked.
+4. Sleep does count toward the duration of the absence, because it proves the user was away. Example: 8 min without input, then 10 min sleep = 18 min absence: 8 min inactive, followed by a 10 min gap. The store remembers the `powerMonitor` `suspend` in memory only (`markSuspend`); at the first heartbeat afterwards it measures from the last `active` heartbeat before the suspend. `startTracking`/`pauseTracking` discard it, and it is not wired in `--mock-data` mode.
+5. Locking the screen or sleeping starts no break and ends no absence by itself. Only the duration until the next input decides.
+6. The app does not need to know who triggered sleep. If the system sleeps due to inactivity, there is awake idle time before it, which becomes inactive by rules 2 and 4. If the user closes the lid, there is no such time and only the gap remains.
+7. Absences may span midnight and several days (e.g. Friday evening until Monday): the retroactive conversion reaches into each affected day.
+
+Heartbeat gaps longer than 2 minutes (`MAX_HEARTBEAT_GAP_MS`) caused by Workmory not running, a crash, shutdown or paused tracking end the backward conversion; only a system-sleep gap (detected via the `powerMonitor` `suspend` event) counts toward the absence.
+
 Merging Activities
 After an activity is updated or created in the timeline data, it's checked whether consecutive activities with the same content can be merged.
 - If activities are identical in type and data and follow each other chronologically, they are combined into a single activity
@@ -169,8 +181,9 @@ After an activity change, the summary times are updated. These are not based on 
 
 #### 2.4.2 Inactivity-Watcher
 - Detects if user is performan an mouse or keyboard action between requested heartbeats
-- Return "may-be-inactive" if the user has not performand an command since the last heartbeat request
-- Return "inactive" if the user has not performand an command since the last FIVE heartbeat request
+- Return "active" if the system idle time is below 60 s
+- Return "may-be-inactive" if the system idle time is 60 s or more (and below 600 s)
+- Return "inactive" if the system idle time is 600 s (10 minutes) or more
 
 
 #### 2.4.3 Teams-Meetings-Watcher

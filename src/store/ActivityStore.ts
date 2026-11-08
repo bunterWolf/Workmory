@@ -9,7 +9,7 @@ import { IntervalScheduler } from './IntervalScheduler';
 import { AggregationManager } from './AggregationManager';
 import { SettingsManager } from './SettingsManager';
 import { toLocalDateKey } from './dateKey';
-import { backfillAbsence } from './AbsenceBackfill';
+import { ABSENCE_THRESHOLD_MS, backfillAbsence, findLastActiveTimestamp } from './AbsenceBackfill';
 
 // ---- TYPE DEFINITIONS ----
 
@@ -101,6 +101,8 @@ class ActivityStore {
   private currentDayKey: string = '';
   private settingsManager: SettingsManager;
   private autoSaveTimer: NodeJS.Timeout | null = null;
+  /** Moment of the last system suspend (in memory only); consumed by the first heartbeat afterwards. */
+  private suspendedAt: number | null = null;
 
   /** Fixed autosave interval (5 minutes), independent of the aggregation interval. */
   private static readonly AUTOSAVE_INTERVAL_MS = 5 * 60 * 1000;
@@ -232,6 +234,7 @@ class ActivityStore {
 
     console.log('[Store] Starting tracking...');
     this.isTracking = true;
+    this.suspendedAt = null;
     this.currentDayKey = this.getDateKey(Date.now());
     this.aggregationManager.clearCache(); // Clear cache on start
 
@@ -284,6 +287,7 @@ class ActivityStore {
 
     console.log('[Store] Pausing tracking...');
     this.isTracking = false;
+    this.suspendedAt = null;
     this.scheduler.pause(); // Pause the scheduler
     this.stopAutoSave(); // Stop the fixed 5-minute autosave
 
@@ -293,6 +297,17 @@ class ActivityStore {
     }
 
     this.notifyTrackingStatusChange();
+  }
+
+  /**
+   * Remembers that the system went to sleep (powerMonitor 'suspend'). Sleep produces no heartbeats,
+   * so the first heartbeat afterwards decides whether the sleep belongs to an absence (see addHeartbeat).
+   * Ignored while not tracking.
+   */
+  markSuspend(timestamp: number = Date.now()): void {
+    if (this.isTracking) {
+      this.suspendedAt = timestamp;
+    }
   }
 
   /**
@@ -315,6 +330,16 @@ class ActivityStore {
     // Handle Day Change
     if (newDateKey !== this.currentDayKey) {
         this.handleDayChange(newDateKey);
+    }
+
+    // Sleep counts toward an absence: if the user was away >= threshold when the system went to sleep
+    // (measured from the last active heartbeat), the awake idle heartbeats before the sleep become inactive.
+    if (this.suspendedAt !== null) {
+        const lastActive = findLastActiveTimestamp(this.activityState, this.suspendedAt);
+        if (lastActive !== null && timestamp - lastActive >= ABSENCE_THRESHOLD_MS) {
+            backfillAbsence(this.activityState, this.suspendedAt);
+        }
+        this.suspendedAt = null;
     }
 
     // Update Heartbeats in State

@@ -1,5 +1,6 @@
 import { powerMonitor, BrowserWindow } from 'electron';
 import { HeartbeatData } from '../store/ActivityStore';
+import { ABSENCE_THRESHOLD_MS } from '../store/AbsenceBackfill';
 
 // Define the possible user activity states
 type UserActivityStatus = 'active' | 'may_be_inactive' | 'inactive';
@@ -9,9 +10,9 @@ type UserActivityStatus = 'active' | 'may_be_inactive' | 'inactive';
  * Verwendet die native Electron powerMonitor API für systemweite Inaktivitätserkennung
  * 
  * Mögliche Status:
- * - "active": Benutzer war seit dem letzten Heartbeat aktiv
- * - "may_be_inactive": Benutzer war seit dem letzten Heartbeat inaktiv 
- * - "inactive": Benutzer war für die letzten fünf Heartbeats inaktiv
+ * - "active": weniger als 60 s ohne Eingabe
+ * - "may_be_inactive": 60 s bis unter 10 min ohne Eingabe
+ * - "inactive": 10 min (ABSENCE_THRESHOLD_MS) oder länger ohne Eingabe
  */
 export default class InactivityWatcher {
   // ---- CLASS PROPERTY DECLARATIONS ----
@@ -44,7 +45,7 @@ export default class InactivityWatcher {
       
       // Define thresholds
       const MAY_BE_INACTIVE_THRESHOLD = 60; // seconds (1min)
-      const INACTIVE_THRESHOLD = 600; // seconds (10 minutes)
+      const INACTIVE_THRESHOLD = ABSENCE_THRESHOLD_MS / 1000; // seconds (10 minutes)
 
       // Bestimme den Status basierend auf der Inaktivitätszeit
       let newStatus: UserActivityStatus;
