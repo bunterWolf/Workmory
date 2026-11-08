@@ -95,6 +95,10 @@ ist das der Typ, der im Block zuerst vorkommt.
 - Keine Sonderbehandlung für halb-wache Zustände (Wartungs-Aufwachen, Modern Standby). Der Nutzer
   sieht darin aktuell kein Problem und will dafür keinen zusätzlichen Code.
 - Keine Versionierung oder Migration alter Tage (siehe §7).
+- Zeitmodell bleibt (Entscheidung des Nutzers nach Bewertung am 2026-11-08): UTC-Zeitpunkte, lokale
+  Tage, Anzeige in lokaler Zeit. Kein gespeicherter UTC-Versatz pro Heartbeat. Ungelöst bleiben
+  Uhrumstellung während des Trackings (2–3 Uhr nachts) und Zeitzonenwechsel. Korrigiert wird nur,
+  dass kein Code im Hauptprozess Tage in UTC rechnet (Aggregations-Cache, Aufräumen nach 30 Tagen).
 
 **Leitlinie des Nutzers:** so wenig Code wie möglich. Im Zweifel die einfachste Umsetzung wählen,
 die die Regeln aus §2 und §3 erfüllt.
