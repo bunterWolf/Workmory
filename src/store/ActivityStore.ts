@@ -80,8 +80,6 @@ export interface StoreOptions {
 }
 
 
-export { handleMayBeInactive } from './AbsenceBackfill';
-
 // ---- ACTIVITY STORE CLASS ----
 
 /**

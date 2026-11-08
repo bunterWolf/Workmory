@@ -1,84 +1,36 @@
 import type { ActivityState } from './ActivityState';
-import type { Heartbeat, HeartbeatData } from './ActivityStore';
+import type { Heartbeat } from './ActivityStore';
 
 export const ABSENCE_THRESHOLD_MS = 10 * 60 * 1000;
 
-/**
- * Behandelt may_be_inactive Heartbeats wenn ein inactive Status erkannt wurde
- * @param {Heartbeat[]} heartbeats - Liste von Heartbeats
- * @param {number} currentTimestamp - Timestamp des aktuellen Heartbeats
- * @param {HeartbeatData} heartbeatData - Daten des aktuellen Heartbeats
- * @returns {Heartbeat[]} Aktualisierte Liste von Heartbeats (kann dieselbe Referenz sein, wenn nichts geändert wurde)
- */
-// Add type annotations
-export function handleMayBeInactive(heartbeats: Heartbeat[], currentTimestamp: number, heartbeatData: HeartbeatData): Heartbeat[] {
-  // Only proceed if the current heartbeat indicates inactivity and there are heartbeats to check
-  if (!heartbeats || heartbeats.length === 0 || heartbeatData.userActivity !== 'inactive') {
-      return heartbeats;
-  }
-
-  // Check if there are any 'may_be_inactive' heartbeats to potentially change
-  const hasMayBeInactive = heartbeats.some(hb => hb.data?.userActivity === 'may_be_inactive');
-  if (!hasMayBeInactive) {
-      return heartbeats; // No changes needed
-  }
-
-
-  // Kopie der Heartbeats erstellen, da wir sie potenziell modifizieren
-  const updatedHeartbeats = [...heartbeats];
-
-  // Finde den Index des letzten 'active' Heartbeats *vor* dem aktuellen Inaktivitäts-Timestamp
-  let lastActiveIndex = -1;
-  for (let i = updatedHeartbeats.length - 1; i >= 0; i--) {
-    const hb = updatedHeartbeats[i];
-    // Skip heartbeats at or after the current inactive one
-    if (hb.timestamp >= currentTimestamp) continue;
-
-    // Found the last active period
-    if (hb.data?.userActivity === 'active') {
-      lastActiveIndex = i;
-        break;
-    }
-  }
-
-  let changed = false;
-  // Alle 'may_be_inactive' Heartbeats *nach* dem letzten 'active' (oder vom Anfang an, falls keiner gefunden wurde)
-  // und *vor* dem aktuellen Inaktivitäts-Timestamp zu 'inactive' konvertieren
-  for (let i = lastActiveIndex + 1; i < updatedHeartbeats.length; i++) {
-    const hb = updatedHeartbeats[i];
-    // Stop when we reach the current heartbeat's timestamp
-    if (hb.timestamp >= currentTimestamp) break;
-
-    if (hb.data?.userActivity === 'may_be_inactive') {
-      // Ensure data exists before spreading
-      const existingData = hb.data || {};
-      updatedHeartbeats[i] = {
-        ...hb, // Spread the original heartbeat
-        data: {
-          ...existingData, // Spread its data
-          userActivity: 'inactive' // Overwrite the status
-        }
-      };
-      changed = true;
-    }
-  }
-
-  // Return the updated array only if changes were made
-  return changed ? updatedHeartbeats : heartbeats;
-}
-
+// Heartbeats come every 30 s, so a larger gap means Workmory was not running or the PC slept; such a gap does not belong to the absence.
+export const MAX_HEARTBEAT_GAP_MS = 2 * 60 * 1000;
 
 /**
- * Wandelt may_be_inactive vor `untilTs` in inactive um, tageübergreifend:
- * geht die Tage rückwärts und hört nach dem ersten Tag mit einem active davor auf.
+ * Wandelt may_be_inactive vor `untilTs` in inactive um, tageübergreifend, in einem Rückwärtslauf
+ * (neueste zuerst). Der Lauf endet am ersten active-Heartbeat oder an einer Lücke
+ * größer als MAX_HEARTBEAT_GAP_MS (Workmory lief nicht / PC schlief).
  */
 export function backfillAbsence(state: ActivityState, untilTs: number): void {
   const days = state.getAvailableDates();
-  for (let i = days.length - 1; i >= 0; i--) {
-    const heartbeats = state.getHeartbeats(days[i]);
-    if (!heartbeats) continue;
-    state.setHeartbeats(days[i], handleMayBeInactive([...heartbeats], untilTs, { userActivity: 'inactive' }));
-    if (heartbeats.some(hb => hb.data?.userActivity === 'active' && hb.timestamp < untilTs)) return;
+  let previous = untilTs;
+  for (let d = days.length - 1; d >= 0; d--) {
+    const heartbeats = state.getHeartbeats(days[d]) ?? [];
+    let updated: Heartbeat[] | null = null;
+    for (let i = heartbeats.length - 1; i >= 0; i--) {
+      const hb = heartbeats[i];
+      if (hb.timestamp >= untilTs) continue;
+      if (previous - hb.timestamp > MAX_HEARTBEAT_GAP_MS || hb.data?.userActivity === 'active') {
+        if (updated) state.setHeartbeats(days[d], updated);
+        return;
+      }
+      if (hb.data?.userActivity === 'may_be_inactive') {
+        updated ??= [...heartbeats];
+        updated[i] = { ...hb, data: { ...hb.data, userActivity: 'inactive' } };
+      }
+      previous = hb.timestamp;
+    }
+    if (updated) state.setHeartbeats(days[d], updated);
   }
 }
 
