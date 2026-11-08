@@ -217,7 +217,7 @@ export default class TimelineGenerator {
 
   /**
    * Determine the dominant activity within a set of heartbeats for a single interval.
-   * Groups heartbeats by type and specific data (e.g., app+title).
+   * Decides by type majority (inactive vs. all appWindow heartbeats), then by the most frequent window (app+title).
    * @param {Heartbeat[]} heartbeats - Array of heartbeat objects for the interval.
    * @returns {{ type: string; data: any } | null} Object with dominant type/data, or null if none found.
    */
@@ -265,19 +265,22 @@ export default class TimelineGenerator {
 
     // console.log("[TimelineGenerator] determineDominantActivity: Calculated groups:", JSON.stringify(activityGroups));
 
-    // Find the most frequent specific activity group
+    // Type majority first: inactive needs a strict majority against all appWindow heartbeats together
+    const { inactive, ...windows } = activityGroups;
+    const windowGroups = Object.values(windows);
+    const windowCount = windowGroups.reduce((sum, group) => sum + group.count, 0);
+    if (inactive && inactive.count > windowCount) return inactive.data;
+
+    // Then the most frequent window (strict >: on a tie the first occurring window wins)
     let maxCount = 0;
     let dominantActivityData: { type: string; data: any } | null = null;
-
-    Object.values(activityGroups).forEach((group: ActivityGroup) => {
+    windowGroups.forEach((group: ActivityGroup) => {
       if (group.count > maxCount) {
         maxCount = group.count;
         dominantActivityData = group.data;
       }
     });
-
-    // Return the dominant activity's type and data, or null if no groups were found
-    return dominantActivityData; 
+    return dominantActivityData;
   }
 
   /**

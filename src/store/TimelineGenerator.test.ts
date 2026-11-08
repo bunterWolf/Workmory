@@ -71,6 +71,30 @@ describe('TimelineGenerator', () => {
   });
 
   describe('Aktivitätserkennung', () => {
+    test('Typ-Mehrheit: viele Fenster schlagen inactive (Spec 2.2.3)', () => {
+      // 6 inactive, 9 appWindow verteilt auf 3 Fenster (je 3) in einem 15-min-Block
+      generator.setAggregationInterval(15);
+      const base = new Date('2024-03-20T10:00:00Z').getTime();
+      const hb = (i: number, data: any) => ({ timestamp: base + i * 30000, data });
+      const heartbeats: any[] = [
+        ...Array.from({ length: 6 }, (_, i) => hb(i, { userActivity: 'inactive' })),
+        ...['Mail', 'Excel', 'Chrome'].flatMap((app, a) =>
+          Array.from({ length: 3 }, (_, i) => hb(6 + a * 3 + i, { userActivity: 'active', appWindow: { app, title: 'x' } }))),
+      ];
+      const [event] = generator.generateTimelineEvents(heartbeats);
+      expect(event.type).toBe('appWindow');
+      expect(event.data.app).toBe('Mail'); // häufigstes Fenster; bei Gleichstand das zuerst vorkommende
+    });
+
+    test('Typ-Mehrheit: inactive gewinnt nur mit echter Mehrheit, Gleichstand ergibt appWindow', () => {
+      const base = new Date('2024-03-20T10:00:00Z').getTime();
+      const heartbeats: any[] = Array.from({ length: 10 }, (_, i) => ({
+        timestamp: base + i * 30000,
+        data: i < 5 ? { userActivity: 'inactive' } : { userActivity: 'active', appWindow: { app: 'VS Code', title: 'a.ts' } },
+      }));
+      expect(generator.generateTimelineEvents(heartbeats)[0].type).toBe('appWindow');
+    });
+
     test('sollte die häufigste spezifische Aktivität in einem Intervall erkennen', () => {
       const baseTime = new Date('2024-03-20T10:00:00Z').getTime();
       const heartbeats: any[] = [

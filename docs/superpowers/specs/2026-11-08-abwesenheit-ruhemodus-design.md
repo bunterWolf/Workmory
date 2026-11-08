@@ -78,8 +78,8 @@ vorkommt: erst `inactive` gegen `appWindow` (alle Fenster zusammen), danach inne
 verteilt auf 3 Fenster ergibt heute „inaktiv“, richtig ist „Arbeit“.
 
 **Gleichstand** (z. B. 15 gegen 15 Heartbeats am Pausenrand): keine Sonderbehandlung, kein
-zusätzlicher Code (Entscheidung des Nutzers). Es gewinnt, was die einfachste Umsetzung ergibt; heute
-ist das der Typ, der im Block zuerst vorkommt.
+zusätzlicher Code (Entscheidung des Nutzers). Es gewinnt, was die einfachste Umsetzung ergibt; bei
+Gleichstand gilt `appWindow`.
 
 ## 4. Nicht-Ziele
 

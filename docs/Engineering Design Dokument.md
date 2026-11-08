@@ -141,6 +141,8 @@ Activity Aggregation
   - Inactive: If userActivity is inactive and there is no active TeamsMeeting
   - appWindow: If the user is not inactive and there is no active meeting
 - Sets the activity type to the type that occurs most frequently in the heartbeats: "appWindow" | "teamsMeeting" | "inactive"
+  - First, "inactive" is weighed against "appWindow" (all windows together). "inactive" needs a strict majority; on a tie, "appWindow" applies.
+  - Within "appWindow" the block shows the most frequent window (on a tie, the one occurring first).
 
 Merging Activities
 After an activity is updated or created in the timeline data, it's checked whether consecutive activities with the same content can be merged.
