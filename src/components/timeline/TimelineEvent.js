@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import TrackingDot from '../ui/TrackingDot';
+import TrackingStatusText from './TrackingStatusText';
 import useAppIcon from './useAppIcon';
 import { eventPalette, readCssColorVar, readEventPaletteTokens, resolveAppColor } from './eventColors';
 import { useColorScheme } from './useColorScheme';
@@ -25,7 +26,7 @@ function getAppPalette(iconColor) {
 
 // One timeline block. App windows (and legacy Teams meetings) get colors computed from the
 // app's hue; inactive and the running block use --surface.
-export default function TimelineEvent({ event, geometry, formatDuration, currentActivityTitle = null }) {
+export default function TimelineEvent({ event, geometry, formatDuration }) {
   const { t } = useTranslation();
   const isTracking = event.type === 'tracking';
   const isInactive = event.type === 'inactive';
@@ -45,7 +46,6 @@ export default function TimelineEvent({ event, geometry, formatDuration, current
   let title;
   if (isTracking) {
     variant = 'tracking';
-    title = currentActivityTitle ?? t('trackingActivities');
   } else if (isInactive) {
     variant = 'inactive';
     title = t('inactive');
@@ -67,7 +67,9 @@ export default function TimelineEvent({ event, geometry, formatDuration, current
           <div className="wm-timeline-event-title-group">
             {isTracking && <TrackingDot />}
             {isApp && iconData?.dataUrl && <img src={iconData.dataUrl} alt="" className="wm-timeline-event-icon" />}
-            <span className="wm-timeline-event-title text-m-primary">{title}</span>
+            {isTracking
+              ? <TrackingStatusText />
+              : <span className="wm-timeline-event-title text-m-primary">{title}</span>}
           </div>
           {!isTracking && (
             <span className="wm-timeline-event-duration text-m-primary tnum">{formatDuration(event.duration)}</span>

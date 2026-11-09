@@ -1,0 +1,16 @@
+/* Figma: .Event-Master, variant Tracking 84722:2213 (title text) */
+.wm-tracking-status {
+  --tl-status-fade: 600ms; /* Calm phrase change; mirrored by FADE_MS in TrackingStatusText.js */
+
+  transition: opacity var(--tl-status-fade) linear;
+}
+
+.wm-tracking-status--fading {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wm-tracking-status {
+    transition: none;
+  }
+}

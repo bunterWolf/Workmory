@@ -61,7 +61,7 @@ Main process / renderer process architecture connected via Electron IPC.
 | `src/watchers/InactivityWatcher.ts` | `active` / `may_be_inactive` / `inactive` based on input since last heartbeats |
 | `src/store/AbsenceBackfill.ts` | Rule 7: on an `inactive` heartbeat, `backfillAbsence` walks back across days and converts `may_be_inactive` to `inactive` until the last `active` heartbeat or a gap > `MAX_HEARTBEAT_GAP_MS` (app not running / PC asleep); also `findLastActiveTimestamp`, `ABSENCE_THRESHOLD_MS` |
 | `src/store/ActivityPersistence.ts` | JSON persistence in `app.getPath('userData')` |
-| `src/store/ActivityIpc.ts` | IPC bridge between store and renderer. Besides `activity-data-updated` it exposes two **read-only** additions for the running timeline block: handler `get-current-activity` (latest heartbeat's app + window title of today, via `ActivityStore.getLatestAppWindow()`) and event `heartbeat-added` (no payload, sent after `addHeartbeat`) |
+| `src/store/ActivityIpc.ts` | IPC bridge between store and renderer; tells the renderer about new data via `activity-data-updated` |
 | `src/components/{ui,window,toolbar,timeline,footer,settings}/`, `src/renderer/` | React UI (title bar, toolbar, timeline, footer, settings view), one folder per area; Figma node id in each file header |
 
 **Aggregation rules are subtle** (fixed time boundaries, "at least half the interval must have

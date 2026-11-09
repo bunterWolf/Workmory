@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow, IpcMainInvokeEvent, IpcMainEvent } from 'electron';
 import ActivityStore from './ActivityStore'; // Import ActivityStore to use its methods
-import { DayData, AppWindowData } from './ActivityStore'; 
+import { DayData } from './ActivityStore';
 import { AggregationIntervalMinutes } from './TimelineGenerator'; 
 
 /**
@@ -49,10 +49,6 @@ export class ActivityIpc {
                  // Optional: throw error back to renderer?
                  // throw new Error(`Invalid aggregation interval: ${interval}`);
              }
-        });
-
-        ipcMain.handle('get-current-activity', (): AppWindowData | null => {
-            return this.activityStore.getLatestAppWindow();
         });
 
         // Note: start/pause tracking are still handled via ipcMain.on as they don't return values directly
@@ -108,31 +104,12 @@ export class ActivityIpc {
     }
 
     /**
-     * Tells all renderer windows that a heartbeat was added (no payload; the renderer re-queries the current activity).
-     */
-    notifyHeartbeatAdded(): void {
-        const windows = BrowserWindow.getAllWindows();
-        if (windows.length === 0) return;
-
-        windows.forEach((window: BrowserWindow) => {
-            if (window && !window.isDestroyed() && window.webContents) {
-                try {
-                    window.webContents.send('heartbeat-added');
-                } catch (sendError) {
-                    console.warn(`[IPC] Failed to send heartbeat-added to window ${window.id}:`, sendError);
-                }
-            }
-        });
-    }
-
-    /**
      * Removes all registered IPC handlers. Should be called during cleanup.
      */
     cleanup(): void {
         console.log('[IPC] Removing ActivityStore IPC handlers...');
         ipcMain.removeHandler('get-day-data');
         ipcMain.removeHandler('get-available-dates');
-        ipcMain.removeHandler('get-current-activity');
         ipcMain.removeHandler('get-aggregation-interval'); // Remove new handler
         ipcMain.removeHandler('set-aggregation-interval'); // Remove new handler
         // Ensure listeners for 'on' events are also removed
