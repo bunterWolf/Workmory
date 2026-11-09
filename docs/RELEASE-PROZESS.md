@@ -25,9 +25,7 @@ Tests aus, committet, taggt und pusht.
 Ein stabiler Release wird sofort als reguläres Release veröffentlicht, nicht als Entwurf. Alle
 Benutzer erhalten ihn über den Auto-Updater.
 
-> Bevor der erste stabile Release erstellt wird, müssen die Release-Korrekturen aus dem Beta-Branch in
-> `main` sein (siehe [BETA-RELEASE-PROZESS.md](BETA-RELEASE-PROZESS.md)). Dieser Weg wurde bisher noch
-> nicht mit einem echten stabilen Release durchlaufen.
+> Dieser Weg wurde bisher noch nicht mit einem echten stabilen Release durchlaufen.
 
 ## Technische Details
 

@@ -136,6 +136,34 @@ Mock data exists **only** for development/testing via the `--mock-data` flag. Se
 - Don't run a release (`npm run release` / `release:beta`) unless explicitly asked — it tags and
   pushes. Follow `docs/RELEASE-PROZESS.md` / `docs/BETA-RELEASE-PROZESS.md`.
 
+## Branches (read this before starting new work)
+
+```
+feature branch --merge--> beta/v0.0.2 --tag--> published beta --fast-forward--> main
+```
+
+`main` always holds the latest published beta, so it is the place to start from. The app has no
+stable release yet.
+
+**Starting new work:**
+- Create one branch per topic from the current `origin/main`, named `<type>/<short-topic>`
+  (`feat/`, `fix/`, `refactor/`, `docs/`, `chore/`):
+  `git fetch origin && git switch -c fix/my-topic origin/main`
+- In a worktree the app already created, check the base with
+  `git merge-base --is-ancestor origin/main HEAD`. If that fails, run `git merge origin/main` before
+  making changes.
+- Never commit directly to `main` or the beta branch.
+
+**Leave these to the release step:** the version in `package.json`, `CHANGELOG.md`, tags, and merging
+into the beta branch or `main`. They happen only when the user asks for a release.
+
+**Before handing a branch over for release:** if `origin/main` has moved, merge it into the branch and
+resolve conflicts there, while the context is still available. Then confirm `npm test` is green.
+
+**Release management** (full steps in `docs/BETA-RELEASE-PROZESS.md`): merge the feature branch into the
+current beta branch (`beta/v0.0.2`), run `npm run release:beta` there, verify the published release, then
+fast-forward `main` to the beta branch. Release fixes are the only commits made directly on the beta branch.
+
 ## Working with Claude (recommended workflow)
 
 These are recommendations, not hard gates — scale them to the size of the change.

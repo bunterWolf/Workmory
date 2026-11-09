@@ -8,12 +8,13 @@ erhöht und ein Tag gepusht; gebaut und veröffentlicht wird ausschließlich von
 - **Betas entstehen auf einem Beta-Branch** (`beta` oder `beta/*`), das Skript prüft den Namen.
   Aktuell ist das `beta/v0.0.2`.
 - **Die Version in `package.json` muss die zuletzt veröffentlichte Beta sein.** Das Skript zählt von
-  dort weiter. Steht dort eine ältere Version (z. B. `0.0.1` aus `main`), kollidiert der neue Tag mit
+  dort weiter. Steht dort eine ältere Version, kollidiert der neue Tag mit
   einem vorhandenen oder die Version ist niedriger als die letzte Beta, und der Auto-Updater bietet
-  sie nicht an. Darum neue Arbeit in den bestehenden Beta-Branch mergen, statt einen neuen von `main`
-  abzuzweigen.
-- **Release-Korrekturen landen auch in `main`.** Korrekturen an Workflow und Build-Konfiguration, die
-  nur auf einem Beta-Branch liegen, fehlen sonst beim nächsten Release.
+  sie nicht an. Darum neue Arbeit in den bestehenden Beta-Branch mergen, statt vom
+  Feature-Branch aus zu releasen.
+- **`main` folgt der Beta.** Neue Branches starten von `origin/main` (siehe `CLAUDE.md`). Nach jedem
+  veröffentlichten Beta-Release wird `main` nachgezogen (Schritt 7), damit dort auch alle
+  Release-Korrekturen liegen. Auf `main` wird nicht direkt committet.
 - **Einen Tag nie verschieben oder neu vergeben.** Bei einem Fehlschlag den Lauf neu starten (siehe
   unten) oder eine neue Beta-Version erstellen.
 
@@ -114,14 +115,22 @@ gh run view <run-id> --log-failed
   eine neue Beta-Version erstellen. Der Workflow läuft immer in der Fassung des getaggten Commits; ein
   Neustart übernimmt also keine Korrektur.
 
-### 7. Finaler Release
+### 7. `main` nachziehen
+
+Erst wenn das Release veröffentlicht und geprüft ist. Auf `main` gibt es keine eigenen Commits, das
+ist also immer ein Fast-Forward; schlägt der Push fehl, nicht erzwingen, sondern die Ursache klären.
+
+```bash
+git push origin beta/v0.0.2:main
+```
+
+### 8. Finaler Release
 
 Wenn das Beta-Testing erfolgreich war:
 
 ```bash
 git checkout main
-git merge beta/v0.0.2
-git push origin main
+git pull origin main
 npm run release
 ```
 
