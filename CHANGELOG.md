@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.2-beta.7](https://github.com/bunterWolf/Workmory/compare/v0.0.2-beta.6...v0.0.2-beta.7) (2026-11-09)
+
+
+### Features
+
+* show rotating phrases in the running block, remove update banner ([6e603ca](https://github.com/bunterWolf/Workmory/commit/6e603caa5420945e54e962f79b02c26c09b3452c))
+
+
+### Documentation
+
+* define where new branches start and keep main on the latest beta ([7e1a428](https://github.com/bunterWolf/Workmory/commit/7e1a4284096df3b8fe57710a7e8c827c755f028a))
+* describe branch cleanup after a beta release ([175ad7d](https://github.com/bunterWolf/Workmory/commit/175ad7d9a8c25c764949d85bd30d2aa5764a1247))
+
 ### [0.0.2-beta.6](https://github.com/bunterWolf/Workmory/compare/v0.0.2-beta.5...v0.0.2-beta.6) (2026-11-08)
 
 
