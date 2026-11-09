@@ -136,6 +136,23 @@ npm run release
 
 Siehe [RELEASE-PROZESS.md](RELEASE-PROZESS.md).
 
+## Branch-Pflege
+
+Nach jedem Beta-Release, wenn `main` nachgezogen ist:
+
+- Branches, deren Commits vollständig in `main` sind, lokal und online löschen, samt ihrem Worktree,
+  wenn er sauber ist. Ausgenommen sind `main`, der aktuelle Beta-Branch und Branches, in denen gerade
+  gearbeitet wird; ein neuer Branch ohne Commits gilt sonst fälschlich als gemergt.
+- Branches mit eigenen Commits nur nach Rückfrage löschen. Vorher mit einem Tag sichern:
+
+  ```bash
+  git tag archive/<name> <branch>
+  git push origin refs/tags/archive/<name>
+  ```
+
+Der Release-Workflow reagiert nur auf Tags, die mit `v` beginnen, ein Archiv-Tag startet also keinen
+Build. Wiederherstellen lässt sich ein Branch mit `git switch -c <name> archive/<name>`.
+
 ## Beta-Updates für Benutzer
 
 - In den Einstellungen **„Auf Beta-Versionen aktualisieren“** einschalten. Der Auto-Updater berücksichtigt dann
