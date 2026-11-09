@@ -17,7 +17,6 @@ const Timeline = ({
   aggregationInterval = 15,
   isTracking = false,
   displayedDate,
-  currentActivityTitle = null,
   // False until App has loaded tracking state and interval (hour height depends on them).
   isInitialized = true,
 }) => {
@@ -157,7 +156,6 @@ const Timeline = ({
               event={currentTrackingBlock}
               geometry={trackingGeometry}
               formatDuration={formatDuration}
-              currentActivityTitle={currentActivityTitle}
             />
           )}
         </div>

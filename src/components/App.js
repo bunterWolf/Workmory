@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import Toolbar from './toolbar/Toolbar';
 import Timeline from './timeline/Timeline';
-import useCurrentActivity from './timeline/useCurrentActivity';
 import Footer from './footer/Footer';
 import SettingsView from './settings/SettingsView';
 import WindowTitleBar from './window/WindowTitleBar';
@@ -28,7 +27,6 @@ const App = () => {
   // True once init has loaded tracking state and interval (the timeline's first scroll waits for it).
   const [isInitialized, setIsInitialized] = useState(false);
   const [aggregationInterval, setAggregationInterval] = useState(15);
-  const [updateStatus, setUpdateStatus] = useState(null);
   // Which view fills the window below the title bar: the day timeline or the settings.
   const [view, setView] = useState('day'); // 'day' | 'settings'
 
@@ -175,42 +173,6 @@ const App = () => {
 
   const summary = getSummary();
 
-  // Live "App · Window title" for the running block (only while tracking today).
-  const isToday = selectedDate === toLocalDateKey();
-  const currentActivityTitle = useCurrentActivity(isTracking && isToday);
-
-  // Update notification handler
-  useEffect(() => {
-    const handleUpdateStatus = (event, status) => {
-      setUpdateStatus(status);
-
-      // Zeige Update-Benachrichtigung
-      if (status.status === 'available') {
-        // Neue Version verfügbar
-        console.log(`Neue Version ${status.version} verfügbar`);
-      } else if (status.status === 'downloaded') {
-        // Update heruntergeladen und bereit zur Installation
-        console.log(`Update ${status.version} heruntergeladen - wird beim nächsten Start installiert`);
-      } else if (status.status === 'error') {
-        // Update-Fehler
-        console.error('Update-Fehler:', status.error);
-        
-        // Analysiere den Fehler für spezifische Probleme
-        if (status.error && status.error.includes('latest.yml') && status.error.includes('beta')) {
-          console.log('Beta-Update-Konfigurationsproblem erkannt. Überprüfe die Einstellungen.');
-        }
-      }
-    };
-
-    // Registriere Update-Event-Handler
-    ipcRenderer.on('update-status', handleUpdateStatus);
-
-    // Cleanup
-    return () => {
-      ipcRenderer.removeListener('update-status', handleUpdateStatus);
-    };
-  }, []);
-
   return (
     <I18nextProvider i18n={i18n}>
       <div className="wm-app">
@@ -234,13 +196,6 @@ const App = () => {
               onIntervalChange={handleIntervalChange}
             />
 
-            {/* Update-Benachrichtigung */}
-            {updateStatus && updateStatus.status === 'downloaded' && (
-              <div className="update-notification">
-                Eine neue Version ist verfügbar und wird beim nächsten Start installiert.
-              </div>
-            )}
-
             <Timeline
               activityData={activityData}
               isLoading={isLoading}
@@ -249,7 +204,6 @@ const App = () => {
               isTracking={isTracking}
               isInitialized={isInitialized}
               displayedDate={selectedDate}
-              currentActivityTitle={currentActivityTitle}
             />
 
             <Footer

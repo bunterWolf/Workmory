@@ -516,47 +516,29 @@ function initAutoUpdater() {
   autoUpdater.allowPrerelease = allowPrerelease;
   console.log(`Beta-Updates ${allowPrerelease ? 'aktiviert' : 'deaktiviert'}. allowPrerelease: ${allowPrerelease}`);
 
-  // Event-Handler für Update-Status
+  // Updates laufen still im Hintergrund; der Status wird nur geloggt.
   autoUpdater.on('checking-for-update', () => {
     console.log('Checking for updates...');
-    notifyAllWindows('update-status', { status: 'checking' });
   });
 
   autoUpdater.on('update-available', (info: UpdateInfo) => {
     console.log('Update available:', info);
-    notifyAllWindows('update-status', { 
-      status: 'available',
-      version: info.version
-    });
   });
 
   autoUpdater.on('update-not-available', (info: UpdateInfo) => {
     console.log('Update not available:', info);
-    notifyAllWindows('update-status', { status: 'not-available' });
   });
 
   autoUpdater.on('error', (err: Error) => {
     console.error('Update error:', err);
-    notifyAllWindows('update-status', { 
-      status: 'error',
-      error: err.message
-    });
   });
 
   autoUpdater.on('download-progress', (progressObj: ProgressInfo) => {
     console.log('Download progress:', progressObj);
-    notifyAllWindows('update-status', {
-      status: 'downloading',
-      progress: progressObj
-    });
   });
 
   autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
     console.log('Update downloaded:', info);
-    notifyAllWindows('update-status', {
-      status: 'downloaded',
-      version: info.version
-    });
   });
 
   // Prüfe regelmäßig auf Updates (alle 4 Stunden)
@@ -569,16 +551,6 @@ function initAutoUpdater() {
   // Erste Update-Prüfung nach App-Start
   autoUpdater.checkForUpdates().catch((err: Error) => {
     console.error('Error checking for updates:', err);
-  });
-}
-
-// Hilfsfunktion zum Benachrichtigen aller Fenster
-function notifyAllWindows(channel: string, data: any) {
-  const windows = BrowserWindow.getAllWindows();
-  windows.forEach(window => {
-    if (!window.isDestroyed()) {
-      window.webContents.send(channel, data);
-    }
   });
 }
 

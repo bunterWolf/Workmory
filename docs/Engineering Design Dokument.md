@@ -310,12 +310,7 @@ OS Events -> Watcher -> Heartbeat -> ActivityStore-heartbeats -> ActivityStore-a
 └──────────────┘    └───────────────┘    └────────────┘
 ```
 
-**Read-only IPC for the running block title:** `activity-data-updated` is only sent at the end of an aggregation interval, so the running timeline block would show stale data. Two additions, which read but never write or aggregate:
-
-- `get-current-activity` (`ipcMain.handle`): returns `ActivityStore.getLatestAppWindow()`, the app name and window title of the **latest heartbeat of today that has an `appWindow`**, or `null`. The store state is not changed.
-- `heartbeat-added` (event, no payload): sent to the renderer by the `ActivityIpc` bridge after `ActivityStore.addHeartbeat` has stored a heartbeat.
-
-The renderer (`useCurrentActivity`) fetches the value on startup and on every `heartbeat-added`, and shows it as "App · Window title" in the running block (default text when `null`).
+**Running block title:** The running timeline block shows no tracked data. Its title is a purely decorative phrase from the renderer (`TrackingStatusText`, `trackingPhrases` in `i18n.js`) that changes every 30 seconds and always opens with the plain tracking phrase, so no IPC is involved.
 
 ## 4. Technical Details
 

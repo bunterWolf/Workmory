@@ -15,13 +15,3 @@
   background: var(--surface);
   color: var(--ink);
 }
-
-/* Update notification banner */
-.update-notification {
-  background-color: var(--ink);
-  color: var(--surface);
-  text-align: center;
-  padding: var(--size-s) var(--size-l);
-  font-size: var(--size-m);
-  flex: none;
-}

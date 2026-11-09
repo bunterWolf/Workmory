@@ -20,7 +20,18 @@ const resources = {
       aggregationInterval: "Zoom",
       pauseTracking: "Aufzeichnung pausieren",
       startTracking: "Aufzeichnung starten",
-      trackingActivities: "Aufzeichnung läuft",
+      // Wechselnder Titel des laufenden Blocks. Der erste Eintrag steht immer zuerst.
+      trackingPhrases: [
+        "Tracking läuft",
+        "Minuten sammeln",
+        "Stunden zählen",
+        "Zeit einfangen",
+        "Minuten stapeln",
+        "Minuten sortieren",
+        "Uhr im Blick",
+        "Zeitleiste füllen",
+        "Tick, tack"
+      ],
       
       // Einstellungen
       settings: "Einstellungen",
@@ -85,7 +96,18 @@ const resources = {
       aggregationInterval: "Zoom",
       pauseTracking: "Pause Tracking",
       startTracking: "Start Tracking",
-      trackingActivities: "Recording activity",
+      // Rotating title of the running block. The first entry always comes first.
+      trackingPhrases: [
+        "Tracking",
+        "Collecting minutes",
+        "Counting hours",
+        "Catching time",
+        "Stacking minutes",
+        "Sorting minutes",
+        "Minding the clock",
+        "Filling the timeline",
+        "Tick, tock"
+      ],
       
       // Settings
       settings: "Settings",
