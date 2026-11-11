@@ -22,6 +22,8 @@ export default function SettingsView({ onBack }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [appVersion, setAppVersion] = useState('');
   const [themeMode, setThemeMode] = useState('system');
+  // Microsoft Store build: the Store handles updates, Windows handles autostart
+  const [isWindowsStore, setIsWindowsStore] = useState(false);
 
   // Lade aktuelle Einstellungen
   useEffect(() => {
@@ -31,6 +33,7 @@ export default function SettingsView({ onBack }) {
         const settings = await ipcRenderer.invoke('get-settings');
         setActivityStorePath(settings.activityStoreDirPath);
         setAllowPrerelease(settings.allowPrerelease);
+        setIsWindowsStore(settings.isWindowsStore === true);
 
         const autoLaunchSettings = await ipcRenderer.invoke('get-auto-launch-settings');
         setAutoLaunchEnabled(autoLaunchSettings.enabled);
@@ -115,16 +118,33 @@ export default function SettingsView({ onBack }) {
           <div className="wm-settings-loading text-m-default">{t('loading')}</div>
         ) : (
           <>
-            <SettingRow
-              control={<Toggle on={autoLaunchEnabled} onChange={handleToggleAutoLaunch} ariaLabel={t('autoLaunch')} />}
-              title={t('autoLaunch')}
-              description={t('autoLaunchDescription')}
-            />
-            <SettingRow
-              control={<Toggle on={allowPrerelease} onChange={handleToggleBetaReleases} ariaLabel={t('betaReleases')} />}
-              title={t('betaReleases')}
-              description={t('betaDescription')}
-            />
+            {isWindowsStore ? (
+              <SettingRow
+                alignWithControls
+                title={t('autoLaunch')}
+                description={t('autoLaunchStoreDescription')}
+              >
+                <div className="wm-settings-row-action">
+                  <Button
+                    label={t('openStartupAppsSettings')}
+                    onClick={() => ipcRenderer.invoke('open-startup-apps-settings')}
+                  />
+                </div>
+              </SettingRow>
+            ) : (
+              <>
+                <SettingRow
+                  control={<Toggle on={autoLaunchEnabled} onChange={handleToggleAutoLaunch} ariaLabel={t('autoLaunch')} />}
+                  title={t('autoLaunch')}
+                  description={t('autoLaunchDescription')}
+                />
+                <SettingRow
+                  control={<Toggle on={allowPrerelease} onChange={handleToggleBetaReleases} ariaLabel={t('betaReleases')} />}
+                  title={t('betaReleases')}
+                  description={t('betaDescription')}
+                />
+              </>
+            )}
             <SettingRow
               alignWithControls
               title={t('appearance')}

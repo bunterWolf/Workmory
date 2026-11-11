@@ -1,7 +1,7 @@
 // Remove ts-node/register as this file will be compiled
 // require('ts-node/register');
 
-import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, dialog, nativeImage, nativeTheme, powerMonitor, screen } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, dialog, nativeImage, nativeTheme, powerMonitor, screen, shell } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import * as remoteMain from '@electron/remote/main'; // Use import for @electron/remote/main
@@ -21,6 +21,10 @@ import { deriveIconColor, ExeIcon, readExeIcon } from './appIcon';
 // Auto-Launcher-Instanz
 let autoLauncher: AutoLaunch;
 
+// Microsoft Store build (MSIX): the Store delivers updates, and autostart is the package's
+// startup task (see resources/appx-extensions.xml), managed in Windows' startup apps settings.
+const isWindowsStore = process.windowsStore === true;
+
 // Initialize @electron/remote
 remoteMain.initialize();
 
@@ -29,6 +33,35 @@ remoteMain.initialize();
 let mainWindow: BrowserWindow | null = null;
 let activityStore: ActivityStore | null = null;
 let heartbeatManager: HeartbeatManager | null = null;
+
+// Initialisiere AutoLaunch und gleiche es mit den gespeicherten Einstellungen ab
+async function initAutoLaunch(): Promise<void> {
+  try {
+    autoLauncher = new AutoLaunch({
+      name: 'Chronflow',
+      path: app.getPath('exe'),
+    });
+
+    // Synchronisiere mit den gespeicherten Einstellungen
+    if (activityStore) {
+      const settingsManager = activityStore.getSettingsManager();
+      const shouldAutoLaunch = settingsManager.getAutoLaunchEnabled();
+      
+      const isEnabled = await autoLauncher.isEnabled();
+      
+      // Nur ändern, wenn nötig
+      if (shouldAutoLaunch && !isEnabled) {
+        await autoLauncher.enable();
+        console.log('Auto-Start aktiviert');
+      } else if (!shouldAutoLaunch && isEnabled) {
+        await autoLauncher.disable();
+        console.log('Auto-Start deaktiviert');
+      }
+    }
+  } catch (error) {
+    console.error('Fehler bei der Initialisierung von AutoLaunch:', error);
+  }
+}
 
 // ---- App icon resolution (real OS icons for timeline events) ----
 // color is null if the icon has no brand color; the renderer then uses the default event color.
@@ -201,32 +234,8 @@ async function initializeTracking(): Promise<void> { // Add return type Promise<
       await heartbeatManager.init();
       console.log("HeartbeatManager initialized.");
 
-      // Initialisiere AutoLaunch
-      try {
-        autoLauncher = new AutoLaunch({
-          name: 'Chronflow',
-          path: app.getPath('exe'),
-        });
-
-        // Synchronisiere mit den gespeicherten Einstellungen
-        if (activityStore) {
-          const settingsManager = activityStore.getSettingsManager();
-          const shouldAutoLaunch = settingsManager.getAutoLaunchEnabled();
-          
-          const isEnabled = await autoLauncher.isEnabled();
-          
-          // Nur ändern, wenn nötig
-          if (shouldAutoLaunch && !isEnabled) {
-            await autoLauncher.enable();
-            console.log('Auto-Start aktiviert');
-          } else if (!shouldAutoLaunch && isEnabled) {
-            await autoLauncher.disable();
-            console.log('Auto-Start deaktiviert');
-          }
-        }
-      } catch (error) {
-        console.error('Fehler bei der Initialisierung von AutoLaunch:', error);
-      }
+      // Not in the Store package: there the package's startup task applies
+      if (!isWindowsStore) await initAutoLaunch();
 
       // Start tracking (only if not using mock data)
       if (!useMockData && activityStore && heartbeatManager) {
@@ -364,7 +373,8 @@ function registerIpcHandlers(): void { // Add return type void
     const settingsManager = activityStore.getSettingsManager();
     return {
       activityStoreDirPath: settingsManager.getActivityStoreDirPath(),
-      allowPrerelease: settingsManager.getAllowPrerelease()
+      allowPrerelease: settingsManager.getAllowPrerelease(),
+      isWindowsStore
     };
   });
   
@@ -499,6 +509,11 @@ function registerIpcHandlers(): void { // Add return type void
     }
   });
 
+  // Store build: autostart is switched in Windows' "Startup apps" settings page
+  ipcMain.handle('open-startup-apps-settings', async (): Promise<void> => {
+    await shell.openExternal('ms-settings:startupapps');
+  });
+
   console.log("IPC handlers registered.");
 }
 
@@ -563,7 +578,7 @@ app.whenReady().then(async () => {
   createWindow();
   await initializeTracking();
   registerIpcHandlers();
-  initAutoUpdater(); // Initialize auto-updater
+  if (!isWindowsStore) initAutoUpdater(); // the Store updates its own packages
 
   app.on('activate', () => { // Use arrow function
     // On macOS it's common to re-create a window in the app when the

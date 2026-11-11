@@ -39,6 +39,8 @@ one before making related changes, and **keep it in sync** when behavior changes
 | What the app *must* do (user-facing requirements) | `docs/User Requirements.md` |
 | Stable release process | `docs/RELEASE-PROZESS.md` |
 | Beta release process | `docs/BETA-RELEASE-PROZESS.md` |
+| Microsoft Store package (MSIX), Partner Center steps, Store-specific behavior | `docs/MICROSOFT-STORE.md` |
+| Privacy policy (linked from the Store listing; keep in sync with what is recorded) | `PRIVACY.md` |
 | Coding pattern preferences (original) | `.cursor/rules/coding-pattern-preferences.mdc` |
 | UI: Figma node/variable → file/class/token mapping, Figma update checklist | `docs/design/figma-map.md` |
 
@@ -52,7 +54,7 @@ Main process / renderer process architecture connected via Electron IPC.
 
 | Module | Responsibility |
 | --- | --- |
-| `src/main/main.ts` | App entry: windows, IPC handlers, auto-update, auto-launch, app-icon resolution; wires up store + heartbeat manager |
+| `src/main/main.ts` | App entry: windows, IPC handlers, auto-update, auto-launch, app-icon resolution; wires up store + heartbeat manager. In the Microsoft Store build (`isWindowsStore`) auto-update and auto-launch are off (Store updates, package startup task) |
 | `src/main/appIcon.ts` | Reads an app's icon from its Windows executable (`app.getFileIcon` cannot load PNG icon frames in the Chromium sandbox and returns the generic icon) and derives its brand color; no icon or no brand color falls back to the default event style (`--event-default`) |
 | `src/store/ActivityStore.ts` | Core: stores/persists heartbeats, triggers aggregation, cleanup, settings; `markSuspend` remembers a system sleep for the absence rule |
 | `src/store/HeartbeatManager.ts` | Emits a heartbeat at :15 and :45 each minute (every 30s), collects data from watchers, supports pause/resume |
@@ -108,6 +110,7 @@ scripts/       # Mock-data generation, release/beta automation
 | `npm run test:watch` | Jest in watch mode |
 | `npm run build` | `npm test` → `tsc` → webpack (build gate) |
 | `npm run dist:win` / `dist:mac` | Build platform installers |
+| `npm run dist:store` | Build the Microsoft Store package (MSIX/AppX) |
 | `npm run release` | Stable release (version, changelog, tag, push → GitHub Actions) |
 | `npm run release:beta` | Beta pre-release from a `beta` branch |
 

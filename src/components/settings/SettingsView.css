@@ -96,3 +96,8 @@
 .wm-settings-version {
   font-variant-numeric: tabular-nums;
 }
+
+/* Store build: the autostart row links to Windows' startup apps instead of a Toggle (no Figma design yet) */
+.wm-settings-row-action {
+  display: flex;
+}
