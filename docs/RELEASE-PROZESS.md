@@ -1,4 +1,4 @@
-# Release-Prozess für Workmory
+# Release-Prozess für Missing Hours
 
 Dieses Dokument beschreibt den Release-Prozess für stabile Releases und die Technik dahinter. Beta-Releases
 stehen im Detail in [BETA-RELEASE-PROZESS.md](BETA-RELEASE-PROZESS.md).
@@ -75,7 +75,7 @@ gh run view <run-id> --log-failed
 
 ### Es fehlen Dateien im Release
 
-- Prüfen, ob die Dateinamen noch zu `release/*/Workmory-*` und `release/*/latest*.yml` im Upload-Schritt
+- Prüfen, ob die Dateinamen noch zu `release/*/Missing-Hours-*` und `release/*/latest*.yml` im Upload-Schritt
   und zu den `files` im Schritt `Create GitHub Release` passen.
 - Die erwartete Dateiliste steht in [BETA-RELEASE-PROZESS.md](BETA-RELEASE-PROZESS.md).
 

@@ -1,4 +1,4 @@
-# Engineering Design Document: Workmory - Automatic time tracking made easy and free
+# Engineering Design Document: Missing Hours - Automatic time tracking made easy and free
 
 ## Glossar
 
@@ -8,13 +8,13 @@
 
 ## 1. Introduction
 
-Workmory is an Electron-based desktop application designed to track and analyze user activity on a computer. The application follows a main process/renderer process architecture connected through IPC communication.
+Missing Hours is an Electron-based desktop application designed to track and analyze user activity on a computer. The application follows a main process/renderer process architecture connected through IPC communication.
 
 ## 1. System Architecture
 
 ### 1.1 Overview
 
-Workmory is an Electron-based desktop application designed to track and analyze user activity on a computer. The application follows a main process/renderer process architecture connected through IPC communication.
+Missing Hours is an Electron-based desktop application designed to track and analyze user activity on a computer. The application follows a main process/renderer process architecture connected through IPC communication.
 
 ### 1.2 Architectural Components
 
@@ -154,7 +154,7 @@ An absence lasts from the last input (mouse or keyboard, as `powerMonitor.getSys
 6. The app does not need to know who triggered sleep. If the system sleeps due to inactivity, there is awake idle time before it, which becomes inactive by rules 2 and 4. If the user closes the lid, there is no such time and only the gap remains.
 7. Absences may span midnight and several days (e.g. Friday evening until Monday): the retroactive conversion reaches into each affected day.
 
-Heartbeat gaps longer than 2 minutes (`MAX_HEARTBEAT_GAP_MS`) caused by Workmory not running, a crash, shutdown or paused tracking end the backward conversion; only a system-sleep gap (detected via the `powerMonitor` `suspend` event) counts toward the absence.
+Heartbeat gaps longer than 2 minutes (`MAX_HEARTBEAT_GAP_MS`) caused by Missing Hours not running, a crash, shutdown or paused tracking end the backward conversion; only a system-sleep gap (detected via the `powerMonitor` `suspend` event) counts toward the absence.
 
 Merging Activities
 After an activity is updated or created in the timeline data, it's checked whether consecutive activities with the same content can be merged.
@@ -317,6 +317,7 @@ OS Events -> Watcher -> Heartbeat -> ActivityStore-heartbeats -> ActivityStore-a
 ### 4.1 Persistence
 
 - Stored as a JSON file inside `app.getPath('userData')` (storage location is configurable)
+- The app was called Workmory before, so its old data folder is named `Workmory`. On start, `migrateLegacyUserData` (`src/store/UserDataMigration.ts`) copies `settings.json` and `chronflow-activity-store.json` from that folder into the new one, but only while the new folder has neither file; it never overwrites and leaves the old folder as a backup. If copying fails, the app keeps using the old folder so no tracked data is hidden.
 - JSON with 2-space indentation
 - Autosave every 5 minutes
 - Cleanup after 30 days

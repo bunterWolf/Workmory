@@ -2,7 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'workmory-settings-'));
+const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'missing-hours-settings-'));
 
 jest.mock('electron', () => ({
   app: { getPath: jest.fn(() => userDataDir) },

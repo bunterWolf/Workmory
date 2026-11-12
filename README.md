@@ -1,6 +1,6 @@
-# Workmory - Automatic time tracking made easy and free
+# Missing Hours - Automatic time tracking made easy and free
 
-Workmory is an Electron-based desktop application designed to track and analyze your computer activity. It automatically records which applications you use, detects inactive periods, and identifies time spent on different tasks.
+Missing Hours is an Electron-based desktop application designed to track and analyze your computer activity. It automatically records which applications you use, detects inactive periods, and identifies time spent on different tasks.
 
 ## Features
 
@@ -38,8 +38,8 @@ Workmory is an Electron-based desktop application designed to track and analyze 
 
 1. Clone the repository
    ```
-   git clone https://github.com/bunterWolf/workmory.git
-   cd workmory
+   git clone https://github.com/bunterWolf/Missing-Hours.git
+   cd Missing-Hours
    ```
 
 2. Install dependencies
@@ -187,5 +187,5 @@ By default, activity data is stored in the app's user data directory. You can ch
 
 Data is automatically cleaned up after 30 days to avoid excessive storage usage.
 
-Workmory is designed with privacy in mind:
+Missing Hours is designed with privacy in mind:
 - **Local Storage:** All tracked data is stored locally on your computer. No data is sent to external servers.
