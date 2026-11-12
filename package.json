@@ -18,6 +18,7 @@
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && electron-builder --win",
     "dist:mac": "npm run build && electron-builder --mac",
+    "dist:store": "npm run build && electron-builder --win appx",
     "generate:mock": "ts-node scripts/generate-mock-data.ts",
     "release": "node scripts/release.js",
     "release:beta": "node scripts/release-beta.js",
@@ -132,6 +133,22 @@
       "artifactName": "Workmory-Setup-${version}-win-${arch}.${ext}",
       "uninstallDisplayName": "Workmory",
       "differentialPackage": true
+    },
+    "appx": {
+      "identityName": "PLACEHOLDER.Workmory",
+      "publisher": "CN=00000000-0000-0000-0000-000000000000",
+      "publisherDisplayName": "PLACEHOLDER",
+      "applicationId": "Workmory",
+      "displayName": "Workmory",
+      "backgroundColor": "transparent",
+      "languages": [
+        "de-DE",
+        "en-US"
+      ],
+      "minVersion": "10.0.17763.0",
+      "maxVersionTested": "10.0.26100.0",
+      "customExtensionsPath": "resources/appx-extensions.xml",
+      "artifactName": "Workmory-Store-${version}-${arch}.${ext}"
     },
     "generateUpdatesFilesForAllChannels": true
   },

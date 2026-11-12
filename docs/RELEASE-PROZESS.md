@@ -27,13 +27,16 @@ Benutzer erhalten ihn über den Auto-Updater.
 
 > Dieser Weg wurde bisher noch nicht mit einem echten stabilen Release durchlaufen.
 
+Soll die Version in den Microsoft Store, muss sie mit mindestens `1` beginnen (`1.0.0`, nicht `0.x`).
+Das Einreichen steht in [MICROSOFT-STORE.md](MICROSOFT-STORE.md).
+
 ## Technische Details
 
 ### Workflow (`.github/workflows/release.yml`)
 
 | Job | Läuft auf | Aufgabe |
 | --- | --- | --- |
-| `build` | Windows, macOS | `npm run build` (Tests, TypeScript, Webpack), dann `electron-builder --publish never` mit bis zu drei Versuchen; lädt die Dateien als Artefakte hoch |
+| `build` | Windows, macOS | `npm run build` (Tests, TypeScript, Webpack), dann `electron-builder --publish never` mit bis zu drei Versuchen; lädt die Dateien als Artefakte hoch. Bei Tags ohne `beta` baut Windows zusätzlich das Microsoft-Store-Paket (Artefakt `microsoft-store-package`, nicht im Release, siehe [MICROSOFT-STORE.md](MICROSOFT-STORE.md)) |
 | `publish` | Ubuntu | läuft nur, wenn alle Builds erfolgreich waren; erstellt das Release und lädt alle Dateien hoch |
 
 - Die Plattformen brechen sich gegenseitig nicht ab (`fail-fast: false`).
