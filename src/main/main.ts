@@ -104,15 +104,22 @@ async function loadAppIcon(exePath: string): Promise<Electron.NativeImage | null
   return icon.width > targetSize ? img.resize({ width: targetSize, quality: 'best' }) : img;
 }
 
+// Check for the mock data flag
+const useMockData = process.argv.includes('--mock-data');
+
 // Take over the data of the Workmory versions before the rename. Runs before the instance lock and the
 // stores, which all live in userData. If copying fails, keep using the old folder so no tracked data is hidden.
+// Not with mock data: such a run must not take a snapshot of the real data, because the migration runs
+// only once and a later real start would then miss what the old version tracked in the meantime.
 const legacyUserDataDir = path.join(app.getPath('appData'), LEGACY_USER_DATA_DIR_NAME);
-try {
-  const migrated = migrateLegacyUserData(legacyUserDataDir, app.getPath('userData'));
-  if (migrated.length > 0) console.log(`Copied ${migrated.join(', ')} from ${legacyUserDataDir}`);
-} catch (error) {
-  console.error(`Could not copy the data from ${legacyUserDataDir}, using that folder instead:`, error);
-  app.setPath('userData', legacyUserDataDir);
+if (!useMockData) {
+  try {
+    const migrated = migrateLegacyUserData(legacyUserDataDir, app.getPath('userData'));
+    if (migrated.length > 0) console.log(`Copied ${migrated.join(', ')} from ${legacyUserDataDir}`);
+  } catch (error) {
+    console.error(`Could not copy the data from ${legacyUserDataDir}, using that folder instead:`, error);
+    app.setPath('userData', legacyUserDataDir);
+  }
 }
 
 // Prüfe, ob bereits eine Instanz läuft
@@ -147,8 +154,6 @@ if (isDev) {
   }
 }
 
-// Check for the mock data flag
-const useMockData = process.argv.includes('--mock-data');
 if (useMockData) {
   console.log('🧪 Mock data mode enabled for development');
 }

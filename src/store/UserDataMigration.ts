@@ -1,9 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-// The app was called Workmory before. Electron names the userData folder after the product name,
-// so the data of earlier versions lies in a folder with this name next to the new one.
-export const LEGACY_USER_DATA_DIR_NAME = 'Workmory';
+// The app was called Workmory before. Electron names the userData folder after the `name` in
+// package.json (there is no top-level productName), so the data of earlier versions lies in a folder
+// with this name next to the new one (`missing-hours`).
+export const LEGACY_USER_DATA_DIR_NAME = 'workmory';
 
 // The files the app itself keeps in userData. Chromium's own files there are not taken over.
 export const MIGRATED_FILES = ['settings.json', 'chronflow-activity-store.json'];

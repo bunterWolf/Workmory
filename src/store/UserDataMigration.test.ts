@@ -15,7 +15,7 @@ const read = (dir: string, file: string) => fs.readFileSync(path.join(dir, file)
 
 beforeEach(() => {
   root = fs.mkdtempSync(path.join(os.tmpdir(), 'missing-hours-migration-'));
-  legacyDir = path.join(root, 'Workmory');
+  legacyDir = path.join(root, 'workmory');
   newDir = path.join(root, 'Missing Hours');
 });
 

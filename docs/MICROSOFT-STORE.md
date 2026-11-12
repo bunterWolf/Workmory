@@ -10,8 +10,8 @@ signiert das Paket. Darum erscheint keine SmartScreen-Warnung, und Firmen lassen
 | Updates | `electron-updater` über GitHub Releases | der Store; `electron-updater` startet nicht |
 | Beta-Updates | Schalter in den Einstellungen | gibt es nicht, im Store landen nur stabile Versionen |
 | Autostart | Registry über `auto-launch`, Schalter in den Einstellungen | Startaufgabe im Paket (`resources/appx-extensions.xml`), an nach dem ersten Start; ein- und ausschalten unter Windows-Einstellungen > Apps > Autostart, die App öffnet die Seite per Knopf |
-| Datenordner | `%APPDATA%\Missing Hours`; beim ersten Start übernimmt die App die Daten aus dem alten Ordner `%APPDATA%\Workmory` (`src/store/UserDataMigration.ts`) | gibt es `%APPDATA%\Missing Hours` schon, nutzt sie genau diesen Ordner; sonst vermutlich den Paketordner (siehe unten) |
-| Deinstallation | Daten bleiben | Daten im Paketordner löscht Windows mit, `%APPDATA%\Missing Hours` bleibt |
+| Datenordner | `%APPDATA%\missing-hours` (nach `name` in `package.json`); beim ersten Start übernimmt die App die Daten aus dem alten Ordner `%APPDATA%\workmory` (`src/store/UserDataMigration.ts`) | gibt es `%APPDATA%\missing-hours` schon, nutzt sie genau diesen Ordner; sonst vermutlich den Paketordner (siehe unten) |
+| Deinstallation | Daten bleiben | Daten im Paketordner löscht Windows mit, `%APPDATA%\missing-hours` bleibt |
 
 Die App erkennt die Store-Version an `process.windowsStore` (`src/main/main.ts`, `isWindowsStore`).
 
@@ -22,7 +22,7 @@ teilen sich dann Daten und Instanz-Sperre: Es läuft immer nur eine von beiden, 
 alle Tage. Nach dem Entfernen des Pakets war die Datei unverändert da.
 
 Nicht getestet: eine frische Installation ohne vorhandenen Ordner. Dann legt Windows neue Dateien
-voraussichtlich im Paketordner an (`%LOCALAPPDATA%\Packages\<Paketname>\LocalCache\Roaming\Missing Hours`),
+voraussichtlich im Paketordner an (`%LOCALAPPDATA%\Packages\<Paketname>\LocalCache\Roaming\missing-hours`),
 und eine Deinstallation löscht sie. Das ist bewusst so entschieden (keine Sonderfreigabe für
 unvirtualisierte Dateien). Wer sicher gehen will, wählt in den Einstellungen einen eigenen Speicherort,
 zum Beispiel unter Dokumente. Dort leitet Windows nichts um.
@@ -133,7 +133,7 @@ Remove-AppxPackage -Package <PackageFullName>                  # wieder entferne
 ```
 
 `PackageFamilyName` und `PackageFullName` zeigt `Get-AppxPackage -Name <identityName>`. Achtung: Die
-Testversion trackt echt und schreibt in `%APPDATA%\Missing Hours`, wenn der Ordner existiert (siehe oben).
+Testversion trackt echt und schreibt in `%APPDATA%\missing-hours`, wenn der Ordner existiert (siehe oben).
 
 Geprüft am 2026-11-11: Start aus dem Startmenü, Einstellungen zeigen den Knopf statt Schalter und keine
 Beta-Option, der Knopf öffnet „Apps > Autostart“, dort steht Missing Hours auf „Ein“, kein Eintrag unter
