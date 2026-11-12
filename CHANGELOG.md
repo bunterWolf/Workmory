@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.2-beta.8](https://github.com/bunterWolf/Missing-Hours/compare/v0.0.2-beta.7...v0.0.2-beta.8) (2026-11-12)
+
+
+### Features
+
+* package Workmory for the Microsoft Store ([a6a6fea](https://github.com/bunterWolf/Missing-Hours/commit/a6a6fea112b98c34503eee3d4cb9c57ce33b5d3a))
+* rename the app from Workmory to Missing Hours ([635d342](https://github.com/bunterWolf/Missing-Hours/commit/635d3421361725941115152e9eee415bf56bae71))
+
+
+### Bug Fixes
+
+* take over the old data folder by its real name, not in mock mode ([60ec633](https://github.com/bunterWolf/Missing-Hours/commit/60ec6331ea4d6d59af364eda60aa8dcfdf8bb3f9))
+
 ### [0.0.2-beta.7](https://github.com/bunterWolf/Workmory/compare/v0.0.2-beta.6...v0.0.2-beta.7) (2026-11-09)
 
 
