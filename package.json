@@ -1,10 +1,10 @@
 {
-  "name": "workmory",
+  "name": "missing-hours",
   "version": "0.0.2-beta.7",
   "description": "Productivity Tracker",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bunterWolf/Workmory.git"
+    "url": "https://github.com/bunterWolf/Missing-Hours.git"
   },
   "main": "dist/main/main.js",
   "scripts": {
@@ -74,7 +74,7 @@
   },
   "build": {
     "appId": "com.electron.workmory",
-    "productName": "Workmory",
+    "productName": "Missing Hours",
     "files": [
       "dist/**/*",
       "src/**/*",
@@ -87,7 +87,7 @@
     "publish": {
       "provider": "github",
       "owner": "bunterWolf",
-      "repo": "Workmory"
+      "repo": "Missing-Hours"
     },
     "mac": {
       "category": "public.app-category.productivity",
@@ -100,7 +100,7 @@
           ]
         }
       ],
-      "artifactName": "Workmory-${version}-mac-${arch}.${ext}",
+      "artifactName": "Missing-Hours-${version}-mac-${arch}.${ext}",
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
       "identity": null
@@ -120,7 +120,7 @@
           ]
         }
       ],
-      "artifactName": "Workmory-${version}-win-${arch}.${ext}"
+      "artifactName": "Missing-Hours-${version}-win-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": true,
@@ -129,17 +129,17 @@
       "deleteAppDataOnUninstall": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Workmory",
-      "artifactName": "Workmory-Setup-${version}-win-${arch}.${ext}",
-      "uninstallDisplayName": "Workmory",
+      "shortcutName": "Missing Hours",
+      "artifactName": "Missing-Hours-Setup-${version}-win-${arch}.${ext}",
+      "uninstallDisplayName": "Missing Hours",
       "differentialPackage": true
     },
     "appx": {
-      "identityName": "PLACEHOLDER.Workmory",
+      "identityName": "PLACEHOLDER.MissingHours",
       "publisher": "CN=00000000-0000-0000-0000-000000000000",
       "publisherDisplayName": "PLACEHOLDER",
-      "applicationId": "Workmory",
-      "displayName": "Workmory",
+      "applicationId": "MissingHours",
+      "displayName": "Missing Hours",
       "backgroundColor": "transparent",
       "languages": [
         "de-DE",
@@ -148,7 +148,7 @@
       "minVersion": "10.0.17763.0",
       "maxVersionTested": "10.0.26100.0",
       "customExtensionsPath": "resources/appx-extensions.xml",
-      "artifactName": "Workmory-Store-${version}-${arch}.${ext}"
+      "artifactName": "Missing-Hours-Store-${version}-${arch}.${ext}"
     },
     "generateUpdatesFilesForAllChannels": true
   },

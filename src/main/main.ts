@@ -17,6 +17,7 @@ import ActivityStore from '../store/ActivityStore';
 import HeartbeatManager from '../store/HeartbeatManager';
 import { SettingsManager, ThemeMode, THEME_MODES } from '../store/SettingsManager';
 import { deriveIconColor, ExeIcon, readExeIcon } from './appIcon';
+import { LEGACY_USER_DATA_DIR_NAME, migrateLegacyUserData } from '../store/UserDataMigration';
 
 // Auto-Launcher-Instanz
 let autoLauncher: AutoLaunch;
@@ -37,8 +38,17 @@ let heartbeatManager: HeartbeatManager | null = null;
 // Initialisiere AutoLaunch und gleiche es mit den gespeicherten Einstellungen ab
 async function initAutoLaunch(): Promise<void> {
   try {
+    // Earlier versions registered the autostart entry as 'Chronflow'; after the rename it points to an exe
+    // that no longer exists. Remove it; the entry below takes its place if autostart is switched on.
+    try {
+      const legacyAutoLauncher = new AutoLaunch({ name: 'Chronflow', path: app.getPath('exe') });
+      if (await legacyAutoLauncher.isEnabled()) await legacyAutoLauncher.disable();
+    } catch (error) {
+      console.error('Could not remove the old Chronflow autostart entry:', error);
+    }
+
     autoLauncher = new AutoLaunch({
-      name: 'Chronflow',
+      name: 'Missing Hours',
       path: app.getPath('exe'),
     });
 
@@ -92,6 +102,17 @@ async function loadAppIcon(exePath: string): Promise<Electron.NativeImage | null
   if (icon.kind === 'bitmap') return app.getFileIcon(exePath, { size: 'normal' });
   const img = nativeImage.createFromBuffer(icon.png);
   return icon.width > targetSize ? img.resize({ width: targetSize, quality: 'best' }) : img;
+}
+
+// Take over the data of the Workmory versions before the rename. Runs before the instance lock and the
+// stores, which all live in userData. If copying fails, keep using the old folder so no tracked data is hidden.
+const legacyUserDataDir = path.join(app.getPath('appData'), LEGACY_USER_DATA_DIR_NAME);
+try {
+  const migrated = migrateLegacyUserData(legacyUserDataDir, app.getPath('userData'));
+  if (migrated.length > 0) console.log(`Copied ${migrated.join(', ')} from ${legacyUserDataDir}`);
+} catch (error) {
+  console.error(`Could not copy the data from ${legacyUserDataDir}, using that folder instead:`, error);
+  app.setPath('userData', legacyUserDataDir);
 }
 
 // Prüfe, ob bereits eine Instanz läuft
@@ -157,7 +178,7 @@ function createWindow(): void { // Add return type void
     useContentSize: true, // sizes below describe the content area, not the window bounds
     minWidth: WINDOW_WIDTH,
     minHeight: WINDOW_MIN_HEIGHT,
-    title: 'Workmory - Automatic time tracking made easy and free' + (useMockData ? ' (Mock Data)' : ''),
+    title: 'Missing Hours - Automatic time tracking made easy and free' + (useMockData ? ' (Mock Data)' : ''),
     icon: path.join(app.getAppPath(), 'build', 'icon.ico'),
     frame: false, // Custom title bar (see WindowTitleBar component)
     backgroundColor: getWindowBackground(),

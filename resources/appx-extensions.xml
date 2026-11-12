@@ -1,6 +1,6 @@
 
-        <!-- Microsoft Store package: start Workmory with Windows. Store apps cannot use the registry
+        <!-- Microsoft Store package: start Missing Hours with Windows. Store apps cannot use the registry
              Run key (auto-launch); the user switches this task in Windows Settings > Startup apps. -->
-        <desktop:Extension Category="windows.startupTask" Executable="app\Workmory.exe" EntryPoint="Windows.FullTrustApplication">
-          <desktop:StartupTask TaskId="WorkmoryStartup" Enabled="true" DisplayName="Workmory" />
+        <desktop:Extension Category="windows.startupTask" Executable="app\Missing Hours.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="MissingHoursStartup" Enabled="true" DisplayName="Missing Hours" />
         </desktop:Extension>

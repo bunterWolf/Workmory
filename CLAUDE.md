@@ -4,14 +4,14 @@ Guidance for Claude (and other AI assistants) working in this repository.
 
 ## Project overview
 
-**Workmory** is an Electron desktop app for **automatic activity tracking**. It records which
+**Missing Hours** is an Electron desktop app for **automatic activity tracking**. It records which
 applications/windows are used and detects inactivity, then aggregates this into a per-day timeline.
 It is **local-first and privacy-first**: all data stays on the user's machine, nothing is sent to a
 server.
 
 ## ⚠️ Critical: data correctness is the product
 
-Workmory visualizes how people spend time at their PC so they can do **time tracking and create
+Missing Hours visualizes how people spend time at their PC so they can do **time tracking and create
 invoices** from it. Tracked, aggregated, and visualized data therefore feeds **real billing** —
 mistakes have real financial consequences.
 
@@ -62,6 +62,7 @@ Main process / renderer process architecture connected via Electron IPC.
 | `src/watchers/ActiveWindowWatcher.ts` | Current active window/app (via `active-win`) |
 | `src/watchers/InactivityWatcher.ts` | `active` / `may_be_inactive` / `inactive` based on input since last heartbeats |
 | `src/store/AbsenceBackfill.ts` | Rule 7: on an `inactive` heartbeat, `backfillAbsence` walks back across days and converts `may_be_inactive` to `inactive` until the last `active` heartbeat or a gap > `MAX_HEARTBEAT_GAP_MS` (app not running / PC asleep); also `findLastActiveTimestamp`, `ABSENCE_THRESHOLD_MS` |
+| `src/store/UserDataMigration.ts` | The app was called Workmory before: on start, `migrateLegacyUserData` copies `settings.json` and the activity store from the old `Workmory` userData folder once, never overwriting; on failure `main.ts` keeps using the old folder |
 | `src/store/ActivityPersistence.ts` | JSON persistence in `app.getPath('userData')` |
 | `src/store/ActivityIpc.ts` | IPC bridge between store and renderer; tells the renderer about new data via `activity-data-updated` |
 | `src/components/{ui,window,toolbar,timeline,footer,settings}/`, `src/renderer/` | React UI (title bar, toolbar, timeline, footer, settings view), one folder per area; Figma node id in each file header |

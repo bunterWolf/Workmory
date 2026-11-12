@@ -14,7 +14,7 @@ test('backfillAbsence erreicht den Vortag über Mitternacht', () => {
   expect(statuses(state, '2026-03-05')).toEqual(['inactive']);
 });
 
-test('backfillAbsence hält an einer Lücke an (Workmory war nicht aktiv)', () => {
+test('backfillAbsence hält an einer Lücke an (Missing Hours war nicht aktiv)', () => {
   const state = new ActivityState();
   state.setHeartbeats('2026-03-05', [hb('2026-03-05T16:00:00', 'may_be_inactive'), hb('2026-03-05T17:00:00', 'active'), hb('2026-03-05T17:02:00', 'may_be_inactive')]);
   state.setHeartbeats('2026-03-09', [hb('2026-03-09T08:00:00', 'may_be_inactive')]);

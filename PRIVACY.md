@@ -6,7 +6,7 @@
 
 Stand: November 2026
 
-Workmory zeichnet auf, welche Programme und Fenster du an deinem Computer nutzt und wann du nicht aktiv
+Missing Hours zeichnet auf, welche Programme und Fenster du an deinem Computer nutzt und wann du nicht aktiv
 bist, damit du deine Arbeitszeit nachvollziehen kannst.
 
 **Welche Daten erfasst werden**
@@ -16,7 +16,7 @@ bist, damit du deine Arbeitszeit nachvollziehen kannst.
 - deine Einstellungen in der App
 
 **Wo die Daten bleiben**
-Alle Daten werden ausschließlich lokal auf deinem Computer gespeichert. Workmory überträgt keine
+Alle Daten werden ausschließlich lokal auf deinem Computer gespeichert. Missing Hours überträgt keine
 aufgezeichneten Daten an Server, weder an uns noch an Dritte. Es gibt keine Analyse- oder Telemetriedienste,
 keine Werbung und kein Benutzerkonto.
 
@@ -24,7 +24,7 @@ Wenn du in den Einstellungen einen eigenen Speicherort wählst (zum Beispiel ein
 wie OneDrive oder Dropbox), liegen die Daten dort. Für diesen Dienst gelten dann dessen Bedingungen.
 
 **Wie lange die Daten bleiben**
-Workmory löscht aufgezeichnete Tage automatisch nach 30 Tagen. Wenn du die Microsoft-Store-Version
+Missing Hours löscht aufgezeichnete Tage automatisch nach 30 Tagen. Wenn du die Microsoft-Store-Version
 deinstallierst, kann Windows ihre Daten im Standard-Speicherort mit entfernen.
 
 **Updates**
@@ -33,13 +33,13 @@ von Microsoft. Die Version von GitHub fragt bei GitHub nach neuen Versionen. Dab
 technischen Verbindungsdaten (zum Beispiel deine IP-Adresse) an GitHub übertragen, keine aufgezeichneten Daten.
 
 **Kontakt**
-Fragen zum Datenschutz kannst du als Issue unter https://github.com/bunterWolf/Workmory/issues stellen.
+Fragen zum Datenschutz kannst du als Issue unter https://github.com/bunterWolf/Missing-Hours/issues stellen.
 
 ## English
 
 Last updated: November 2026
 
-Workmory records which programs and windows you use on your computer and when you are inactive, so you can
+Missing Hours records which programs and windows you use on your computer and when you are inactive, so you can
 keep track of your working time.
 
 **What is recorded**
@@ -49,14 +49,14 @@ keep track of your working time.
 - your settings in the app
 
 **Where the data stays**
-All data is stored only on your computer. Workmory does not send any recorded data to any server, neither
+All data is stored only on your computer. Missing Hours does not send any recorded data to any server, neither
 to us nor to third parties. There are no analytics or telemetry services, no ads and no user account.
 
 If you choose your own storage location in the settings (for example a synced folder like OneDrive or
 Dropbox), the data is stored there, and that service's terms apply.
 
 **How long the data is kept**
-Workmory deletes recorded days automatically after 30 days. When you uninstall the Microsoft Store version,
+Missing Hours deletes recorded days automatically after 30 days. When you uninstall the Microsoft Store version,
 Windows may also remove its data in the default storage location.
 
 **Updates**
@@ -65,4 +65,4 @@ version from GitHub asks GitHub for new versions. Only the usual technical conne
 address) is sent to GitHub, no recorded data.
 
 **Contact**
-Questions about privacy can be raised as an issue at https://github.com/bunterWolf/Workmory/issues.
+Questions about privacy can be raised as an issue at https://github.com/bunterWolf/Missing-Hours/issues.

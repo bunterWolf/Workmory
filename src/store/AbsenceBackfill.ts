@@ -6,13 +6,13 @@ export const ABSENCE_THRESHOLD_MS = 10 * 60 * 1000;
 // Idle under this counts as `active`, so the input lies within this window before an `active` heartbeat.
 export const ACTIVE_WINDOW_MS = 60 * 1000;
 
-// Heartbeats come every 30 s, so a larger gap means Workmory was not running or the PC slept; such a gap does not belong to the absence.
+// Heartbeats come every 30 s, so a larger gap means Missing Hours was not running or the PC slept; such a gap does not belong to the absence.
 export const MAX_HEARTBEAT_GAP_MS = 2 * 60 * 1000;
 
 /**
  * Wandelt may_be_inactive vor `untilTs` in inactive um, tageübergreifend, in einem Rückwärtslauf
  * (neueste zuerst). Der Lauf endet am ersten active-Heartbeat oder an einer Lücke
- * größer als MAX_HEARTBEAT_GAP_MS (Workmory lief nicht / PC schlief).
+ * größer als MAX_HEARTBEAT_GAP_MS (Missing Hours lief nicht / PC schlief).
  */
 export function backfillAbsence(state: ActivityState, untilTs: number): void {
   const days = state.getAvailableDates();

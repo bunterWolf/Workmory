@@ -39,7 +39,7 @@ Die GitHub Action wird nun automatisch:
 3. Die .exe hochladen
 
 Du kannst den Fortschritt hier verfolgen:
-https://github.com/bunterWolf/Workmory/actions
+https://github.com/bunterWolf/Missing-Hours/actions
         `);
 
     } catch (error) {

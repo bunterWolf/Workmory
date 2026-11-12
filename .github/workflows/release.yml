@@ -52,7 +52,7 @@ jobs:
           name: ${{ matrix.os }}-artifacts
           if-no-files-found: error
           path: |
-            release/*/Workmory-*
+            release/*/Missing-Hours-*
             release/*/latest*.yml
 
       # Microsoft Store package (MSIX), stable releases only: the Store has no "-beta" versions
@@ -80,7 +80,7 @@ jobs:
         with:
           name: microsoft-store-package
           if-no-files-found: error
-          path: release/*/Workmory-Store-*.appx
+          path: release/*/Missing-Hours-Store-*.appx
 
   # Single publishing step, so a failed build never leaves a partial release behind.
   # Safe to re-run: existing assets of the same release are replaced.
@@ -115,5 +115,5 @@ jobs:
           draft: false
           fail_on_unmatched_files: true
           files: |
-            artifacts/${{ steps.version.outputs.version }}/Workmory-*
+            artifacts/${{ steps.version.outputs.version }}/Missing-Hours-*
             artifacts/${{ steps.version.outputs.version }}/latest*.yml

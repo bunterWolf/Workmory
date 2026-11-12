@@ -1,6 +1,6 @@
 # Beta Release Prozess
 
-Dieses Dokument beschreibt, wie ein Beta-Release für Workmory entsteht. Lokal wird nur die Version
+Dieses Dokument beschreibt, wie ein Beta-Release für Missing Hours entsteht. Lokal wird nur die Version
 erhöht und ein Tag gepusht; gebaut und veröffentlicht wird ausschließlich von GitHub Actions.
 
 ## Grundregeln
@@ -92,8 +92,8 @@ gh release view v<version> --json isPrerelease,assets -q '{pre:.isPrerelease,ass
 
 Ein vollständiges Release enthält:
 
-- `Workmory-Setup-<version>-win-x64.exe` mit `.blockmap` und `Workmory-<version>-win-x64.zip`
-- `Workmory-<version>-mac-x64.zip` und `Workmory-<version>-mac-arm64.zip`, jeweils mit `.blockmap`
+- `Missing-Hours-Setup-<version>-win-x64.exe` mit `.blockmap` und `Missing-Hours-<version>-win-x64.zip`
+- `Missing-Hours-<version>-mac-x64.zip` und `Missing-Hours-<version>-mac-arm64.zip`, jeweils mit `.blockmap`
 - `latest.yml` und `latest-mac.yml` mit der neuen Version
 
 ### 6. Wenn der Build fehlschlägt

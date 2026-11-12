@@ -6,7 +6,7 @@ enthält die Checkliste für spätere Figma-Änderungen. Hintergrund und Entsche
 
 ## 1. Quelle und Zugang
 
-- **Figma-Datei:** „Workmory“, Datei-Key `BYAYmyZwAVg1mkrBqS2esP`
+- **Figma-Datei:** „Workmory“ (alter App-Name, die Datei heißt noch so), Datei-Key `BYAYmyZwAVg1mkrBqS2esP`
 
 | Frame | Node-ID |
 |---|---|
@@ -186,7 +186,7 @@ Zeilenmuster abgeleitet, Figma wird später nachgezogen) die **Intervall-Pille**
 | | `--wm-titlebar-glyph-size` | 10 px | `2061:4850` (Segoe Fluent Icons) |
 | | `--wm-titlebar-close-hover(-ink)`, `--wm-titlebar-light-*`, `--wm-titlebar-transition` | | OS-Konvention (Windows-Close-Rot, macOS-Ampel), nicht in Figma |
 
-Titelleiste: Hintergrund `--surface-2`, Titel „Workmory“ in `.text-m-primary` / `--ink-3`, Settings (`…`, Icon 20 px),
+Titelleiste: Hintergrund `--surface-2`, Titel „Missing Hours“ in `.text-m-primary` / `--ink-3`, Settings (`…`, Icon 20 px),
 Minimieren und Schließen je 46 × 32, **kein** Maximieren-Button (macOS: Ampel-Buttons links, Settings rechts).
 Der leere 28-px-Platzhalter `84822:1564` links davon ist unsichtbar und wird nicht umgesetzt.
 
