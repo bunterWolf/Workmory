@@ -111,7 +111,7 @@ The build process will:
 
 #### App Icon
 
-All icon files come from one drawing, `resources/icon-source/icon.svg` (1024 × 1024). After changing it, run:
+All icon files come from one drawing, `resources/icon-source/icon.svg` (square, artwork edge to edge). After changing it, run:
 ```bash
 npm run icons
 ```

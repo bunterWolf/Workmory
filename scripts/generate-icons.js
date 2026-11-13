@@ -1,9 +1,10 @@
-// Generates every app icon file from the one source drawing, resources/icon-source/icon.svg.
+// Generates every app icon file from the one source drawing, resources/icon-source/icon.svg
+// (square viewBox of any size; the artwork fills it edge to edge).
 // Run `npm run icons` after changing the SVG and commit the generated files.
 //
 //   resources/icon.ico     Windows: exe, installer, shortcuts, taskbar, window (16-256 px)
 //   resources/icon.png     1024 px, window icon outside Windows, Linux
-//   resources/icon.icns    macOS app bundle (16-1024 px); the circle sits on Apple's
+//   resources/icon.icns    macOS app bundle (16-1024 px); the artwork sits on Apple's
 //                          icon grid (824 of 1024 px) so it matches the size of other Mac icons
 //   resources/appx/*.png   Microsoft Store tiles (sizes fixed by the package manifest)
 
@@ -14,7 +15,7 @@ const { Resvg } = require('@resvg/resvg-js');
 const ROOT = path.join(__dirname, '..');
 const RESOURCES = path.join(ROOT, 'resources');
 const SOURCE = fs.readFileSync(path.join(RESOURCES, 'icon-source', 'icon.svg'), 'utf8');
-const SOURCE_SIZE = 1024; // viewBox of the source drawing
+const SOURCE_SIZE = Number(SOURCE.match(/viewBox="0 0 ([\d.]+) [\d.]+"/)[1]); // square viewBox of the source
 
 const ICO_SIZES = [16, 20, 24, 32, 40, 48, 64, 128, 256];
 const MAC_ICON_SHARE = 824 / 1024; // Apple macOS icon grid: artwork 824 px on a 1024 px canvas
@@ -23,7 +24,7 @@ const ICNS_TYPES = [
   ['icp4', 16], ['ic11', 32], ['icp5', 32], ['ic12', 64], ['icp6', 64], ['ic07', 128],
   ['ic13', 256], ['ic08', 256], ['ic14', 512], ['ic09', 512], ['ic10', 1024],
 ];
-// Store tiles: canvas size and the circle's diameter in px
+// Store tiles: canvas size and the artwork's size in px
 const APPX_TILES = [
   ['StoreLogo.png', 50, 50, 50],
   ['Square44x44Logo.png', 44, 44, 44],
@@ -31,9 +32,9 @@ const APPX_TILES = [
   ['Wide310x150Logo.png', 310, 150, 112],
 ];
 
-// Renders the icon centered on a transparent width x height canvas, the circle `diameter` px wide.
-function render(width, height = width, diameter = Math.min(width, height)) {
-  const units = SOURCE_SIZE / diameter; // source units per output pixel
+// Renders the icon centered on a transparent width x height canvas, the artwork `artSize` px wide.
+function render(width, height = width, artSize = Math.min(width, height)) {
+  const units = SOURCE_SIZE / artSize; // source units per output pixel
   const viewW = width * units;
   const viewH = height * units;
   const viewBox = `${(SOURCE_SIZE - viewW) / 2} ${(SOURCE_SIZE - viewH) / 2} ${viewW} ${viewH}`;
@@ -115,6 +116,6 @@ function write(relativePath, data) {
 write('icon.ico', buildIco());
 write('icon.png', render(1024).png);
 write('icon.icns', buildIcns());
-for (const [name, width, height, diameter] of APPX_TILES) {
-  write(path.join('appx', name), render(width, height, diameter).png);
+for (const [name, width, height, artSize] of APPX_TILES) {
+  write(path.join('appx', name), render(width, height, artSize).png);
 }
