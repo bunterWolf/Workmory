@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.2-beta.10](https://github.com/bunterWolf/Missing-Hours/compare/v0.0.2-beta.9...v0.0.2-beta.10) (2026-11-13)
+
+
+### Features
+
+* replace the squirrel app icon with the ring icon ([e36d183](https://github.com/bunterWolf/Missing-Hours/commit/e36d18352c638fcb73e2c8d1a34bccd0e8e4170b))
+
 ### [0.0.2-beta.9](https://github.com/bunterWolf/Missing-Hours/compare/v0.0.2-beta.8...v0.0.2-beta.9) (2026-11-13)
 
 
