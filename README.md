@@ -109,6 +109,16 @@ The build process will:
      - ZIP archive
      - Auto-update support
 
+#### App Icon
+
+All icon files come from one drawing, `resources/icon-source/icon.svg` (1024 × 1024). After changing it, run:
+```bash
+npm run icons
+```
+and commit the generated files: `resources/icon.ico` (Windows, 16–256 px), `resources/icon.png`
+(1024 px, window icon outside Windows), `resources/icon.icns` (macOS, artwork scaled to Apple's
+824/1024 icon grid) and the Microsoft Store tiles in `resources/appx/`.
+
 #### Creating a Release
 
 To create a new release:

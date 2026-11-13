@@ -20,6 +20,7 @@
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:store": "npm run build && electron-builder --win appx",
     "generate:mock": "ts-node scripts/generate-mock-data.ts",
+    "icons": "node scripts/generate-icons.js",
     "release": "node scripts/release.js",
     "release:beta": "node scripts/release-beta.js",
     "beta:create": "node scripts/create-beta-branch.js"
@@ -78,7 +79,9 @@
     "files": [
       "dist/**/*",
       "src/**/*",
-      "package.json"
+      "package.json",
+      "resources/icon.ico",
+      "resources/icon.png"
     ],
     "directories": {
       "buildResources": "resources",
@@ -91,6 +94,7 @@
     },
     "mac": {
       "category": "public.app-category.productivity",
+      "icon": "resources/icon.icns",
       "target": [
         {
           "target": "zip",
@@ -106,6 +110,7 @@
       "identity": null
     },
     "win": {
+      "icon": "resources/icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -175,6 +180,7 @@
     "@babel/core": "^7.23.5",
     "@babel/preset-env": "^7.23.5",
     "@babel/preset-react": "^7.23.3",
+    "@resvg/resvg-js": "^2.6.2",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.14.0",
     "babel-loader": "^9.1.3",

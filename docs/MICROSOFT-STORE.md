@@ -112,6 +112,10 @@ npm run dist:store
 
 Das Paket landet in `release/<version>/Missing-Hours-Store-<version>-x64.appx`.
 
+Die Kacheln in `resources/appx/` (StoreLogo 50, Square44x44, Square150x150, Wide310x150) erzeugt
+`npm run icons` aus `resources/icon-source/icon.svg`, nicht von Hand bearbeiten. Für die Store-Einträge im
+Partner Center (Logos unter **Store-Einträge**) lässt sich `resources/icon.png` (1024 × 1024) hochladen.
+
 **Bekanntes lokales Problem:** Auf manchen Rechnern startet `makeappx.exe` aus dem electron-builder-Cache
 nicht (`spawn UNKNOWN`, im Ereignisprotokoll „Side-by-Side-Konfiguration ungültig“). Eine Kopie des Ordners
 `%LOCALAPPDATA%\electron-builder\Cache\winCodeSign-2.6.0\<…>\windows-10\x64` an einem anderen Ort funktioniert.
